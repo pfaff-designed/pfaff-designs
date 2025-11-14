@@ -5,11 +5,11 @@ import { ImageContainer } from "@/components/atoms/ImageContainer";
 import { cn } from "@/lib/utils";
 
 export interface FullWidthProps {
-  imageUrl?: string;
+  headline?: string;
+  body?: string;
+  eyebrow?: string;
+  imageSrc?: string;
   imageAlt?: string;
-  title?: string;
-  subtitle?: string;
-  quote?: string;
   projectDetails?: {
     client?: string;
     role?: string;
@@ -19,21 +19,21 @@ export interface FullWidthProps {
 }
 
 export const FullWidth: React.FC<FullWidthProps> = ({
-  imageUrl,
+  headline,
+  body,
+  eyebrow,
+  imageSrc,
   imageAlt = "",
-  title,
-  subtitle,
-  quote,
   projectDetails,
   className,
 }) => {
   return (
     <div className={cn("relative w-full overflow-hidden h-[100vh]", className)}>
       {/* Background Image - Full Hero Background */}
-      {imageUrl && (
+      {imageSrc && (
         <div className="absolute inset-0 z-0">
           <ImageContainer
-            imageSrc={imageUrl}
+            imageSrc={imageSrc}
             alt={imageAlt}
             fill={true}
             containerClassName="absolute inset-0 w-full h-full"
@@ -48,30 +48,30 @@ export const FullWidth: React.FC<FullWidthProps> = ({
       {/* Content Overlay */}
       <div className="relative z-10 flex items-center justify-center min-h-[100vh] px-6 md:px-8 lg:px-12">
         <div className="w-full max-w-7xl mx-auto flex flex-col justify-center gap-[26.75rem] py-[8.375rem]">
-          {/* Top Section: Title and Subtitle */}
-          {(title || subtitle) && (
+          {/* Top Section: Headline and Eyebrow */}
+          {(headline || eyebrow) && (
             <div className="flex flex-col gap-[1.4375rem] max-w-[50%]">
-              {title && (
+              {headline && (
                 <Heading
-                  text={title}
+                  text={headline}
                   variant="display"
                   className="text-[#fdf9f4] uppercase"
                 />
               )}
-              {subtitle && (
+              {eyebrow && (
                 <p className="font-medium text-[1.4375rem] leading-[2rem] tracking-[-0.014375rem] text-[#fdf9f4]">
-                  {subtitle}
+                  {eyebrow}
                 </p>
               )}
             </div>
           )}
 
-          {/* Bottom Section: Quote and Project Details */}
+          {/* Bottom Section: Body and Project Details */}
           <div className="flex flex-col lg:flex-row items-start justify-between w-full gap-6">
-            {/* Quote */}
-            {quote && (
+            {/* Body */}
+            {body && (
               <p className="font-medium text-[1.4375rem] leading-[2rem] tracking-[-0.014375rem] text-[#fdf9f4] flex-1 max-w-[25rem]">
-                {quote}
+                {body}
               </p>
             )}
 
