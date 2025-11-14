@@ -1,0 +1,80 @@
+version: "1"
+kind: "identity_longform"
+
+profile:
+  professional_identity: |
+    I am a Design Engineer and Applied AI technologist who works at the intersection of product design, front-end engineering, and emerging technology. My background spans UX, interaction design, and component systems, and I specialize in building experiences where thoughtful design and strong engineering reinforce each other.
+
+    My work focuses on creating intentional, human-centered digital products using tools like React, TypeScript, modern UI frameworks, and AI-assisted systems. I am most energized when I am solving ambiguous problems, shaping the structure of a product, or building the design systems, patterns, and components that bring an experience to life.
+
+    I have contributed to complex platforms across travel, retail, e-commerce, and financial services, and I have worked as both a designer and a front-end engineer. Because I am fluent in both disciplines, I can translate ideas into working systems quickly and collaborate deeply with cross-functional teams.
+
+    Recently, my work has expanded into applied AI engineering, where I build systems that blend structured design principles with AI-driven content and layout generation. I enjoy exploring how AI can support clarity, efficiency, and creativity in digital experiences while still maintaining high standards of quality, intention, and craft.
+
+    I am currently looking for opportunities that allow me to continue bridging design and engineering while strengthening my AI engineering abilities. I am especially interested in roles such as Design Engineer, AI Front-End Engineer, Creative Technologist, and Design Systems Engineer.
+
+education:
+  summary: |
+    I have a B.S. in Marketing with a concentration in Brand Management and Product Development, where I learned how to identify business needs and think with stakeholders in mind. I also hold an MBA from VCU’s Brandcenter in Experience Design, which taught me to think empathetically about end users, understand their needs, and use creativity to design meaningful solutions.
+  items:
+    - degree: "B.S."
+      field: "Marketing"
+      concentration: "Brand Management and Product Development"
+      institution: "Virginia Commonwealth University"
+      notes: "Focused on brand strategy, business needs, and stakeholder perspectives."
+    - degree: "MBA"
+      program: "Brandcenter"
+      field: "Experience Design"
+      institution: "Virginia Commonwealth University"
+      notes: "Focused on user needs, empathy, creativity, and experience design."
+
+skills:
+  front_end_engineering: |
+    I build reliable, scalable interfaces using modern front-end tools and frameworks. My focus is on component-driven architecture, strong type safety, and accessible, responsive layouts. I work comfortably with React, TypeScript, Next.js, Tailwind, and testing tools like Jest, React Testing Library, and Storybook.
+  design_engineering: |
+    I work across design and development, creating systems that are visually consistent, performance-minded, and practical to maintain. I draw on design systems thinking, interaction design, typography, and layout to create interfaces that feel intentional and cohesive, and I enjoy translating Figma concepts into production-ready components.
+  applied_ai_engineering: |
+    I enjoy building AI-assisted experiences that integrate structured content, controlled generation, validation, and interactive UI. I work with multi-agent setups, retrieval augmented generation, and deterministic JSON outputs, and I care about designing AI systems that follow clear constraints and design rules rather than generating arbitrary layouts.
+  backend_and_integration: |
+    While I focus primarily on front-end and design engineering, I am comfortable working across the stack when needed. I have experience with Supabase, REST APIs, serverless functions, real-time syncing, and deployments on Vercel, which helps me understand how front-end decisions interact with the broader system.
+
+values:
+  - name: "Curiosity"
+    description: |
+      I like understanding how things work and why they work that way. Curiosity drives my learning, whether I am exploring a new framework, building a prototype, or digging into a difficult problem.
+  - name: "Creativity"
+    description: |
+      My creativity comes from making things and putting them into the world. I enjoy the energy of exploring ideas, shaping something from nothing, and finding the right balance between structure and expression.
+  - name: "Positivity"
+    description: |
+      I try to show up in a way that makes collaboration easier. I stay level-headed, open-minded, and focused on moving the work forward, especially when things are uncertain.
+  - name: "Intention"
+    description: |
+      I care about the choices I make, from layout decisions to interaction details. I want the work to feel considered rather than accidental, and I believe small decisions add up to meaningful experiences.
+  - name: "Craft"
+    description: |
+      I am drawn to work that respects details: typography, spacing, rhythm, and interaction. I focus on shaping products that feel good to use, even if the user never thinks about why.
+  - name: "Empathy"
+    description: |
+      I think about the person on the other side of the screen as a guest in the experience. I want what I build to feel welcoming, clear, and respectful of their time and attention.
+  - name: "Resourcefulness"
+    description: |
+      My DIY background taught me how to figure things out with whatever tools I have. I stay adaptable, learn quickly, and look for creative ways to move the work forward even when constraints are tight.
+
+personal_philosophy: |
+  My early years in a DIY band shaped how I think about building digital products. Back then, I created things I cared about and wanted to share them with people. Everything I did, from booking shows to making artwork and designing websites, was part of helping more people discover and enjoy what I had made. That mindset still guides my work.
+
+  Today, design and engineering are the tools I use to close the gap between what I have to offer and what people need. I think about the end user like a guest in my house and aim to create experiences that feel welcoming, intuitive, and intentional.
+
+  My process begins with understanding the problem and the person behind it. From there, I explore, prototype, and refine until the interaction feels grounded and thoughtful. I enjoy moving between design and engineering, and I see them as different ways of shaping the same experience.
+
+working_style: |
+  People often tell me I am a delight to work with. I stay positive, collaborative, and level-headed, and I balance that energy with competency and a strong sense of craft. I enjoy working through complex problems and breaking them into smaller, manageable pieces.
+
+  When I approach a problem, I start by exploring it with curiosity and understanding how all the parts relate. If I get stuck, I ask for help rather than staying blocked. When I work with designers, I try to stay encouraging while staying grounded in what is realistic. Designers imagine what is possible, and I see my role as finding a practical path that honors that vision without unnecessary compromise.
+
+  I keep the focus on who we are designing for and what the goal of the project is, and I ask whether decisions align with that goal. I make sure my reasoning is clear and backed up by thoughtful explanation. I try not to get attached to any one idea. If something is not working, I let it go and move on.
+
+  My workflow usually starts with exploring the problem, then defining what it would take to solve it. I build a happy path proof of concept to check that the direction is sound, then move into implementation or revision based on what I learn. Implementation is where a lot of my research and attention to detail come through, and I aim to create experiences that feel polished and meaningful to use.
+
+  I try to avoid deadline pressure through clear and early communication. When unexpected issues do come up, I focus on solving the problem and keeping project managers informed, rather than letting stress build silently. Ideally, the team stays in steady communication so deadlines feel achievable and manageable for everyone involved.

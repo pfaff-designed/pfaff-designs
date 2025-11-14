@@ -1,0 +1,235 @@
+@import "tailwindcss";
+
+/* Font Face Declarations */
+@font-face {
+  font-family: "PP Neue Montreal";
+  src: url("../../fonts/PPNeueMontreal-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PP Neue Montreal";
+  src: url("../../fonts/PPNeueMontreal-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PP Neue Montreal";
+  src: url("../../fonts/PPNeueMontreal-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PP Neue Montreal";
+  src: url("../../fonts/PPNeueMontreal-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PP Neue Montreal";
+  src: url("../../fonts/PPNeueMontreal-Thin.woff2") format("woff2");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PP Neue Montreal Mono";
+  src: url("../../fonts/PPNeueMontrealMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PP Neue Montreal Mono";
+  src: url("../../fonts/PPNeueMontrealMono-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PP Neue Montreal Mono";
+  src: url("../../fonts/PPNeueMontrealMono-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    /* Color Palette - Raw Colors */
+    --color-dark: #26291D;
+    --color-light: #FDF9F4;
+    --color-primary-light: #E76F51;
+    --color-primary-dark: #FFF8A7;
+    --color-secondary: #9EC8D2;
+    --color-success: #6D7F5C;
+    --color-error: #E75151;
+    --color-hover: #C2C0B4;
+    --color-border: #DAC1BD;
+    --color-yellow: #FFF8A7;
+
+    /* Light Theme Semantic Tokens */
+    --bg-default: #FDF9F4;
+    --bg-surface: #FFFFFF;
+    --text-default: #26291D;
+    --text-muted: #C2C0B4;
+    --accent-primary: #E76F51;
+    --accent-secondary: #9EC8D2;
+    --accent-yellow: #FFF8A7;
+    --border-subtle: #DAC1BD;
+    --state-success: #6D7F5C;
+    --state-error: #E75151;
+    --state-hover: #C2C0B4;
+
+    /* Shadcn-compatible variables */
+    --background: var(--bg-default);
+    --foreground: var(--text-default);
+    --card: var(--bg-surface);
+    --card-foreground: var(--text-default);
+    --popover: var(--bg-surface);
+    --popover-foreground: var(--text-default);
+    --primary: var(--accent-primary);
+    --primary-foreground: var(--bg-default);
+    --secondary: var(--accent-secondary);
+    --secondary-foreground: var(--text-default);
+    --muted: var(--bg-default);
+    --muted-foreground: var(--text-muted);
+    --accent: var(--state-hover);
+    --accent-foreground: var(--text-default);
+    --destructive: var(--state-error);
+    --destructive-foreground: var(--bg-default);
+    --border: var(--border-subtle);
+    --input: var(--border-subtle);
+    --ring: var(--accent-primary);
+    --radius: var(--radius-md);
+
+    /* Typography Scale (Major 4th ~1.333) */
+    --font-size-xs: 12px;
+    --font-size-sm: 14px;
+    --font-size-base: 16px;
+    --font-size-lg: 21px;
+    --font-size-xl: 28px;
+    --font-size-2xl: 37px;
+    --font-size-3xl: 50px;
+    --font-size-4xl: 67px;
+
+    /* Line Heights */
+    --line-height-tight: 1.2;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.6;
+
+    /* Spacing Scale (modular, base 8+) */
+    --spacing-1: 4px;
+    --spacing-2: 8px;
+    --spacing-3: 12px;
+    --spacing-4: 16px;
+    --spacing-5: 20px;
+    --spacing-6: 24px;
+    --spacing-8: 32px;
+    --spacing-9: 36px;
+    --spacing-10: 40px;
+    --spacing-12: 48px;
+    --spacing-16: 64px;
+    --spacing-18: 72px;
+    --spacing-24: 96px;
+    --spacing-36: 144px;
+
+    /* Grid System */
+    --grid-margin-mobile: 20px;
+    --grid-margin-tablet: 24px;
+    --grid-margin-desktop: 32px;
+    --grid-gutter-mobile: 16px;
+    --grid-gutter-tablet: 20px;
+    --grid-gutter-desktop: 24px;
+
+    /* Border Radius */
+    --radius-xs: 2px;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  /* Dark Theme (future support) */
+  [data-theme="dark"] {
+    --bg-default: #26291D;
+    --bg-surface: #26291D;
+    --text-default: #FDF9F4;
+    --text-muted: #C2C0B4;
+    --accent-primary: #FFF8A7;
+    --accent-secondary: #9EC8D2;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--border-subtle);
+  }
+
+  html {
+    font-family: "PP Neue Montreal", system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    background-color: var(--bg-default);
+    color: var(--text-default);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography Base Styles */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--text-default);
+    font-weight: 500;
+    line-height: var(--line-height-tight);
+  }
+
+  h1 {
+    font-size: var(--font-size-3xl);
+  }
+
+  h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  h3 {
+    font-size: var(--font-size-xl);
+  }
+
+  h4 {
+    font-size: var(--font-size-lg);
+  }
+
+  /* Small text / meta / code */
+  code,
+  kbd,
+  samp,
+  .font-mono {
+    font-family: "PP Neue Montreal Mono", "Courier New", monospace;
+    font-size: var(--font-size-xs);
+  }
+
+  /* Reset */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+}

@@ -1,0 +1,39 @@
+version: "1"
+kind: "project_longform"
+
+project:
+  id: "tanger-outlets"
+  title: "Tanger Outlets Digital Experience"
+  client: "Tanger Outlets"
+  industry: "Retail, E-commerce"
+  role: "Front-End Engineer / Technologist"
+
+context: |
+  Tanger Outlets needed an updated digital experience that better reflected their modern retail brand. The redesign spanned marketing pages, promotional modules, retail listings, and content blocks that needed to be flexible enough to support ongoing updates. The work required close collaboration between design, engineering, and client teams.
+
+  Through AKQA, I worked as a front-end engineer focused on turning Figma designs into reusable, responsive components that could adapt to many use cases across the Tanger site.
+
+problem: |
+  Tanger’s existing platform needed more consistent components, clearer layouts, and more flexible content modules. Promotions, retail content, and marketing updates all needed to be easier to support, and the experience needed to be more polished across mobile and desktop screens.
+
+solution: |
+  I developed a set of component-driven UI modules using React and TypeScript. The work required translating design concepts into maintainable components that fit Tanger’s brand system and supported content variations. I focused heavily on responsive behavior to ensure the experience felt seamless across breakpoints.
+
+  I also collaborated with designers and art directors to refine the details—spacing, hierarchy, alignment, and micro-interactions—to bring clarity and cohesion to the experience.
+
+process: |
+  I began by reviewing the design specifications for each module and identifying the best architectural approach for flexibility and reuse. I then built components using predictable state handling and clear props structures.
+
+  Throughout implementation, I worked closely with designers to adjust interactions, refine spacing, and ensure the UI behaved as intended. On the engineering side, I partnered with backend teams to integrate dynamic content and ensure components rendered correctly with real data.
+
+  I tested everything across multiple devices to confirm that breakpoints, typography, and layout held together. The team iterated quickly, so communication and responsiveness were essential to keeping everything aligned.
+
+outcomes: |
+  The new components supported a more cohesive and modern digital experience for Tanger. Marketing teams gained flexible modules they could reuse across the site, and the updated layouts improved readability and navigation. The final work helped strengthen Tanger’s brand presence and made maintenance more efficient for future updates.
+
+reflections: |
+  This project sharpened my ability to create components that balance design expectations with technical constraints. It reinforced the value of reusable architecture, especially for marketing-driven platforms where content needs to evolve frequently. I enjoyed shaping UI patterns that felt intentional, clean, and reliable at scale.
+
+links:
+  - label: "Tanger Outlet"
+    url: "https://www.tanger.com/"

@@ -1,0 +1,265 @@
+Frontend Development Rules (dev-rules)
+
+These rules govern how the frontend is built for the generative-UI portfolio project. They are written for:
+	•	Human developers
+	•	AI coding assistants (Cursor, etc.)
+
+The goal is to keep the codebase:
+	•	Predictable
+	•	Testable
+	•	Accessible
+	•	Visually consistent
+	•	Safe for generative rendering
+
+⸻
+
+1. Tech Stack & Assumptions
+	•	Framework: Next.js (App Router)
+	•	Language: TypeScript (strict: true)
+	•	UI Library: React
+	•	Styling: Tailwind CSS (+ minimal global CSS)
+	•	Components: shadcn/ui + custom components
+	•	Validation: Zod
+	•	Testing: Jest + React Testing Library (unit) + Storybook for visual testing
+
+No component in the generative path performs data fetching or calls AI directly.
+
+⸻
+
+2. Project Structure
+
+All source code lives under src/.
+
+src/
+  app/                 # Next.js routes
+  components/
+    atoms/
+    molecules/
+    organisms/
+    page-components/
+    templates/
+    pages/
+    ui/                # shadcn-derived primitives
+  lib/
+    ai/                # orchestrator/copywriter clients, schemas
+    kb/                # KB fetchers + mappers
+    registry/          # component registry + types
+    utils/             # generic helpers
+    validation/        # shared Zod schemas
+  styles/
+    globals.css
+  tests/
+    e2e/               # optional end-to-end tests
+
+Each component gets its own folder:
+
+src/components/<layer>/ComponentName/
+  ComponentName.tsx
+  ComponentName.stories.tsx
+  index.ts
+  tests/
+    ComponentName.test.tsx
+
+index.ts re-exports the main component.
+
+⸻
+
+3. Component Layers & Responsibilities
+
+3.1 Atoms
+	•	Examples: Text, Heading, Badge, Button, Icon wrappers
+	•	Behavior:
+	•	Purely presentational
+	•	No data fetching
+	•	No domain knowledge (no “case study” awareness)
+	•	Minimal or no internal state (UI-only, like open/closed)
+	•	Props: Simple, explicit prop types
+
+3.2 Molecules
+	•	Examples: BadgeRow, MetricList, MediaFigure, BulletList
+	•	Behavior:
+	•	Compose atoms
+	•	Still no data fetching
+	•	Limited layout decisions
+	•	Domain light: they understand structures like metrics or points but not KB or AI
+
+3.3 Organisms
+	•	Examples: CaseStudySection, SkillsGrid, RoleSection, CaseStudyHero
+	•	Behavior:
+	•	Domain-shaped props (e.g. sectionType: "context" | "problem" | ...)
+	•	Can encode small domain layout rules (e.g. where metrics vs body vs media go)
+	•	No data fetching, no AI calls
+	•	Receive fully-resolved props from renderer or page-components
+
+3.4 Page Components
+	•	Examples: CaseStudyPageShell, ExperiencePageShell, SkillsPageShell
+	•	Behavior:
+	•	Compose organisms into a full page layout
+	•	Know about pageKind, audience, etc.
+	•	In generative path: mostly structured by renderer/orchestrator JSON
+	•	For non-AI pages: may receive data via props from the route file
+
+3.5 Templates
+	•	Examples: CaseStudyTemplate, SkillsTemplate
+	•	Behavior:
+	•	Higher-level layout recipes
+	•	Compose page-components + organisms
+	•	No data fetching
+	•	Not directly used by the Orchestrator in v1 (manual-only)
+
+3.6 Pages
+	•	Location: src/components/pages and route-level components in src/app
+	•	Behavior:
+	•	Route-aware
+	•	May perform data fetching (static/SSR) for non-AI content
+	•	Decide when to mount the Composer
+	•	No low-level presentational code (that lives in components)
+
+⸻
+
+4. Generative vs Manual Components
+	•	Components in atoms, molecules, organisms, and selected page-components may be used in the Component Registry for generative layouts.
+	•	Components in templates and pages are manual-only and must not be referenced by the Orchestrator.
+
+Registry entries must explicitly define which components are safe for AI orchestration.
+
+⸻
+
+5. TypeScript & Validation
+	•	tsconfig must use strict: true.
+	•	Avoid any in production code. If absolutely necessary, document why.
+	•	All props must have explicit TypeScript types.
+	•	Use Zod for:
+	•	Orchestrator JSON (PageJSON, BlockJSON, MediaJSON)
+	•	Registry entries (propsSchema)
+	•	API input/output validation
+
+Example registry entry type:
+
+export type RegistryEntry = {
+  name: string;
+  component: React.ComponentType<any>;
+  category: "atom" | "molecule" | "organism" | "layout" | "utility";
+  allowedChildren: string[];
+  allowedParents: string[] | "*";
+  propsSchema: z.ZodTypeAny;
+};
+
+The Renderer must validate all Orchestrator JSON using Zod before rendering.
+
+⸻
+
+6. Styling & Layout
+
+6.1 Tailwind Usage
+	•	Tailwind is the primary styling mechanism.
+	•	Prefer utility classes over ad-hoc CSS.
+	•	Global CSS (styles/globals.css) is only for:
+	•	Reset/normalize
+	•	Typography base styles
+	•	CSS variables (colors, spacing, radii, etc.)
+	•	No component-specific CSS files.
+    •	ALWAYS use rem over px
+    
+6.2 shadcn/ui
+	•	All shadcn primitives live in src/components/ui.
+	•	Customize theme via design tokens (colors, radii, spacings) rather than inline overrides when possible.
+	•	When composing shadcn components into project-specific ones, place them in atoms/ or molecules/.
+
+6.3 Layout Primitives
+
+Create and reuse layout primitives instead of ad-hoc flex/grid.
+
+Examples:
+	•	Container – centers content, sets max-width
+	•	Section – vertical spacing between sections, background variants
+	•	Stack – vertical stack with configurable gap
+	•	Grid – standardized grid for cards and galleries
+
+Pages and organisms must compose these primitives instead of reinventing layout each time.
+
+⸻
+
+7. Data Fetching & Async Rules
+	•	No data fetching in registry components (atoms, molecules, organisms, generative page-components).
+	•	All generative data is fetched:
+	•	In API routes under app/api/
+	•	In lib/ai and lib/kb as reusable helpers
+	•	Route-level components (src/app/.../page.tsx) may fetch for static/non-AI content.
+
+Generative components always receive plain props.
+
+⸻
+
+8. AI / Generative Guardrails
+
+These rules are primarily for AI assistants (e.g., Cursor):
+	•	Do not modify:
+	•	Core architecture docs
+	•	dev-rules and design-rules
+	•	Registry type definitions
+	•	Renderer validation logic
+	•	Without explicit user instruction.
+	•	When adding a new generative component:
+	1.	Create it under the correct layer folder.
+	2.	Add ComponentName.tsx, .stories.tsx, index.ts, tests/ComponentName.test.tsx.
+	3.	Register it in the Component Registry with:
+	•	name
+	•	category
+	•	allowedChildren
+	•	allowedParents
+	•	propsSchema
+	•	Never:
+	•	Call AI directly from components
+	•	Fetch from the KB directly in components
+	•	Bypass Renderer validation
+
+⸻
+
+9. Storybook & Testing
+
+Storybook
+	•	Every component in atoms/, molecules/, organisms/, and page-components/ should have a Storybook file.
+	•	Stories should include at least:
+	•	Default state
+	•	Edge case (long text, no media, etc.)
+	•	Any variant props
+
+Unit Tests
+	•	Use Jest + React Testing Library for:
+	•	Critical interactive components
+	•	Renderer behavior
+	•	Registry/validation logic
+
+Focus tests on:
+	•	Accessibility behaviors
+	•	Conditional rendering (with/without media, metrics, etc.)
+	•	Regression coverage for orchestrated layouts.
+
+⸻
+
+10. Performance & Accessibility
+	•	Use Next/Image (or equivalent) for images where possible.
+	•	Lazy-load media-heavy sections.
+	•	Avoid unnecessary re-renders by keeping components pure.
+
+Accessibility rules:
+	•	All interactive elements must have proper roles and labels.
+	•	All media must have alt text.
+	•	Maintain sufficient color contrast.
+	•	Keyboard navigation must be supported across the site.
+
+⸻
+
+11. Summary
+
+These dev rules define how the frontend is built:
+	•	Clear component layering
+	•	Strong TypeScript + Zod validation
+	•	Tailwind + shadcn for styling
+	•	No data fetching in generative components
+	•	Strict AI guardrails for registry and rendering
+
+They are the reference point for both humans and AI assistants when writing or modifying frontend code in this project.---
+alwaysApply: true
+---

@@ -1,0 +1,59 @@
+{
+    "version": 1,
+    "kind": "project_facts",
+    "projectId": "tanger-outlets",
+    "client": "Tanger Outlets",
+    "industry": "Retail, E-commerce",
+    "timeline": {
+      "year": 2023,
+      "duration": "Multi-phase engagement"
+    },
+    "role": "Front-End Engineer / Technologist",
+    "team": {
+      "company": "AKQA",
+      "collaborators": [
+        "Designers",
+        "Art Directors",
+        "Project Managers",
+        "Backend Engineers"
+      ]
+    },
+    "projectSummary": "Built responsive, component-driven UI for Tanger’s retail and brand experience, supporting new layouts, interactive modules, and marketing-driven content updates.",
+    "problem": {
+      "summary": "Tanger needed a refreshed digital experience that modernized their brand presentation, improved site clarity, and supported flexible content updates across a wide variety of retail pages."
+    },
+    "goals": [
+      "Implement flexible components for marketing and retail modules",
+      "Improve responsiveness across all major breakpoints",
+      "Collaborate with design to refine interaction and layout details",
+      "Strengthen visual consistency throughout the platform"
+    ],
+    "responsibilities": [
+      "Building React components aligned with Figma specifications",
+      "Creating reusable patterns for retail content and promotional modules",
+      "Supporting responsive behavior across different device sizes",
+      "Collaborating with designers on polish and interaction details",
+      "Ensuring accessibility and visual consistency",
+      "Working with backend engineers to integrate dynamic content"
+    ],
+    "skillsUsed": [
+      "React",
+      "TypeScript",
+      "Responsive design",
+      "Component-driven architecture",
+      "Tailwind CSS",
+      "UI refinement",
+      "Cross-functional collaboration"
+    ],
+    "outcomes": [
+      "Delivered flexible UI modules used across the Tanger digital ecosystem",
+      "Improved clarity and visual consistency across brand and retail pages",
+      "Supported faster iteration on marketing and promotional content"
+    ],
+    "links": [
+      {
+        "label": "Tanger Outlet",
+        "url": "https://www.tanger.com/"
+      }
+    ]
+  }

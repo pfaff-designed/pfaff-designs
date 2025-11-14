@@ -1,0 +1,41 @@
+version: "1"
+kind: "project_longform"
+
+project:
+  id: "capital-one-travel"
+  title: "Capital One Travel"
+  client: "Capital One"
+  industry: "Travel, Financial Services"
+  role: "Front-End Engineer / Technologist"
+
+context: |
+  Capital One Travel is a large-scale booking platform built to help travelers get more value from their rewards. The experience spans search, booking, pricing, offers, loyalty benefits, and customer support. Because of the scale of the platform, even small changes require careful engineering, thoughtful UI decisions, and strong coordination across teams.
+
+  I worked as a front-end engineer through AKQA, collaborating with designers, art directors, product owners, and back-end teams. Much of the work centered on translating detailed design specifications into modular components that could support evolving user flows.
+
+problem: |
+  Parts of the booking experience needed clearer UI patterns and more consistent components. New features in the rewards flow also required updates to the system, which meant translating complex interactions into stable, maintainable components.
+
+solution: |
+  I built and refined a series of front-end components using React and TypeScript, working directly with designers to ensure every detail aligned with interaction expectations. I focused on delivering components that were flexible, predictable, and easy to reuse so future updates could be implemented without rewriting the UI.
+
+  Because the travel platform has many moving pieces, clarity and consistency were essential. I helped ensure new modules fit cleanly into the existing system and supported responsive layouts that worked well on all devices.
+
+process: |
+  My workflow started with reviewing design files and validating technical feasibility with the broader team. I collaborated closely with designers to refine spacing, layout, and behavior, and I built modular components that followed Capital One’s design system guidelines.
+
+  After implementation, I worked through design QA, testing, and iteration. I also supported cross-browser testing and assisted other engineers by documenting patterns and edge cases. Throughout the project, communication was key—small UI details often had significant impact in a product as complex as a travel booking system.
+
+outcomes: |
+  The components I developed became part of updated travel flows, supporting new booking logic, rewards interactions, and UI improvements. The work strengthened consistency across the platform and made it easier for teams to extend the system without rebuilding components from scratch.
+
+  The project also improved the user experience by clarifying interactions and strengthening visual alignment across the booking journey.
+
+reflections: |
+  This project sharpened my ability to collaborate across disciplines on a high-stakes, detail-heavy experience. It reinforced the importance of predictable components and clear front-end structure, especially when multiple teams rely on the same UI patterns.
+
+  I enjoyed the level of craftsmanship required to make complex flows feel simple, and it gave me deeper insight into building design-system-friendly components at scale.
+
+links:
+  - label: "Capital One Travel"
+    url: "https://capitalonetravel.com/"

@@ -1,0 +1,61 @@
+{
+    "version": 1,
+    "kind": "project_facts",
+    "projectId": "capital-one-travel",
+    "client": "Capital One Travel",
+    "industry": "Travel, Financial Services",
+    "timeline": {
+      "year": 2023,
+      "duration": "Multi-sprint engagement"
+    },
+    "role": "Front-End Engineer / Technologist",
+    "team": {
+      "company": "AKQA",
+      "collaborators": [
+        "Designers",
+        "Art Directors",
+        "Product Owners",
+        "Back-end Engineers",
+        "QA"
+      ]
+    },
+    "projectSummary": "Developed flexible, reusable front-end components and UI patterns for Capital One Travel, supporting new booking flows, UI updates, and user experience improvements.",
+    "problem": {
+      "summary": "Capital One Travel needed to enhance parts of their booking platform with clearer UI patterns, more consistent components, and improved user flows for rewards-focused travelers."
+    },
+    "goals": [
+      "Support new booking and rewards flow updates",
+      "Improve clarity and usability across travel modules",
+      "Translate complex design requirements into stable components",
+      "Strengthen consistency across the travel experience"
+    ],
+    "responsibilities": [
+      "Building React components aligned with Capital One’s design system",
+      "Collaborating closely with designers to refine UI patterns",
+      "Translating Figma interactions into stable, predictable components",
+      "Implementing responsive layouts for travel modules",
+      "Improving clarity through front-end behavior and interaction polish",
+      "Supporting design QA and cross-browser testing"
+    ],
+    "skillsUsed": [
+      "React",
+      "TypeScript",
+      "Next.js",
+      "Design-engineering collaboration",
+      "Responsive layout",
+      "UI polish",
+      "Design system implementation",
+      "Component-driven architecture"
+    ],
+    "outcomes": [
+      "Delivered flexible UI components used across new travel booking flows",
+      "Improved clarity and interaction patterns for rewards and purchase flows",
+      "Strengthened cross-team alignment on front-end UX details"
+    ],
+    "links": [
+      {
+        "label": "Capital One Travel",
+        "url": "https://capitalonetravel.com/"
+      }
+    ]
+  }

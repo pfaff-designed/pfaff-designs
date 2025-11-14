@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "kind": "project_facts",
+    "projectId": "coca-cola-creative-technology",
+    "client": "Coca-Cola",
+    "industry": "Brand, Creative Technology, Innovation",
+    "timeline": {
+      "year": 2023,
+      "duration": "Innovation sprint"
+    },
+    "role": "Creative Technologist / Front-End Engineer",
+    "team": {
+      "company": "AKQA",
+      "collaborators": [
+        "Designers",
+        "Art Directors",
+        "Creative Directors",
+        "AI/ML Experimentation Team"
+      ]
+    },
+    "projectSummary": "Prototyped AI-powered interactive experiences for Coca-Cola, including an AI-enabled vending machine concept that analyzed hydration signals and recommended products.",
+    "problem": {
+      "summary": "Coca-Cola was exploring how emerging AI capabilities could create more personalized, engaging brand experiences for retail and experiential environments."
+    },
+    "goals": [
+      "Prototype AI-driven interactive touchpoints",
+      "Translate creative concepts into working demos",
+      "Experiment with multimodal AI inputs and outputs",
+      "Showcase feasibility for future retail experiences"
+    ],
+    "responsibilities": [
+      "Prototyping interactive AI features",
+      "Building front-end interfaces for concept demos",
+      "Collaborating with designers and art directors on experiential flows",
+      "Rapid iteration across creative and technical concepts",
+      "Integrating AI classification and recommendation logic into UI demos"
+    ],
+    "skillsUsed": [
+      "Creative technology prototyping",
+      "Front-end engineering",
+      "Experience design",
+      "Rapid iteration",
+      "AI-assisted concept development",
+      "Collaborative ideation with design and creative leadership"
+    ],
+    "outcomes": [
+      "Delivered working prototypes for AI-enabled retail interactions",
+      "Helped validate feasibility of the AI vending concept",
+      "Enabled creative and leadership teams to visualize future brand experiences"
+    ],
+    "links": []
+  }

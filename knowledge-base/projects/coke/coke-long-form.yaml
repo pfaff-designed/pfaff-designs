@@ -1,0 +1,39 @@
+version: "1"
+kind: "project_longform"
+
+project:
+  id: "coca-cola-creative-technology"
+  title: "Coca-Cola Creative Technology Prototyping"
+  client: "Coca-Cola"
+  industry: "Brand, Creative Technology, Innovation"
+  role: "Creative Technologist / Front-End Engineer"
+
+context: |
+  Coca-Cola was exploring ways to bring AI into their retail and experiential touchpoints. The goal was to imagine what the future of vending machines, product interactions, and brand experiences could look like if they were powered by intelligent, personalized technology.
+
+  Through AKQA, I worked as a creative technologist supporting designers, art directors, and creative leadership. My role was to help translate early creative concepts into functional prototypes that made these ideas tangible.
+
+  One of the most notable explorations was an AI-enabled vending machine that could analyze a person’s hydration signals and recommend the most appropriate product. While the concept was experimental, it provided a way for the team to push the boundaries of what AI could do in a retail environment.
+
+problem: |
+  Coca-Cola needed a way to evaluate new AI-driven brand experiences without committing to full product development. They wanted working prototypes that showed how AI could personalize interactions, recommend products, or adapt based on user input.
+
+solution: |
+  I helped build front-end prototypes that connected to AI classification logic. These demos allowed the team to simulate different interactions, test user flows, and evaluate how AI could complement the brand experience.
+
+  I collaborated closely with designers and art directors to bring their creative ideas into a working form. The UI elements needed to be simple, expressive, and clear enough to support rapid iteration as the team explored different versions of the experience.
+
+process: |
+  I began by working with the creative team to outline the intended user journey and the types of AI inputs and outputs the concept would use. From there, I built interactive front-end prototypes that could simulate hydration detection, product recommendations, and adaptive states.
+
+  These prototypes evolved quickly as creative leadership refined the experience. I adjusted the UI, refined interactions, and aligned everything with Coca-Cola’s tone and visual direction. Because this was a rapid innovation sprint, the work required flexible thinking and tight collaboration between design and engineering.
+
+outcomes: |
+  The prototypes helped the Coca-Cola team understand how AI could enhance everyday brand interactions. They made abstract ideas concrete and gave leadership a clear sense of what future retail experiences could look like.
+
+  The work provided a foundation for exploring AI-assisted product selection, personalized recommendations, and adaptive experiential environments.
+
+reflections: |
+  This project was a reminder of how valuable creative technology can be in early-stage exploration. I enjoyed working closely with designers and creative directors to turn imaginative ideas into something people could interact with. It sharpened my ability to build fast, expressive prototypes and strengthened my appreciation for how AI can support meaningful brand experiences.
+
+links: []

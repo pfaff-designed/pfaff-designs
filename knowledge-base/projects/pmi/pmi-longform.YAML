@@ -1,0 +1,35 @@
+version: "1"
+kind: "project_longform"
+
+project:
+  id: "pmi-agile-certification"
+  title: "PMI Agile Certification Site"
+  client: "PMI (Project Management Institute)"
+  industry: "Professional Certification, Education"
+  role: "Front-End Engineer / Technologist"
+
+context: |
+  PMI is a globally recognized organization in the project management and agile certification space. They needed a refreshed site for their Agile Certified Practitioner (ACP) program that communicated the value of the certification in a clear and trustworthy way. The experience had to support users across a wide range of backgrounds, devices, and levels of familiarity with agile methods.
+
+  The project was delivered through AKQA, where I worked alongside designers, art directors, project managers, and back-end engineers to build a responsive and accessible experience. My role centered on front-end engineering and design translation, turning Figma concepts into reliable components and layouts.
+
+problem: |
+  The existing presentation of PMI’s Agile certification content felt dated and lacked clarity. Users had trouble understanding key benefits, requirements, and the value of the credential. The page also needed better responsiveness for mobile users and a more modern visual approach that aligned with PMI’s evolving brand.
+
+solution: |
+  I helped build a modern, responsive front-end using React, TypeScript, and Tailwind. I translated design files into accessible components and ensured the visual experience matched PMI’s updated brand direction. The new structure made it easier for users to understand the certification and explore the content on any device.
+
+process: |
+  I started by reviewing the designs with the creative team to ensure that the intended interactions were feasible and could be built cleanly. As I developed the components, I collaborated closely with designers to refine spacing, hierarchy, and layout details.
+
+  My workflow centered on modular components, predictable state handling, and strong accessibility practices. I tested all work across multiple breakpoints and worked with the back-end team to integrate dynamic content. Throughout the process, I focused on ensuring the pages felt unified, readable, and consistent across viewports.
+
+outcomes: |
+  The updated site improved clarity around PMI’s Agile certification and delivered a more modern, responsive experience. The components proved reusable and maintainable for future updates, and the final build aligned with PMI’s visual and accessibility standards. The redesign made it easier for users to understand the certification value and navigate the information confidently.
+
+reflections: |
+  This project reinforced my approach to design-engineering collaboration. Working closely with designers helped ensure the build matched the intended experience without unnecessary complexity. It also deepened my practice of balancing clarity, readability, and accessibility in marketing-oriented pages. The work further shaped my ability to merge strong engineering with thoughtful design.
+
+links:
+  - label: "PMI Agile Certification Overview"
+    url: "https://www.pmi.org/certifications/agile-acp?gad_campaignid=21784826064&gbraid=0AAAAADkaZHu3l9j1xQG5OHP9M7-yCdDtG"
