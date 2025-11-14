@@ -3,26 +3,34 @@ import { ContentBlock, type ContentBlockItem } from "@/components/molecules/Cont
 import { ImageContainer } from "@/components/atoms/ImageContainer";
 
 export interface TwoColumnImageProps {
-  contentBlocks?: Array<{
-    headline: string;
-    items: ContentBlockItem[];
-    headlineVariant?: "display" | "hero" | "headline" | "subheading" | "h1" | "h2" | "h3";
-  }>;
-  imageUrl?: string;
+  headline?: string;
+  body?: string;
+  eyebrow?: string;
+  imageSrc?: string;
   imageAlt?: string;
   imageOnRight?: boolean;
 }
 
 export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
-  contentBlocks,
-  imageUrl,
+  headline,
+  body,
+  eyebrow,
+  imageSrc,
   imageAlt = "",
   imageOnRight = true,
 }) => {
-  const imageComponent = imageUrl && (
+  // Convert headline/body to contentBlocks format for ContentBlock component
+  const contentBlocks = headline || body ? [
+    {
+      headline: headline || "",
+      items: body ? [{ body }] : [],
+    }
+  ] : undefined;
+
+  const imageComponent = imageSrc && (
     <div className="flex-1 shrink-0">
       <ImageContainer
-        imageSrc={imageUrl}
+        imageSrc={imageSrc}
         alt={imageAlt}
         aspectRatio={imageOnRight ? "portrait" : "landscape"}
       />

@@ -1,10 +1,11 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { validateSupabaseURL } from "@/lib/utils/urlValidation";
 
 export interface ImageContainerProps {
   imageSrc?: string;
-  alt?: string;
+  alt: string; // Required per architecture
   aspectRatio?: "auto" | "square" | "video" | "portrait" | "landscape" | "wide";
   containerClassName?: string;
   imageClassName?: string;
@@ -32,7 +33,7 @@ const ImageContainer = React.forwardRef<HTMLDivElement, ImageContainerProps>(
       containerClassName,
       imageClassName,
       imageSrc,
-      alt = "",
+      alt,
       fill = true,
       width,
       height,
@@ -42,6 +43,26 @@ const ImageContainer = React.forwardRef<HTMLDivElement, ImageContainerProps>(
     },
     ref
   ) => {
+    // Enforce alt text requirement
+    if (!alt || alt.trim() === "") {
+      console.error("ImageContainer: alt text is required for accessibility");
+      return (
+        <div className={cn("p-4 border border-red-300 bg-red-50 rounded", containerClassName)}>
+          <p className="text-sm text-red-800">Image missing required alt text.</p>
+        </div>
+      );
+    }
+
+    // Validate URL if provided
+    if (imageSrc && !validateSupabaseURL(imageSrc)) {
+      console.error(`Invalid image URL: ${imageSrc}. Only Supabase URLs are allowed.`);
+      return (
+        <div className={cn("p-4 border border-red-300 bg-red-50 rounded", containerClassName)}>
+          <p className="text-sm text-red-800">Invalid image URL. Only Supabase URLs are allowed.</p>
+        </div>
+      );
+    }
+
     const objectFitClass = `object-${objectFit}`;
     const defaultImageSrc =
       "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=60";
@@ -59,20 +80,22 @@ const ImageContainer = React.forwardRef<HTMLDivElement, ImageContainerProps>(
         {fill ? (
           <Image
             src={finalImageSrc}
-            alt={alt || "Image placeholder"}
+            alt={alt}
             fill
             className={cn(objectFitClass, imageClassName)}
             sizes={sizes || "100vw"}
             priority={priority}
+            loading={priority ? undefined : "lazy"}
           />
         ) : (
           <Image
             src={finalImageSrc}
-            alt={alt || "Image placeholder"}
+            alt={alt}
             width={width || 800}
             height={height || 600}
             className={cn(objectFitClass, "w-full h-auto", imageClassName)}
             priority={priority}
+            loading={priority ? undefined : "lazy"}
           />
         )}
       </div>

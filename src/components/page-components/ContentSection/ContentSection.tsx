@@ -27,29 +27,13 @@ export type ContentSectionVariant =
 
 export interface ContentSectionProps {
   variant: ContentSectionVariant;
-  title?: string;
-  titleVariant?: "display" | "hero" | "headline" | "subheading" | "h1" | "h2" | "h3";
-  description?: string;
-  contentBlocks?: Array<{
-    headline: string;
-    items: ContentBlockItem[];
-    headlineVariant?: "display" | "hero" | "headline" | "subheading" | "h1" | "h2" | "h3";
-  }>;
-  leftContent?: string;
-  rightContent?: string;
-  leftLabel?: string;
-  rightLabel?: string;
-  leftImageUrl?: string;
-  leftImageAlt?: string;
-  rightImageUrl?: string;
-  rightImageAlt?: string;
-  imageUrl?: string;
+  // Standardized props (used by most variants)
+  headline?: string;
+  body?: string;
+  eyebrow?: string;
+  imageSrc?: string;
   imageAlt?: string;
-  cards?: Array<{
-    title: string;
-    description?: string;
-    content?: React.ReactNode;
-  }>;
+  // Special props for specific variants
   galleryImages?: Array<{
     url: string;
     alt?: string;
@@ -65,8 +49,14 @@ export interface ContentSectionProps {
     title: string;
     description: string;
   }>;
-  subtitle?: string;
-  quote?: string;
+  leftImageSrc?: string;
+  leftImageAlt?: string;
+  leftLabel?: string;
+  leftContent?: string;
+  rightImageSrc?: string;
+  rightImageAlt?: string;
+  rightLabel?: string;
+  rightContent?: string;
   projectDetails?: {
     client?: string;
     role?: string;
@@ -75,36 +65,34 @@ export interface ContentSectionProps {
   sectionVariant?: "light" | "dark" | "default";
   containerSize?: "default" | "narrow" | "wide";
   className?: string;
+  children?: React.ReactNode;
 }
 
 const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
   (
     {
       variant,
-      title,
-      titleVariant = "headline",
-      description,
-      contentBlocks,
-      leftContent,
-      rightContent,
-      leftLabel,
-      rightLabel,
-      leftImageUrl,
-      leftImageAlt = "",
-      rightImageUrl,
-      rightImageAlt = "",
-      imageUrl,
+      headline,
+      body,
+      eyebrow,
+      imageSrc,
       imageAlt = "",
-      cards,
       galleryImages,
       annotations,
       timelineItems,
-      subtitle,
-      quote,
+      leftImageSrc,
+      leftImageAlt = "",
+      leftLabel,
+      leftContent,
+      rightImageSrc,
+      rightImageAlt = "",
+      rightLabel,
+      rightContent,
       projectDetails,
       sectionVariant = "default",
       containerSize = "default",
       className,
+      children,
     },
     ref
   ) => {
@@ -114,11 +102,11 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
         case "full-width":
           return (
             <FullWidth
-              imageUrl={imageUrl}
+              headline={headline}
+              body={body}
+              eyebrow={eyebrow}
+              imageSrc={imageSrc}
               imageAlt={imageAlt}
-              title={title}
-              subtitle={subtitle}
-              quote={quote}
               projectDetails={projectDetails}
             />
           );
@@ -126,8 +114,10 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
         case "2-column-image-right":
           return (
             <TwoColumnImage
-              contentBlocks={contentBlocks}
-              imageUrl={imageUrl}
+              headline={headline}
+              body={body}
+              eyebrow={eyebrow}
+              imageSrc={imageSrc}
               imageAlt={imageAlt}
               imageOnRight={true}
             />
@@ -136,8 +126,10 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
         case "2-column-image-left":
           return (
             <TwoColumnImage
-              contentBlocks={contentBlocks}
-              imageUrl={imageUrl}
+              headline={headline}
+              body={body}
+              eyebrow={eyebrow}
+              imageSrc={imageSrc}
               imageAlt={imageAlt}
               imageOnRight={false}
             />
@@ -149,9 +141,10 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
         case "text-with-image":
           return (
             <TextWithImage
-              headline={title}
-              body={description}
-              imageUrl={imageUrl}
+              headline={headline}
+              body={body}
+              eyebrow={eyebrow}
+              imageSrc={imageSrc}
               imageAlt={imageAlt}
             />
           );
@@ -159,9 +152,10 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
         case "annotated-visual":
           return (
             <AnnotatedVisual
-              title={title}
-              description={description}
-              imageUrl={imageUrl}
+              headline={headline}
+              body={body}
+              eyebrow={eyebrow}
+              imageSrc={imageSrc}
               imageAlt={imageAlt}
               annotations={annotations}
             />
@@ -170,11 +164,11 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
         case "half-and-half-column":
           return (
             <HalfAndHalfColumn
-              leftImageUrl={leftImageUrl}
+              leftImageSrc={leftImageSrc}
               leftImageAlt={leftImageAlt}
               leftLabel={leftLabel}
               leftContent={leftContent}
-              rightImageUrl={rightImageUrl}
+              rightImageSrc={rightImageSrc}
               rightImageAlt={rightImageAlt}
               rightLabel={rightLabel}
               rightContent={rightContent}
@@ -194,6 +188,7 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
       return (
         <div ref={ref as any} className={className}>
           {renderVariant()}
+          {children}
         </div>
       );
     }
@@ -202,6 +197,7 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
       <Section ref={ref} variant={sectionVariant} className={className}>
         <Container size={containerSize}>
           {renderVariant()}
+          {children}
         </Container>
       </Section>
     );
