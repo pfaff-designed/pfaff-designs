@@ -32,11 +32,11 @@ type Story = StoryObj<typeof ContentSection>;
 export const FullWidth: Story = {
   args: {
     variant: "full-width",
-    imageUrl: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=60",
+    imageSrc: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=60",
     imageAlt: "Background image",
-    title: "Capital One",
-    subtitle: "Subtitle",
-    quote: "THIS IS A HIGH LEVEL SUMMARY I helped build a travel booking platform that improved conversion by 15%.",
+    headline: "Capital One",
+    eyebrow: "Subtitle",
+    body: "THIS IS A HIGH LEVEL SUMMARY I helped build a travel booking platform that improved conversion by 15%.",
     projectDetails: {
       client: "Capital One",
       role: "Developer",
@@ -48,19 +48,9 @@ export const FullWidth: Story = {
 export const TwoColumnImageRight: Story = {
   args: {
     variant: "2-column-image-right",
-    title: "Content with Image Right",
-    contentBlocks: [
-      {
-        headline: "Design System Implementation",
-        items: [
-          {
-            eyebrow: "Approach",
-            body: "Our design system approach focuses on creating reusable components that maintain consistency while allowing for creative flexibility. We've built a comprehensive library that serves multiple products and platforms.",
-          },
-        ],
-      },
-    ],
-    imageUrl: "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=600&h=400&q=60",
+    headline: "Design System Implementation",
+    body: "Our design system approach focuses on creating reusable components that maintain consistency while allowing for creative flexibility. We've built a comprehensive library that serves multiple products and platforms.",
+    imageSrc: "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=600&h=400&q=60",
     imageAlt: "Design system components",
   },
 };
@@ -68,19 +58,9 @@ export const TwoColumnImageRight: Story = {
 export const TwoColumnImageLeft: Story = {
   args: {
     variant: "2-column-image-left",
-    title: "Content with Image Left",
-    contentBlocks: [
-      {
-        headline: "Visual Design Process",
-        items: [
-          {
-            eyebrow: "Methodology",
-            body: "Our visual design process begins with understanding user needs and business goals. Through research, iteration, and collaboration, we create solutions that are both beautiful and functional.",
-          },
-        ],
-      },
-    ],
-    imageUrl: "https://images.unsplash.com/photo-1558655146-364adaf1fcc9?auto=format&fit=crop&w=600&h=400&q=60",
+    headline: "Visual Design Process",
+    body: "Our visual design process begins with understanding user needs and business goals. Through research, iteration, and collaboration, we create solutions that are both beautiful and functional.",
+    imageSrc: "https://images.unsplash.com/photo-1558655146-364adaf1fcc9?auto=format&fit=crop&w=600&h=400&q=60",
     imageAlt: "Design process visualization",
   },
 };
@@ -120,10 +100,10 @@ export const CardGallery: Story = {
 export const TextWithImage: Story = {
   args: {
     variant: "text-with-image",
-    title: "Headline for Case Study Story Telling",
-    description:
+    headline: "Headline for Case Study Story Telling",
+    body:
       "Pfaff Design System is a shared visual language that bridges design and code for all pfaff.design projects. It ensures consistency, efficiency, and accessibility across experiences while keeping space for creative expression. Pfaff Design System is a shared visual language that bridges design and code for all pfaff.design projects. It ensures consistency, efficiency, and accessibility across experiences while keeping space for creative expression. Pfaff Design System is a shared visual language that bridges design and code for all pfaff.design projects. It ensures consistency, efficiency, and accessibility across experiences while keeping space for creative expression. Pfaff Design System is a shared visual language that bridges design and code for all pfaff.design projects. It ensures consistency, efficiency, and accessibility across experiences while keeping space for creative expression. Pfaff Design System is a shared visual language that bridges design and code for all pfaff.design projects. It ensures consistency, efficiency, and accessibility across experiences while keeping space for creative expression. Pfaff Design System is a shared visual language that bridges design and code for all pfaff.design projects. It ensures consistency, efficiency, and accessibility across experiences while keeping space for creative expression.",
-    imageUrl: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=539&h=918&q=60",
+    imageSrc: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=539&h=918&q=60",
     imageAlt: "Case study visualization",
   },
 };
@@ -131,10 +111,10 @@ export const TextWithImage: Story = {
 export const AnnotatedVisual: Story = {
   args: {
     variant: "annotated-visual",
-    title: "Layout 6: \"Annotated Visual\"",
-    description:
+    headline: "Layout 6: \"Annotated Visual\"",
+    body:
       "Columns: 12\n\nContent: Image with numbered or labeled callouts\n\nUse for:\n\nComponent breakdowns\nDiagrams\nDesign explanations\n\nRules:\n\nImage spans 10 cols, centered.\nUse numbered annotations or side callout lines (cols 1–2).\nMaintain equal padding around visual (min 48px).\n\nVisual feel: Analytical, clear, instructional.",
-    imageUrl: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1382&h=918&q=60",
+    imageSrc: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1382&h=918&q=60",
     imageAlt: "Annotated visual",
   },
 };
@@ -142,12 +122,12 @@ export const AnnotatedVisual: Story = {
 export const HalfAndHalfColumn: Story = {
   args: {
     variant: "half-and-half-column",
-    leftImageUrl: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=60",
+    leftImageSrc: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=60",
     leftImageAlt: "Before state",
     leftLabel: "Before",
     leftContent:
       "Pfaff Design System is a shared visual language that bridges design and code for all pfaff.design projects. It ensures consistency, efficiency, and accessibility across experiences while keeping space for creative expression. Pfaff Design System is a shared visual language that bridges design and code for all pfaff.design projects. It ensures consistency, efficiency, and accessibility across experiences while keeping space for creative expression. Pfaff Design System is a shared visual language that bridges design and code for all pfaff.design projects. It ensures consistency, efficiency, and accessibility across experiences while keeping space for creative expression.",
-    rightImageUrl: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=900&q=60",
+    rightImageSrc: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=900&q=60",
     rightImageAlt: "After state",
     rightLabel: "After",
     rightContent:
@@ -158,8 +138,8 @@ export const HalfAndHalfColumn: Story = {
 export const Timeline: Story = {
   args: {
     variant: "timeline",
-    title: "Project Timeline",
-    description: "Key milestones and achievements throughout the project lifecycle",
+    headline: "Project Timeline",
+    body: "Key milestones and achievements throughout the project lifecycle",
     timelineItems: [
       {
         year: "2024 Q1",

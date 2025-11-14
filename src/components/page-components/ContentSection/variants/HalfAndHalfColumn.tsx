@@ -3,22 +3,22 @@ import { BodyText } from "@/components/atoms/BodyText";
 import { ImageContainer } from "@/components/atoms/ImageContainer";
 
 export interface HalfAndHalfColumnProps {
-  leftImageUrl?: string;
+  leftImageSrc?: string;
   leftImageAlt?: string;
   leftLabel?: string;
   leftContent?: string;
-  rightImageUrl?: string;
+  rightImageSrc?: string;
   rightImageAlt?: string;
   rightLabel?: string;
   rightContent?: string;
 }
 
 export const HalfAndHalfColumn: React.FC<HalfAndHalfColumnProps> = ({
-  leftImageUrl,
+  leftImageSrc,
   leftImageAlt = "",
   leftLabel,
   leftContent,
-  rightImageUrl,
+  rightImageSrc,
   rightImageAlt = "",
   rightLabel,
   rightContent,
@@ -28,10 +28,10 @@ export const HalfAndHalfColumn: React.FC<HalfAndHalfColumnProps> = ({
       {/* Left Column */}
       <div className="flex flex-col gap-6 w-full lg:flex-1 lg:min-w-0">
         {/* Image */}
-        {leftImageUrl && (
+        {leftImageSrc && (
           <div className="h-[40.5625rem] w-full relative">
             <ImageContainer
-              imageSrc={leftImageUrl}
+              imageSrc={leftImageSrc}
               alt={leftImageAlt}
               fill={true}
               containerClassName="absolute inset-0 w-full h-full"
@@ -59,10 +59,10 @@ export const HalfAndHalfColumn: React.FC<HalfAndHalfColumnProps> = ({
       {/* Right Column */}
       <div className="flex flex-col gap-6 w-full lg:flex-1 lg:min-w-0">
         {/* Image */}
-        {rightImageUrl && (
+        {rightImageSrc && (
           <div className="h-[40.5625rem] w-full relative">
             <ImageContainer
-              imageSrc={rightImageUrl}
+              imageSrc={rightImageSrc}
               alt={rightImageAlt}
               fill={true}
               containerClassName="absolute inset-0 w-full h-full"
