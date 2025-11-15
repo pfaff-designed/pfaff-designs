@@ -1,4 +1,5 @@
 import * as React from "react";
+import { cn } from "@/lib/utils";
 import { getComponent, hasComponent, isValidChild, componentRegistry } from "@/lib/registry/componentRegistry";
 
 export interface Block {
@@ -435,7 +436,7 @@ export const Renderer: React.FC<RendererProps> = ({ data, className }) => {
   if (!data) {
     console.log("Renderer: No data provided");
     return (
-      <div className={className}>
+      <div className={cn("flex items-center justify-center h-screen", className)}>
         <div className="p-6 text-center text-text-muted">
           <p>No content to display. Ask a question to get started.</p>
         </div>
