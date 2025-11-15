@@ -336,6 +336,9 @@ const renderBlock = (block: Block, parentComponent?: string): React.ReactNode =>
       eyebrow: normalizedProps.eyebrow,
       imageSrc: normalizedProps.imageSrc,
       imageAlt: normalizedProps.imageAlt,
+      hasImageSrc: !!normalizedProps.imageSrc,
+      imageSrcType: normalizedProps.imageSrc ? typeof normalizedProps.imageSrc : "none",
+      imageSrcLength: normalizedProps.imageSrc ? normalizedProps.imageSrc.length : 0,
       // Original props for comparison
       originalProps: {
         headline: props.headline,
