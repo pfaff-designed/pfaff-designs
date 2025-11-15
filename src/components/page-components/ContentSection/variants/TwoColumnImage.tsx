@@ -20,12 +20,17 @@ export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
   imageOnRight = true,
 }) => {
   // Convert headline/body to contentBlocks format for ContentBlock component
-  const contentBlocks = headline || body ? [
+  const contentBlocks: Array<{
+    headline: string;
+    items: ContentBlockItem[];
+    headlineVariant?: "display" | "hero" | "headline" | "subheading" | "h1" | "h2" | "h3";
+  }> = headline || body ? [
     {
       headline: headline || "",
       items: body ? [{ body }] : [],
+      headlineVariant: "headline" as const,
     }
-  ] : undefined;
+  ] : [];
 
   const imageComponent = imageSrc && (
     <div className="flex-1 shrink-0">
@@ -39,7 +44,7 @@ export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
 
   const contentComponent = (
     <div className={`flex-1 ${imageOnRight ? "pb-[6.625rem] pt-[2.1875rem]" : ""}`}>
-      {contentBlocks?.map((block, index) => (
+      {contentBlocks.map((block, index) => (
         <ContentBlock
           key={index}
           headline={block.headline}
