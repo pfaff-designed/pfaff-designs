@@ -92,7 +92,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-default">
       {/* Renderer Content Area */}
-      <div className="pb-[12rem]">
+      <div>
         <Renderer data={renderedContent} />
       </div>
 
