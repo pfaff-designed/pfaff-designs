@@ -114,6 +114,19 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
     const displayQuery = localRecentQuery || recentQuery;
     const displayResponse = recentResponse;
 
+    // Auto-hide the query after 5 seconds
+    React.useEffect(() => {
+      if (displayQuery) {
+        const timer = setTimeout(() => {
+          setLocalRecentQuery(undefined);
+        }, 5000);
+
+        return () => {
+          clearTimeout(timer);
+        };
+      }
+    }, [displayQuery]);
+
     return (
       <div
         ref={ref}
