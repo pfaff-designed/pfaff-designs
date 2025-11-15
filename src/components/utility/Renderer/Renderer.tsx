@@ -1,4 +1,5 @@
 import * as React from "react";
+import { cn } from "@/lib/utils";
 import { getComponent, hasComponent, isValidChild, componentRegistry } from "@/lib/registry/componentRegistry";
 
 export interface Block {
@@ -336,6 +337,9 @@ const renderBlock = (block: Block, parentComponent?: string): React.ReactNode =>
       eyebrow: normalizedProps.eyebrow,
       imageSrc: normalizedProps.imageSrc,
       imageAlt: normalizedProps.imageAlt,
+      hasImageSrc: !!normalizedProps.imageSrc,
+      imageSrcType: normalizedProps.imageSrc ? typeof normalizedProps.imageSrc : "none",
+      imageSrcLength: normalizedProps.imageSrc ? normalizedProps.imageSrc.length : 0,
       // Original props for comparison
       originalProps: {
         headline: props.headline,
@@ -432,7 +436,7 @@ export const Renderer: React.FC<RendererProps> = ({ data, className }) => {
   if (!data) {
     console.log("Renderer: No data provided");
     return (
-      <div className={className}>
+      <div className={cn("flex items-center justify-center h-screen", className)}>
         <div className="p-6 text-center text-text-muted">
           <p>No content to display. Ask a question to get started.</p>
         </div>

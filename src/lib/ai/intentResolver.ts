@@ -1,4 +1,5 @@
-import { anthropic } from "./client";
+import { anthropic, langsmithClient } from "./client";
+import { traceable } from "langsmith/traceable";
 
 export type QueryIntent = "project" | "skills" | "experience" | "general";
 export type Audience = "recruiter" | "freelance_client" | "unknown";
@@ -18,8 +19,10 @@ export interface IntentResult {
 
 /**
  * Resolve user query intent, audience, and page kind
+ * Wrapped with LangSmith tracing for monitoring
  */
-export const resolveIntent = async (query: string): Promise<IntentResult> => {
+const resolveIntentInternal = traceable(
+  async (query: string): Promise<IntentResult> => {
   const prompt = `You are an intent resolver for a portfolio website. Analyze the user query and determine:
 
 1. Intent: What is the user asking about?
@@ -106,5 +109,18 @@ User query: "${query}"`;
       confidence: "low",
     };
   }
+  },
+  {
+    name: "resolve-intent",
+    project_name: "pr-potable-commitment-61",
+    tags: ["intent-resolver", "agent"],
+    metadata: {
+      agent: "intent-resolver",
+    },
+  }
+);
+
+export const resolveIntent = async (query: string): Promise<IntentResult> => {
+  return resolveIntentInternal(query);
 };
 
