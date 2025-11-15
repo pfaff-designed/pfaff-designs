@@ -8,6 +8,7 @@
 import { getMediaById, getMediaByIds } from "@/lib/kb/supabaseLoader";
 import { getMediaURL } from "@/lib/supabase/storage";
 import type { MediaRow } from "@/lib/supabase/types";
+import { traceable } from "langsmith/traceable";
 import yaml from "js-yaml";
 
 export interface MediaResolution {
@@ -24,7 +25,8 @@ export interface MediaResolution {
  * Resolve a single media ID to URL and metadata
  * Returns null if media not found or Supabase not configured
  */
-export async function resolveMediaId(mediaId: string): Promise<MediaResolution | null> {
+const resolveMediaIdInternal = traceable(
+  async (mediaId: string): Promise<MediaResolution | null> => {
   try {
     // Try Supabase first
     const media = await getMediaById(mediaId);
@@ -54,6 +56,19 @@ export async function resolveMediaId(mediaId: string): Promise<MediaResolution |
     console.error(`Error resolving media ID ${mediaId}:`, error);
     return null;
   }
+  },
+  {
+    name: "resolve-media-id",
+    project_name: "pr-potable-commitment-61",
+    tags: ["media-resolver"],
+    metadata: {
+      component: "media-resolver",
+    },
+  }
+);
+
+export async function resolveMediaId(mediaId: string): Promise<MediaResolution | null> {
+  return resolveMediaIdInternal(mediaId);
 }
 
 /**
@@ -61,7 +76,8 @@ export async function resolveMediaId(mediaId: string): Promise<MediaResolution |
  * Returns a map of mediaId -> MediaResolution for efficient lookup
  * Gracefully handles Supabase not being configured
  */
-export async function resolveMediaIds(mediaIds: string[]): Promise<Map<string, MediaResolution>> {
+const resolveMediaIdsInternal = traceable(
+  async (mediaIds: string[]): Promise<Map<string, MediaResolution>> => {
   if (mediaIds.length === 0) {
     return new Map();
   }
@@ -122,6 +138,19 @@ export async function resolveMediaIds(mediaIds: string[]): Promise<Map<string, M
   }
 
   return resolutionMap;
+  },
+  {
+    name: "resolve-media-ids",
+    project_name: "pr-potable-commitment-61",
+    tags: ["media-resolver"],
+    metadata: {
+      component: "media-resolver",
+    },
+  }
+);
+
+export async function resolveMediaIds(mediaIds: string[]): Promise<Map<string, MediaResolution>> {
+  return resolveMediaIdsInternal(mediaIds);
 }
 
 /**
