@@ -436,9 +436,12 @@ export const Renderer: React.FC<RendererProps> = ({ data, className }) => {
   if (!data) {
     console.log("Renderer: No data provided");
     return (
-      <div className={cn("flex items-center justify-center h-screen", className)}>
-        <div className="p-6 text-center text-text-muted">
-          <p>No content to display. Ask a question to get started.</p>
+      <div 
+        className={cn("flex items-center justify-center", className)}
+        style={{ height: "calc(100dvh - 12rem)" }}
+      >
+        <div className="p-6 text-left text-text-muted max-w-[25rem]">
+          <p>Hey 👋, my name is Charles, I'm a design-minded engineer interested in helping you build scalable ai products using generative ui. Thanks for checking out my portfolio don't forget to say hi below vvv</p>
         </div>
       </div>
     );
