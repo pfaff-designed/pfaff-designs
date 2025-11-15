@@ -61,7 +61,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
       <header
         ref={ref}
         className={cn(
-          "relative w-full bg-default",
+          "sticky top-0 z-50 w-full bg-[var(--bg-default)]",
           "flex items-center justify-between",
           "px-[1.5rem] md:px-[2rem] lg:px-[3rem]",
           "h-[4.5rem] md:h-[5rem]",
