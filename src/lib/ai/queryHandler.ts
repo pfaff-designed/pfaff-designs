@@ -18,6 +18,7 @@ import { kbCache } from "@/lib/kb/cache";
 import { generateCopywriterYAML } from "./copywriter";
 import { generateOrchestratorJSON } from "./orchestrator";
 import { componentRegistry } from "@/lib/registry/componentRegistry";
+import { traceable } from "langsmith/traceable";
 
 /**
  * Load Knowledge Base via Supabase, falling back to legacy filesystem data.
@@ -148,8 +149,10 @@ async function getYamlForQuery(
 
 /**
  * Main entry point used by /api/query
+ * Wrapped with LangSmith tracing for monitoring
  */
-export async function handleQuery(query: string): Promise<PageJSON> {
+const handleQueryInternal = traceable(
+  async (query: string): Promise<PageJSON> => {
   try {
     console.time("handleQuery");
     console.time("yaml-resolution");
@@ -210,5 +213,18 @@ export async function handleQuery(query: string): Promise<PageJSON> {
 
     return fallback;
   }
+  },
+  {
+    name: "handle-query",
+    project_name: "pr-potable-commitment-61",
+    tags: ["query-handler", "pipeline"],
+    metadata: {
+      component: "query-handler",
+    },
+  }
+);
+
+export async function handleQuery(query: string): Promise<PageJSON> {
+  return handleQueryInternal(query);
 }
 

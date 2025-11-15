@@ -1,6 +1,8 @@
-import { anthropic } from "./client";
+import { anthropic, langsmithClient } from "./client";
 import type { KBData, ProjectFacts, ProjectLongform } from "@/lib/kb/loader";
 import type { IntentResult } from "./intentResolver";
+import { traceable } from "langsmith/traceable";
+import yaml from "js-yaml";
 
 export interface CopywriterInput {
   userQuery: string;
@@ -9,11 +11,121 @@ export interface CopywriterInput {
 }
 
 /**
+ * Fix duplicate "sections:" keys in YAML by merging them
+ * This handles cases where the AI outputs "sections:" multiple times
+ */
+function fixDuplicateSectionsKey(yamlText: string): string {
+  // Count occurrences of "sections:" at the start of a line (top-level key)
+  // Match "sections:" with minimal or no indentation (top-level key)
+  const sectionsPattern = /^(\s{0,2})sections:\s*$/gm;
+  const matches = Array.from(yamlText.matchAll(sectionsPattern));
+  
+  if (!matches || matches.length <= 1) {
+    // No duplicates, return as-is
+    return yamlText;
+  }
+
+  console.warn(`Found ${matches.length} duplicate "sections:" keys in YAML. Attempting to merge...`);
+
+  // Use the simpler repair function which is more reliable
+  return repairYAMLSimple(yamlText);
+}
+
+/**
+ * Simple YAML repair: remove duplicate "sections:" keys and merge their content
+ */
+function repairYAMLSimple(yamlText: string): string {
+  const lines = yamlText.split("\n");
+  const result: string[] = [];
+  let seenSections = false;
+  let collectingSections = false;
+  const allSections: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    
+    // Check if this is a "sections:" key at the top level (0-2 spaces of indentation)
+    const isSectionsKey = trimmed === "sections:" && line.match(/^\s{0,2}sections:\s*$/);
+    
+    if (isSectionsKey) {
+      if (!seenSections) {
+        // First occurrence - keep it
+        result.push(line);
+        seenSections = true;
+        collectingSections = true;
+      } else {
+        // Duplicate - skip the key, start collecting its content
+        console.warn(`Skipping duplicate "sections:" key at line ${i + 1}`);
+        collectingSections = true;
+      }
+    } else if (collectingSections) {
+      // Check if we've moved to a new top-level key (starts at column 0 or with minimal indentation)
+      // A top-level key is: starts with a letter/underscore, ends with ":", no leading spaces (or max 2)
+      const isTopLevelKey = trimmed && 
+                           trimmed.match(/^[a-z_][a-z0-9_]*:\s*$/i) &&
+                           (line.startsWith(trimmed) || line.match(/^\s{0,2}[a-z_]/i));
+      
+      if (isTopLevelKey && trimmed !== "sections:") {
+        // New top-level key - stop collecting sections, add collected sections to result
+        collectingSections = false;
+        if (allSections.length > 0) {
+          result.push(...allSections);
+          allSections.length = 0;
+        }
+        result.push(line);
+      } else if (trimmed === "" && i < lines.length - 1) {
+        // Empty line - check if next line is a top-level key
+        const nextLine = lines[i + 1]?.trim() || "";
+        if (nextLine.match(/^[a-z_][a-z0-9_]*:\s*$/i) && nextLine !== "sections:") {
+          // Next line is a top-level key - stop collecting
+          collectingSections = false;
+          if (allSections.length > 0) {
+            result.push(...allSections);
+            allSections.length = 0;
+          }
+          result.push(line);
+        } else {
+          // Keep empty line in sections
+          allSections.push(line);
+        }
+      } else {
+        // Still collecting sections (including list items, indented content, etc.)
+        allSections.push(line);
+      }
+    } else {
+      // Not in sections block
+      result.push(line);
+    }
+  }
+
+  // Add any remaining collected sections
+  if (allSections.length > 0) {
+    result.push(...allSections);
+  }
+
+  const repairedText = result.join("\n");
+  
+  // Validate the repaired YAML can be parsed
+  try {
+    yaml.load(repairedText);
+    console.log("Successfully repaired duplicate sections keys");
+    return repairedText;
+  } catch (parseError) {
+    console.error("Repaired YAML still has parse errors:", parseError);
+    // Return the repaired text anyway - the orchestrator will handle parse errors
+    return repairedText;
+  }
+}
+
+/**
  * Copywriter Agent
  * Transforms KB data into structured YAML for rendering
  * Must remain fully grounded in KB - no fabrication
+ * Wrapped with LangSmith tracing for monitoring
  */
-export const generateCopywriterYAML = async (input: CopywriterInput): Promise<string> => {
+const generateCopywriterYAMLInternal = traceable(
+  async (input: CopywriterInput): Promise<string> => {
   const { userQuery, intent, kbData } = input;
 
   // Prepare KB context for the prompt
@@ -68,6 +180,8 @@ CRITICAL RULES:
 5. Be concise, factual, and recruiter-friendly.
 6. Organize content into canonical section types: context, problem, solution, process, outcome, reflections.
 7. Follow the media selection rules and page-kind behaviors specified below.
+8. NEVER duplicate mapping keys (e.g., "sections:" should appear only ONCE at the top level).
+9. Each YAML key must be unique - if you need multiple sections, use a list under ONE "sections:" key.
 
 YAML SCHEMA:
 \`\`\`yaml
@@ -250,10 +364,26 @@ Output ONLY the YAML, no markdown code fences, no explanation.`;
     // Remove markdown code fences if present
     yamlText = yamlText.replace(/^```(?:yaml)?\s*/i, "").replace(/\s*```$/i, "");
 
+    // Fix duplicate "sections:" keys by merging them
+    yamlText = fixDuplicateSectionsKey(yamlText);
+
     return yamlText;
   } catch (error) {
     console.error("Error generating copywriter YAML:", error);
     throw error;
   }
+  },
+  {
+    name: "generate-copywriter-yaml",
+    project_name: "pr-potable-commitment-61",
+    tags: ["copywriter", "agent"],
+    metadata: {
+      agent: "copywriter",
+    },
+  }
+);
+
+export const generateCopywriterYAML = async (input: CopywriterInput): Promise<string> => {
+  return generateCopywriterYAMLInternal(input);
 };
 

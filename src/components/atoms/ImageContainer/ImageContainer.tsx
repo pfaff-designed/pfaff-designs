@@ -56,11 +56,26 @@ const ImageContainer = React.forwardRef<HTMLDivElement, ImageContainerProps>(
     // Validate URL if provided
     if (imageSrc && !validateSupabaseURL(imageSrc)) {
       console.error(`Invalid image URL: ${imageSrc}. Only Supabase URLs are allowed.`);
+      console.error(`URL validation failed. URL type: ${typeof imageSrc}, URL length: ${imageSrc?.length}, First 100 chars: ${imageSrc?.substring(0, 100)}`);
       return (
         <div className={cn("p-4 border border-red-300 bg-red-50 rounded", containerClassName)}>
           <p className="text-sm text-red-800">Invalid image URL. Only Supabase URLs are allowed.</p>
+          <p className="text-xs text-red-600 mt-2">URL: {imageSrc?.substring(0, 100)}...</p>
         </div>
       );
+    }
+    
+    // Debug logging for image rendering
+    if (imageSrc) {
+      console.log(`ImageContainer rendering image:`, {
+        hasImageSrc: !!imageSrc,
+        imageSrcLength: imageSrc.length,
+        imageSrcPreview: imageSrc.substring(0, 100),
+        alt: alt,
+        isValidURL: validateSupabaseURL(imageSrc),
+      });
+    } else {
+      console.warn(`ImageContainer: No imageSrc provided, using default placeholder`);
     }
 
     const objectFitClass = `object-${objectFit}`;
