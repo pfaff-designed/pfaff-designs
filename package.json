@@ -24,6 +24,8 @@
   "homepage": "https://github.com/pfaff-designed/pfaff-designs#readme",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",
+    "@langchain/anthropic": "^1.0.1",
+    "@langchain/core": "^1.0.5",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-separator": "^1.1.8",
@@ -36,6 +38,7 @@
     "clsx": "^2.1.1",
     "js-yaml": "^4.1.1",
     "langchain": "^1.0.4",
+    "langsmith": "^0.3.79",
     "lucide-react": "^0.553.0",
     "next": "^14.2.33",
     "react": "^18.3.1",
