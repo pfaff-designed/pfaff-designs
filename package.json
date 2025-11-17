@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "embed-projects": "tsx scripts/embedProjects.ts"
   },
   "repository": {
     "type": "git",
@@ -26,6 +27,8 @@
     "@anthropic-ai/sdk": "^0.68.0",
     "@langchain/anthropic": "^1.0.1",
     "@langchain/core": "^1.0.5",
+    "@langchain/openai": "^1.1.1",
+    "@langchain/textsplitters": "^1.0.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-separator": "^1.1.8",
@@ -59,6 +62,7 @@
     "@types/react": "^18.3.26",
     "@types/react-dom": "^18.3.7",
     "autoprefixer": "^10.4.22",
+    "dotenv": "^17.2.3",
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.0.3",
     "eslint-plugin-storybook": "^10.0.7",
@@ -68,6 +72,7 @@
     "prettier": "^3.6.2",
     "storybook": "^10.0.7",
     "tailwindcss": "^4.1.17",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   },
   "eslintConfig": {

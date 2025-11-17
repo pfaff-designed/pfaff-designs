@@ -1,126 +1,214 @@
-import { anthropic, langsmithClient } from "./client";
-import { traceable } from "langsmith/traceable";
+// src/lib/ai/intentResolver.ts
+
+// No anthropic / traceable needed for now
+// import { anthropic } from "./client";
+// import { traceable } from "langsmith/traceable";
 
 export type QueryIntent = "project" | "skills" | "experience" | "general";
 export type Audience = "recruiter" | "freelance_client" | "unknown";
 export type PageKind = "case_study" | "overview" | "skills" | "experience" | "mixed";
 
+export type QuestionFocus =
+  | "overview"
+  | "tools"
+  | "process"
+  | "outcomes"
+  | "timeline"
+  | "reflections"
+  | "skills"
+  | "experience"
+  | "other";
+
+export interface IntentTopic {
+  type?: QueryIntent | "general";
+  projectSlug?: string | null;
+  skillNames?: string[] | null;
+}
+
+export type IntentConfidence = "high" | "medium" | "low";
+
 export interface IntentResult {
   intent: QueryIntent;
-  audience: Audience;
   pageKind: PageKind;
-  topic?: {
-    type: QueryIntent;
-    projectSlug?: string;
-    skillNames?: string[];
-  };
-  confidence: "high" | "medium" | "low";
+  audience: Audience;
+  topic?: IntentTopic;
+  confidence: IntentConfidence;
+  questionFocus: QuestionFocus;
 }
 
 /**
- * Resolve user query intent, audience, and page kind
- * Wrapped with LangSmith tracing for monitoring
+ * Simple project matcher: map phrases → project slugs
  */
-const resolveIntentInternal = traceable(
-  async (query: string): Promise<IntentResult> => {
-  const prompt = `You are an intent resolver for a portfolio website. Analyze the user query and determine:
-
-1. Intent: What is the user asking about?
-   - "project": Asking about a specific project/case study (e.g., "Tell me about Capital One", "Show me the Coca-Cola project")
-   - "skills": Asking about skills or capabilities (e.g., "What are your skills?", "What can you do with React?")
-   - "experience": Asking about work experience or roles (e.g., "Where have you worked?", "What's your experience?")
-   - "general": General questions about the person (e.g., "Tell me about yourself", "Who are you?")
-
-2. Audience: Who is likely asking?
-   - "recruiter": Professional recruiter or hiring manager
-   - "freelance_client": Potential freelance client
-   - "unknown": Cannot determine
-
-3. Page Kind: What type of page should be generated?
-   - "case_study": For project-specific queries
-   - "overview": For general "about" queries
-   - "skills": For skills-focused queries
-   - "experience": For experience/roles queries
-   - "mixed": For queries that span multiple topics
-
-4. Topic: Extract specific details
-   - If project intent: extract project slug/name (e.g., "capital-one", "coca-cola", "coke", "pmi", "tanger")
-   - If skills intent: extract skill names mentioned
-   - Otherwise: leave empty
-
-Available projects: capital-one-travel, coca-cola-creative-technology, coke, pmi, tanger
-
-Respond with JSON only in this exact format:
-{
-  "intent": "project" | "skills" | "experience" | "general",
-  "audience": "recruiter" | "freelance_client" | "unknown",
-  "pageKind": "case_study" | "overview" | "skills" | "experience" | "mixed",
-  "topic": {
-    "type": "project" | "skills" | "experience" | "general",
-    "projectSlug": "string or null",
-    "skillNames": ["string"] or null
-  },
-  "confidence": "high" | "medium" | "low"
-}
-
-User query: "${query}"`;
-
-  try {
-    const message = await anthropic.messages.create({
-      model: "claude-3-5-haiku-latest",
-      max_tokens: 4000,
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-    });
-
-    const content = message.content[0];
-    if (content.type !== "text") {
-      throw new Error("Unexpected response type from Anthropic");
-    }
-
-    // Extract JSON from response (handle markdown code blocks)
-    let jsonText = content.text.trim();
-    const jsonMatch = jsonText.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
-    if (jsonMatch) {
-      jsonText = jsonMatch[1];
-    }
-
-    const result: IntentResult = JSON.parse(jsonText);
-
-    // Validate and set defaults
-    return {
-      intent: result.intent || "general",
-      audience: result.audience || "unknown",
-      pageKind: result.pageKind || "overview",
-      topic: result.topic,
-      confidence: result.confidence || "medium",
-    };
-  } catch (error) {
-    console.error("Error resolving intent:", error);
-    // Return safe defaults
-    return {
-      intent: "general",
-      audience: "unknown",
-      pageKind: "overview",
-      confidence: "low",
-    };
-  }
+const PROJECT_PATTERNS: { slug: string; keywords: string[] }[] = [
+  {
+    slug: "capital-one-travel",
+    keywords: ["capital one", "capital-one", "capitalone", "capital one travel"],
   },
   {
-    name: "resolve-intent",
-    project_name: "pr-potable-commitment-61",
-    tags: ["intent-resolver", "agent"],
-    metadata: {
-      agent: "intent-resolver",
-    },
+    slug: "coca-cola-creative-technology",
+    keywords: ["coca cola", "coke", "coca-cola"],
+  },
+  {
+    slug: "tanger-outlets",
+    keywords: ["tanger", "tanger outlets"],
+  },
+  {
+    slug: "pmi",
+    keywords: ["pmi", "project management institute"],
+  },
+];
+
+function matchProjectSlug(query: string): string | null {
+  const q = query.toLowerCase();
+  for (const pattern of PROJECT_PATTERNS) {
+    if (pattern.keywords.some((kw) => q.includes(kw))) {
+      return pattern.slug;
+    }
   }
-);
+  return null;
+}
 
-export const resolveIntent = async (query: string): Promise<IntentResult> => {
-  return resolveIntentInternal(query);
-};
+/**
+ * Infer question focus from query using simple rules (no LLM)
+ */
+function inferQuestionFocusFromQuery(
+  query: string,
+  pageKind: PageKind | string
+): QuestionFocus {
+  const q = query.toLowerCase();
 
+  if (q.includes("tool") || q.includes("stack") || q.includes("tech")) {
+    return "tools";
+  }
+
+  if (q.includes("process") || q.includes("how did you")) {
+    return "process";
+  }
+
+  if (
+    q.includes("outcome") ||
+    q.includes("result") ||
+    q.includes("impact") ||
+    q.includes("what happened")
+  ) {
+    return "outcomes";
+  }
+
+  if (q.includes("timeline") || q.includes("when") || q.includes("duration")) {
+    return "timeline";
+  }
+
+  if (q.includes("learn") || q.includes("lesson")) {
+    return "reflections";
+  }
+
+  if (pageKind === "skills") return "skills";
+  if (pageKind === "experience") return "experience";
+
+  return "overview";
+}
+
+/**
+ * Infer audience from query
+ */
+function inferAudience(query: string): Audience {
+  const q = query.toLowerCase();
+
+  // Very rough heuristics – we can refine later
+  if (
+    q.includes("role") ||
+    q.includes("position") ||
+    q.includes("hire") ||
+    q.includes("interview") ||
+    q.includes("job")
+  ) {
+    return "recruiter";
+  }
+
+  if (
+    q.includes("project") ||
+    q.includes("budget") ||
+    q.includes("rate") ||
+    q.includes("freelance") ||
+    q.includes("contract")
+  ) {
+    return "freelance_client";
+  }
+
+  return "unknown";
+}
+
+/**
+ * Pure rule-based intent resolver (no LLM, fast + deterministic)
+ */
+export async function resolveIntent(query: string): Promise<IntentResult> {
+  const q = query.toLowerCase().trim();
+
+  const projectSlug = matchProjectSlug(q);
+
+  let intent: QueryIntent = "general";
+  let pageKind: PageKind = "overview";
+  let confidence: IntentConfidence = "medium";
+
+  if (projectSlug) {
+    intent = "project";
+    pageKind = "case_study";
+    confidence = "high";
+  } else if (
+    q.includes("skill") ||
+    q.includes("skills") ||
+    q.includes("what can you do") ||
+    q.includes("tech stack") ||
+    q.includes("technology stack")
+  ) {
+    intent = "skills";
+    pageKind = "skills";
+    confidence = "high";
+  } else if (
+    q.includes("experience") ||
+    q.includes("where have you worked") ||
+    q.includes("work history") ||
+    q.includes("resume") ||
+    q.includes("cv")
+  ) {
+    intent = "experience";
+    pageKind = "experience";
+    confidence = "high";
+  } else {
+    intent = "general";
+    pageKind = "overview";
+    confidence = "medium";
+  }
+
+  const audience = inferAudience(q);
+
+  const topic: IntentTopic | undefined =
+    intent === "project" && projectSlug
+      ? {
+          type: "project",
+          projectSlug,
+          skillNames: null,
+        }
+      : intent === "skills"
+      ? {
+          type: "skills",
+          projectSlug: null,
+          skillNames: null, // could parse later if you want skill names
+        }
+      : undefined;
+
+  const questionFocus = inferQuestionFocusFromQuery(query, pageKind);
+
+  const result: IntentResult = {
+    intent,
+    pageKind,
+    audience,
+    topic,
+    confidence,
+    questionFocus,
+  };
+
+  console.log("resolveIntent (rule-based) result:", result);
+
+  return result;
+}
