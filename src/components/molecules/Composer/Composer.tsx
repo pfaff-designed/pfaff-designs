@@ -8,11 +8,40 @@ export interface ComposerProps {
   onSubmit?: (query: string) => void;
   recentQuery?: string;
   recentResponse?: string;
+  status?: "idle" | "loading" | "success" | "error";
+  lastPrompt?: string | null;
+  lastUpdatedAt?: string | null;
   className?: string;
   inputClassName?: string;
   buttonClassName?: string;
 }
 
+
+/**
+ * Format a date to relative time (e.g., "2 seconds ago", "1 minute ago")
+ */
+const formatRelativeTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} second${diffInSeconds !== 1 ? "s" : ""} ago`;
+  }
+
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} minute${diffInMinutes !== 1 ? "s" : ""} ago`;
+  }
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${diffInHours} hour${diffInHours !== 1 ? "s" : ""} ago`;
+  }
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays} day${diffInDays !== 1 ? "s" : ""} ago`;
+};
 
 const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
   (
@@ -21,6 +50,9 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
       onSubmit,
       recentQuery,
       recentResponse,
+      status = "idle",
+      lastPrompt,
+      lastUpdatedAt,
       className,
       inputClassName,
       buttonClassName,
@@ -35,21 +67,21 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
     const containerRef = React.useRef<HTMLDivElement>(null);
 
     const handleSubmit = React.useCallback(() => {
-      if (inputValue.trim()) {
+      if (inputValue.trim() && status !== "loading") {
         setLocalRecentQuery(inputValue.trim());
         onSubmit?.(inputValue.trim());
         setInputValue("");
       }
-    }, [inputValue, onSubmit]);
+    }, [inputValue, onSubmit, status]);
 
     const handleKeyDown = React.useCallback(
       (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter" && !e.shiftKey) {
+        if (e.key === "Enter" && !e.shiftKey && status !== "loading") {
           e.preventDefault();
           handleSubmit();
         }
       },
-      [handleSubmit]
+      [handleSubmit, status]
     );
 
     // Update local state when prop changes
@@ -139,12 +171,20 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
           bottom: footerHeight > 0 ? `${footerHeight}px` : "1.5rem",
         }}
       >
-        {/* Recent Query Display - Plain Text Above */}
-        {displayQuery && (
+        {/* Status Display - Thinking or Last Updated */}
+        {status === "loading" && lastPrompt ? (
+          <p className="text-base leading-5 text-[var(--text-default)] w-[24.875rem] text-left pl-[2rem] opacity-75">
+            Thinking about: "{lastPrompt}"
+          </p>
+        ) : status === "success" && lastPrompt && lastUpdatedAt ? (
+          <p className="text-base leading-5 text-[var(--text-default)] w-[24.875rem] text-left pl-[2rem] opacity-50">
+            Last updated {formatRelativeTime(lastUpdatedAt)} based on: "{lastPrompt}"
+          </p>
+        ) : displayQuery ? (
           <p className="text-base leading-5 text-[var(--text-default)] w-[24.875rem] text-left pl-[2rem] opacity-50">
             {displayQuery}
           </p>
-        )}
+        ) : null}
 
         {/* Input Field with Button */}
         <div className="relative w-full">
@@ -168,20 +208,24 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 placeholder={placeholder}
+                disabled={status === "loading"}
                 className={cn(
                   "relative w-full border-0 bg-transparent px-0 py-0 text-base leading-5 text-[#26291d] placeholder:text-[#26291d] placeholder:opacity-50",
                   "focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none",
+                  status === "loading" && "opacity-50 cursor-not-allowed",
                   inputClassName
                 )}
-                style={{ caretColor: '#26291d' }}
+                style={{ caretColor: status === "loading" ? "transparent" : "#26291d" }}
               />
             </div>
             <button
               type="button"
               onClick={handleSubmit}
+              disabled={status === "loading"}
               aria-label="Submit query"
               className={cn(
                 "relative z-[1] flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e76f51] p-0 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e76f51] focus-visible:ring-offset-2",
+                status === "loading" && "opacity-50 cursor-not-allowed",
                 buttonClassName
               )}
             >

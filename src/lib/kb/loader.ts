@@ -28,6 +28,70 @@ export interface ProjectFacts {
   links?: Array<{ label: string; url: string }>;
 }
 
+/**
+ * Hero facts for case study pages
+ * Deterministic data extracted from project facts (no LLM generation)
+ */
+export interface CaseStudyHeroFacts {
+  projectId: string;         // "capital-one-travel", "tanger-outlets", etc.
+  client: string;            // "Capital One Travel"
+  projectNameOrUrl: string; // "capitalonetravel.com" or "AI Vending Machine"
+  role: string;              // "Design-minded Engineer / Front-end"
+  description: string;       // short 1–2 sentence summary
+  yearOrTimeline: string;    // "2023–2024" or "2023"
+  team: string;              // e.g. "PM, Designer, Engineer, Client Stakeholders"
+}
+
+/**
+ * Extract hero facts from ProjectFacts
+ * This is a deterministic transformation (no LLM)
+ */
+export function extractHeroFacts(facts: ProjectFacts): CaseStudyHeroFacts {
+  // Extract project name or URL from links, or derive from projectId
+  let projectNameOrUrl = facts.projectId;
+  if (facts.links && facts.links.length > 0) {
+    const firstLink = facts.links[0];
+    // Extract domain from URL (e.g., "https://capitalonetravel.com/" -> "capitalonetravel.com")
+    if (firstLink.url) {
+      try {
+        const url = new URL(firstLink.url);
+        projectNameOrUrl = url.hostname.replace(/^www\./, "");
+      } catch {
+        // If URL parsing fails, use the label or URL as-is
+        projectNameOrUrl = firstLink.label || firstLink.url;
+      }
+    } else {
+      projectNameOrUrl = firstLink.label || facts.projectId;
+    }
+  }
+
+  // Format timeline
+  const yearOrTimeline = facts.timeline.year.toString();
+
+  // Format team
+  let team = "";
+  if (facts.team) {
+    const teamParts: string[] = [];
+    if (facts.team.company) {
+      teamParts.push(facts.team.company);
+    }
+    if (facts.team.collaborators && facts.team.collaborators.length > 0) {
+      teamParts.push(...facts.team.collaborators);
+    }
+    team = teamParts.join(", ");
+  }
+
+  return {
+    projectId: facts.projectId,
+    client: facts.client,
+    projectNameOrUrl,
+    role: facts.role,
+    description: facts.projectSummary,
+    yearOrTimeline,
+    team: team || "Solo",
+  };
+}
+
 export interface ProjectLongform {
   version: string;
   kind: string;

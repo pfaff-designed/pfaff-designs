@@ -1,6 +1,9 @@
+"use client";
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { getComponent, hasComponent, isValidChild, componentRegistry } from "@/lib/registry/componentRegistry";
+import { ResponseContext, type ResponseContextValue } from "./ResponseContext";
 
 export interface Block {
   id: string;
@@ -117,6 +120,9 @@ export interface PageJSON {
 export interface RendererProps {
   data: PageJSON | null;
   className?: string;
+  status?: "idle" | "loading" | "success" | "error";
+  responseId?: string | number;
+  isLatest?: boolean;
 }
 
 /**
@@ -238,6 +244,23 @@ const normalizeProps = (name: string, props: Record<string, any> = {}): Record<s
 
     case "ImageContainer":
       if (p.src && !p.imageSrc) p.imageSrc = p.src;
+      break;
+
+    case "AnswerBlock":
+      // Normalize prop names for AnswerBlock
+      // heading is already correct, but ensure it exists
+      if (p.title && !p.heading) {
+        p.heading = p.title;
+      }
+      // body is already correct
+      // eyebrow is already correct
+      // imageId should be resolved to imageSrc by orchestrator, but handle fallback
+      if (p.imageId && !p.imageSrc) {
+        // imageId should have been resolved by orchestrator, but if not, we can't resolve it here
+        // Just ensure imageSrc takes precedence
+      }
+      // Clean up old prop names
+      delete p.title;
       break;
   }
 
@@ -422,7 +445,13 @@ const renderBlock = (block: Block, parentComponent?: string): React.ReactNode =>
  * Renderer Component
  * Converts JSON page structure into React components
  */
-export const Renderer: React.FC<RendererProps> = ({ data, className }) => {
+export const Renderer: React.FC<RendererProps> = ({ 
+  data, 
+  className,
+  status = "idle",
+  responseId,
+  isLatest = true,
+}) => {
   // Debug: Log what we receive
   console.log("Renderer received data:", data);
   if (data) {
@@ -432,6 +461,12 @@ export const Renderer: React.FC<RendererProps> = ({ data, className }) => {
       console.warn("Renderer: Failed to stringify debug content", error);
     }
   }
+  
+  const contextValue: ResponseContextValue = {
+    status,
+    responseId: responseId || data?.page?.id,
+    isLatest,
+  };
   
   if (!data) {
     console.log("Renderer: No data provided");
@@ -475,12 +510,18 @@ export const Renderer: React.FC<RendererProps> = ({ data, className }) => {
 
   console.log("Renderer: Rendering blocks", data.page.blocks.length, "blocks");
 
-  // Render all blocks
+  // Render all blocks with timing
+  console.time("renderer-render");
   const renderedBlocks = data.page.blocks.map((block) => renderBlock(block));
+  console.timeEnd("renderer-render");
   
   console.log("Renderer: Rendered blocks count", renderedBlocks.length);
 
-  return <div className={className}>{renderedBlocks}</div>;
+  return (
+    <ResponseContext.Provider value={contextValue}>
+      <div className={className}>{renderedBlocks}</div>
+    </ResponseContext.Provider>
+  );
 };
 
 Renderer.displayName = "Renderer";

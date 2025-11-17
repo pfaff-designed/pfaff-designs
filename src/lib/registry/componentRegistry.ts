@@ -11,6 +11,8 @@ import { Video } from "@/components/atoms/Video";
 import { MediaFigure } from "@/components/molecules/MediaFigure";
 import { SideBySideMedia } from "@/components/molecules/SideBySideMedia";
 import { MediaGallery } from "@/components/molecules/MediaGallery";
+import { AnswerBlock } from "@/components/page-components/AnswerBlock";
+import { CaseStudyHero } from "@/components/templates/CaseStudyHero";
 
 export type ComponentType = React.ComponentType<any>;
 
@@ -33,6 +35,22 @@ export const componentRegistry: Record<string, RegistryEntry> = {
     component: ContentSection,
     category: "page-component",
     allowedChildren: ["Heading", "BodyText", "Eyebrow", "ImageContainer"],
+    allowedParents: "*",
+  },
+
+  AnswerBlock: {
+    name: "AnswerBlock",
+    component: AnswerBlock,
+    category: "page-component",
+    allowedChildren: [],
+    allowedParents: "*",
+  },
+
+  CaseStudyHero: {
+    name: "CaseStudyHero",
+    component: CaseStudyHero,
+    category: "page-component",
+    allowedChildren: [],
     allowedParents: "*",
   },
 

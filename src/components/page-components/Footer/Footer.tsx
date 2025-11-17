@@ -136,7 +136,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
               {/* Social Links */}
               {links.slice(2).map((link) => (
                 <Link
-                  key={link.href}
+                  key={link.label}
                   href={link.href}
                   className={cn(
                     "flex items-center justify-center",
