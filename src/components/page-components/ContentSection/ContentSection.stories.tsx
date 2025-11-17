@@ -21,6 +21,7 @@ const meta: Meta<typeof ContentSection> = {
         "annotated-visual",
         "half-and-half-column",
         "timeline",
+        "default",
       ],
     },
   },
@@ -166,6 +167,57 @@ export const Timeline: Story = {
           "Launched the new system, monitored performance metrics, and gathered user feedback. Implemented optimizations and refinements based on real-world usage.",
       },
     ],
+  },
+};
+
+export const Default: Story = {
+  args: {
+    variant: "default",
+    headline: "Direct Response to user Query",
+    imageSrc: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=60",
+    imageAlt: "Urban night scene with neon lights",
+    contentBlocks: [
+      {
+        eyebrow: "TOPIC",
+        body: "Content content content Content content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content content",
+      },
+      {
+        eyebrow: "TOPIC",
+        body: "Content content content Content content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content content",
+      },
+    ],
+  },
+};
+
+export const DefaultWithRichText: Story = {
+  args: {
+    variant: "default",
+    headline: "Direct Response to user Query",
+    imageSrc: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=60",
+    imageAlt: "Urban night scene with neon lights",
+    contentBlocks: [
+      {
+        eyebrow: "TOPIC",
+        body: "<p>This is a paragraph with <strong>bold text</strong>, <em>italic text</em>, and <s>strikethrough text</s>. You can also combine them like <strong><em>bold and italic</em></strong> or <strong><s>bold and strikethrough</s></strong>.</p>",
+        richText: true,
+      },
+      {
+        eyebrow: "TOPIC",
+        body: "<p>Here's another paragraph with <strong>important bold content</strong> and <em>emphasized italic text</em>. We can also have <s>removed or deprecated content</s> that shows what was changed.</p><p>Multiple paragraphs are supported. This second paragraph has <strong>bold</strong>, <em>italic</em>, and <s>strikethrough</s> formatting as well. You can mix and match formatting like <strong><em><s>all three together</s></em></strong>.</p>",
+        richText: true,
+      },
+    ],
+  },
+};
+
+export const DefaultSimple: Story = {
+  args: {
+    variant: "default",
+    headline: "Direct Response to user Query",
+    eyebrow: "TOPIC",
+    body: "Content content content Content content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content content",
+    imageSrc: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=60",
+    imageAlt: "Urban night scene with neon lights",
   },
 };
 

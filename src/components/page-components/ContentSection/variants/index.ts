@@ -19,3 +19,6 @@ export type { HalfAndHalfColumnProps } from "./HalfAndHalfColumn";
 export { Timeline } from "./Timeline";
 export type { TimelineProps } from "./Timeline";
 
+export { DefaultSection } from "./DefaultSection";
+export type { DefaultSectionProps } from "./DefaultSection";
+

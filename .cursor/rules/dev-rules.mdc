@@ -1,4 +1,4 @@
-Frontend Development Rules (dev-rules)
+<!-- Frontend Development Rules (dev-rules)
 
 These rules govern how the frontend is built for the generative-UI portfolio project. They are written for:
 	•	Human developers
@@ -262,4 +262,4 @@ These dev rules define how the frontend is built:
 
 They are the reference point for both humans and AI assistants when writing or modifying frontend code in this project.---
 alwaysApply: true
----
+--- -->

@@ -1,8 +1,4 @@
 // orchestrator.ts
-import { ChatAnthropic } from "@langchain/anthropic";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { StructuredOutputParser } from "@langchain/core/output_parsers";
-import { RunnableSequence } from "@langchain/core/runnables";
 import { z } from "zod";
 import { componentRegistry } from "@/lib/registry/componentRegistry";
 import { resolveMediaIds, extractMediaIdsFromYAML } from "./mediaResolver";
@@ -11,12 +7,17 @@ import { validateSupabaseURL } from "@/lib/utils/urlValidation";
 import yaml from "js-yaml";
 import type { PageJSON, Block } from "@/components/utility/Renderer";
 import { traceable } from "langsmith/traceable";
+import type { QuestionFocus, IntentResult } from "./intentResolver";
+import { logToLangSmith, logDiagnostic } from "./langsmithLogger";
+import { getHeroFacts } from "@/lib/kb/CaseStudyHeroFacts";
+import { AnswerBlockSchema, HeroCaseStudyBlockSchema, BlockSchema, type Block as SchemaBlock } from "@/lib/layout/blockSchema";
 
 // Configure LangSmith tracing for LangChain
 // This will automatically trace if LANGSMITH_API_KEY is set
 if (process.env.LANGSMITH_API_KEY) {
   process.env.LANGCHAIN_TRACING_V2 = "true";
-  process.env.LANGCHAIN_PROJECT = process.env.LANGSMITH_PROJECT || "pr-potable-commitment-61";
+  process.env.LANGCHAIN_PROJECT =
+    process.env.LANGSMITH_PROJECT || "pr-potable-commitment-61";
   if (process.env.LANGSMITH_API_URL) {
     process.env.LANGCHAIN_ENDPOINT = process.env.LANGSMITH_API_URL;
   }
@@ -24,10 +25,12 @@ if (process.env.LANGSMITH_API_KEY) {
 
 export interface OrchestratorInput {
   yaml: string;
+  intent: IntentResult;
   registrySummary: {
     components: string[];
     categories: string[];
   };
+  questionFocus?: QuestionFocus;
 }
 
 // ---- Layout planner schemas ----
@@ -57,59 +60,6 @@ const layoutPlanSchema = z.object({
 export type LayoutPlan = z.infer<typeof layoutPlanSchema>;
 export type LayoutPlanSection = z.infer<typeof layoutPlanSectionSchema>;
 
-const layoutPlanParser = StructuredOutputParser.fromZodSchema(layoutPlanSchema);
-
-const layoutPlanPrompt = ChatPromptTemplate.fromMessages([
-  [
-    "system",
-    [
-      "You are a layout planner for a portfolio website.",
-      "Given a list of sections and their roles, choose a ContentSection variant for each section.",
-      "You must return JSON that matches the provided JSON schema exactly.",
-      "",
-      "Rules:",
-      "- Use at most 3 different variants per page to keep layouts coherent.",
-      "- Avoid using the same variant more than 2 times in a row.",
-      "- Prefer:",
-      "  • summary/hero → full-width (if hasMedia) or 2-column-image-right",
-      "  • context/problem/solution → 2-column-image-right / 2-column-image-left",
-      "  • process → timeline or 2-column-split",
-      "  • outcome/results → text-with-image",
-      "  • media-heavy (mediaCount >= 3) → card-gallery",
-      "",
-      "IMPORTANT: You only choose variants + which section may use hero media.",
-      "Do NOT invent text. Do NOT invent components outside the given variants.",
-    ].join("\n"),
-  ],
-  [
-    "user",
-    [
-      "Here is the page plan (derived from YAML):",
-      "```json",
-      "{pagePlan}",
-      "```",
-      "",
-      "Return a JSON object matching this schema:",
-      "{format_instructions}",
-    ].join("\n"),
-  ],
-]);
-
-const layoutPlannerChain = RunnableSequence.from([
-  layoutPlanPrompt,
-  new ChatAnthropic({
-    model: "claude-3-5-haiku-latest",
-    temperature: 0.4,
-    maxTokens: 800,
-    // LangSmith tracing is automatically enabled via environment variables
-  }),
-  layoutPlanParser,
-]).withConfig({
-  // Add run name for better tracking in LangSmith
-  runName: "layout-planner",
-  tags: ["orchestrator", "layout-planning"],
-});
-
 // ---- Types for TS-only planning ----
 
 type PagePlanSection = {
@@ -131,25 +81,27 @@ function buildPagePlanFromYaml(yamlData: any): PagePlan {
   const kind = yamlData?.kind || "case_study";
 
   const sections: PagePlanSection[] = Array.isArray(yamlData?.sections)
-    ? yamlData.sections.map((section: any, index: number): PagePlanSection => {
-        const type =
-          section.type ||
-          section.kind ||
-          (index === 0 ? "summary" : "generic-section");
+    ? yamlData.sections.map(
+        (section: any, index: number): PagePlanSection => {
+          const type =
+            section.type ||
+            section.kind ||
+            (index === 0 ? "summary" : "generic-section");
 
-        const mediaArray: any[] = Array.isArray(section.media)
-          ? section.media
-          : [];
-        const hasMedia = mediaArray.length > 0;
+          const mediaArray: any[] = Array.isArray(section.media)
+            ? section.media
+            : [];
+          const hasMedia = mediaArray.length > 0;
 
-        return {
-          id: section.id || section.slug || `section-${index}`,
-          title: section.title,
-          type,
-          hasMedia,
-          mediaCount: mediaArray.length,
-        };
-      })
+          return {
+            id: section.id || section.slug || `section-${index}`,
+            title: section.title,
+            type,
+            hasMedia,
+            mediaCount: mediaArray.length,
+          };
+        }
+      )
     : [];
 
   const pageId =
@@ -165,10 +117,66 @@ function buildPagePlanFromYaml(yamlData: any): PagePlan {
   };
 }
 
+/**
+ * Synthesize section content from KB data when YAML section is missing
+ */
+function synthesizeSectionContent(
+  sectionId: string,
+  yamlData: any,
+  variant: string
+): { title?: string; body?: string; eyebrow?: string } | null {
+  const sections = Array.isArray(yamlData?.sections) ? yamlData.sections : [];
+  const summary = yamlData?.summary || {};
+
+  // For "tools" section, synthesize from skills/tech stack
+  if (sectionId === "tools" || sectionId.toLowerCase().includes("tool")) {
+    const project = sections.find(
+      (s: any) => s.type === "solution" || s.type === "process"
+    );
+    const skills = yamlData?.meta?.focus || [];
+    const summary = yamlData?.summary || {};
+
+    return {
+      title: "Tools & Technologies",
+      body:
+        skills.length > 0
+          ? `Technologies used: ${skills.join(", ")}. ${
+              project?.body || summary?.elevator_pitch || ""
+            }`
+          : project?.body ||
+            summary?.elevator_pitch ||
+            "Key technologies and tools used in this project.",
+      eyebrow: summary?.one_liner,
+    };
+  }
+
+  // For other sections, try to find ANY section with content
+  const anySection = sections.find((s: any) => s.body && s.body.trim().length > 0);
+  if (anySection) {
+    return {
+      title: anySection.title || anySection.heading || sectionId.charAt(0).toUpperCase() + sectionId.slice(1),
+      body: anySection.body || summary?.elevator_pitch || "Content for this section.",
+      eyebrow: anySection.eyebrow || summary?.one_liner,
+    };
+  }
+
+  // Last resort: use summary
+  if (summary.elevator_pitch || summary.one_liner) {
+    return {
+      title: summary.title || sectionId.charAt(0).toUpperCase() + sectionId.slice(1),
+      body: summary.elevator_pitch || summary.one_liner || "Content for this section.",
+      eyebrow: summary.one_liner,
+    };
+  }
+
+  return null;
+}
+
 function buildPageJSONFromLayoutPlan(
   layoutPlan: LayoutPlan,
   yamlData: any,
-  mediaResolutionMap: Map<string, MediaResolution>
+  mediaResolutionMap: Map<string, MediaResolution>,
+  runId?: string
 ): PageJSON {
   const blocks: Block[] = [];
 
@@ -176,43 +184,36 @@ function buildPageJSONFromLayoutPlan(
   const PLACEHOLDER_IMAGE_SRC =
     process.env.NEXT_PUBLIC_SUPABASE_PLACEHOLDER_IMAGE_URL ?? "";
   const PLACEHOLDER_IMAGE_ALT = "Placeholder case study image";
-  
-  // Default fallback placeholder (allowed by urlValidation)
-  const DEFAULT_PLACEHOLDER_URL = "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=60";
 
-  // Validate placeholder URL is from Supabase if provided, or use default fallback
+  // Default fallback placeholder (allowed by urlValidation)
+  const DEFAULT_PLACEHOLDER_URL =
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=60";
+
   // Always returns a valid placeholder (either configured or default)
   const getPlaceholder = (): { url: string; alt: string } => {
-    // If a placeholder is configured, validate it
     if (PLACEHOLDER_IMAGE_SRC) {
       if (!validateSupabaseURL(PLACEHOLDER_IMAGE_SRC)) {
-        console.error(
-          `Invalid placeholder image URL (not from Supabase): ${PLACEHOLDER_IMAGE_SRC}. ` +
-          `Only Supabase URLs are allowed. Falling back to default placeholder.`
-        );
-        // Fall through to use default placeholder
+        logToLangSmith("warn", `Invalid placeholder image URL (not from Supabase): ${PLACEHOLDER_IMAGE_SRC}. Only Supabase URLs are allowed. Falling back to default placeholder.`, { placeholderUrl: PLACEHOLDER_IMAGE_SRC }, runId);
+        // Fall through to default
       } else {
         return { url: PLACEHOLDER_IMAGE_SRC, alt: PLACEHOLDER_IMAGE_ALT };
       }
     }
-    
-    // Use default placeholder if none configured or if configured one is invalid
-    console.warn("No Supabase placeholder image configured. Using default placeholder. Set NEXT_PUBLIC_SUPABASE_PLACEHOLDER_IMAGE_URL to use a custom placeholder.");
+
+    logToLangSmith("warn", "No Supabase placeholder image configured. Using default placeholder. Set NEXT_PUBLIC_SUPABASE_PLACEHOLDER_IMAGE_URL to use a custom placeholder.", { placeholderUrl: DEFAULT_PLACEHOLDER_URL }, runId);
     return { url: DEFAULT_PLACEHOLDER_URL, alt: PLACEHOLDER_IMAGE_ALT };
   };
-  
-  // Validate that a media resolution URL is from Supabase
-  const validateMediaResolution = (resolution: MediaResolution | null): MediaResolution | null => {
+
+  const validateMediaResolution = (
+    resolution: MediaResolution | null
+  ): MediaResolution | null => {
     if (!resolution) return null;
-    
+
     if (!validateSupabaseURL(resolution.url)) {
-      console.error(
-        `Invalid media URL (not from Supabase): ${resolution.url} for media ID: ${resolution.id}. ` +
-        `Only Supabase URLs are allowed. This media will be skipped.`
-      );
+      logToLangSmith("error", `Invalid media URL (not from Supabase): ${resolution.url} for media ID: ${resolution.id}. Only Supabase URLs are allowed. This media will be skipped.`, { mediaId: resolution.id, mediaUrl: resolution.url }, runId);
       return null;
     }
-    
+
     return resolution;
   };
 
@@ -264,7 +265,9 @@ function buildPageJSONFromLayoutPlan(
   if (heroMediaId) usedMediaIds.add(heroMediaId);
 
   inlineMediaIds.forEach((id) => {
-    const resolution = validateMediaResolution(mediaResolutionMap.get(id) || null);
+    const resolution = validateMediaResolution(
+      mediaResolutionMap.get(id) || null
+    );
     if (resolution) {
       inlineMediaQueue.push(resolution);
       usedMediaIds.add(id);
@@ -272,7 +275,9 @@ function buildPageJSONFromLayoutPlan(
   });
 
   galleryMediaIds.forEach((id) => {
-    const resolution = validateMediaResolution(mediaResolutionMap.get(id) || null);
+    const resolution = validateMediaResolution(
+      mediaResolutionMap.get(id) || null
+    );
     if (resolution) {
       galleryMediaQueue.push(resolution);
       usedMediaIds.add(id);
@@ -289,8 +294,7 @@ function buildPageJSONFromLayoutPlan(
     }
   });
 
-  // Log media queue status
-  console.log(`Media queues built:`, {
+  logDiagnostic("media-queues", {
     heroMedia: heroMediaResolution ? {
       id: heroMediaResolution.id,
       url: heroMediaResolution.url.substring(0, 100),
@@ -301,37 +305,31 @@ function buildPageJSONFromLayoutPlan(
     fallbackQueueSize: fallbackMediaQueue.length,
     totalMediaResolved: mediaResolutionMap.size,
     usedMediaIds: Array.from(usedMediaIds),
-  });
+  }, runId);
 
   const takeNextMedia = (opts?: { forceHero?: boolean }): MediaResolution | null => {
     // Try hero media first if requested
     if (opts?.forceHero && heroMediaResolution && !heroMediaConsumed) {
       heroMediaConsumed = true;
-      // Validate hero media is from Supabase
       if (validateSupabaseURL(heroMediaResolution.url)) {
-        console.log(`takeNextMedia: Returning hero media`, {
-          mediaId: heroMediaResolution.id,
-          url: heroMediaResolution.url.substring(0, 100),
-        });
+        logToLangSmith("info", `takeNextMedia: Returning hero media`, { mediaId: heroMediaResolution.id, mediaUrl: heroMediaResolution.url.substring(0, 100) }, runId);
         return heroMediaResolution;
       } else {
-        console.error(
-          `Invalid hero media URL (not from Supabase): ${heroMediaResolution.url}. Skipping hero media.`
-        );
+        logToLangSmith("error", `Invalid hero media URL (not from Supabase): ${heroMediaResolution.url}. Skipping hero media.`, { mediaId: heroMediaResolution.id, mediaUrl: heroMediaResolution.url }, runId);
       }
     }
 
-    // Log queue status
-    console.log(`takeNextMedia: Queue status:`, {
+    logToLangSmith("info", `takeNextMedia: Queue status:`, {
       inlineQueueLength: inlineMediaQueue.length,
       galleryQueueLength: galleryMediaQueue.length,
       fallbackQueueLength: fallbackMediaQueue.length,
-      totalAvailable: inlineMediaQueue.length + galleryMediaQueue.length + fallbackMediaQueue.length,
-    });
+      totalAvailable:
+        inlineMediaQueue.length +
+        galleryMediaQueue.length +
+        fallbackMediaQueue.length,
+    }, runId);
 
-    // Try to get media from queues, validating each one
-    // Limit attempts to prevent infinite loop
-    const maxAttempts = 50; // Safety limit
+    const maxAttempts = 50;
     let attempts = 0;
 
     while (attempts < maxAttempts) {
@@ -341,59 +339,149 @@ function buildPageJSONFromLayoutPlan(
         fallbackMediaQueue.shift();
 
       if (!source) {
-        // No more media available
-        console.warn(`takeNextMedia: No more media available in queues`);
+        logToLangSmith("warn", `takeNextMedia: No more media available in queues`, { maxAttempts: maxAttempts, attempts: attempts }, runId);
         return null;
       }
 
-      // Validate the source URL is from Supabase before returning
       if (validateSupabaseURL(source.url)) {
-        console.log(`takeNextMedia: Returning valid media`, {
-          mediaId: source.id,
-          url: source.url.substring(0, 100),
-          queue: source === inlineMediaQueue[0] ? 'inline' : source === galleryMediaQueue[0] ? 'gallery' : 'fallback',
-        });
+        logToLangSmith("info", `takeNextMedia: Returning valid media`, { mediaId: source.id, mediaUrl: source.url.substring(0, 100) }, runId);
         return source;
       } else {
-        console.error(
-          `Invalid media URL (not from Supabase): ${source.url} for media ID: ${source.id}. Skipping this media.`
-        );
+        logToLangSmith("error", `Invalid media URL (not from Supabase): ${source.url} for media ID: ${source.id}. Skipping this media.`, { mediaId: source.id, mediaUrl: source.url }, runId);
         attempts++;
-        // Continue to next iteration to try next media item
       }
     }
 
-    // Reached max attempts, return null
-    console.warn(
-      `Reached max attempts (${maxAttempts}) while trying to get valid Supabase media. No valid media found.`
-    );
+    logToLangSmith("warn", `Reached max attempts (${maxAttempts}) while trying to get valid Supabase media. No valid media found.`, { maxAttempts: maxAttempts, attempts: attempts }, runId);
     return null;
   };
 
   // --- 2) Build blocks from layout plan + YAML, assigning images ---
 
-  layoutPlan.sections.forEach((sectionPlan, index) => {
-    const yamlSection =
-      Array.isArray(yamlData?.sections) &&
-      yamlData.sections.find(
-        (s: any, i: number) =>
-          s.id === sectionPlan.id || s.slug === sectionPlan.id || i === index
+  for (let index = 0; index < layoutPlan.sections.length; index++) {
+    const sectionPlan = layoutPlan.sections[index];
+    let yamlSection: any = null;
+
+    if (Array.isArray(yamlData?.sections)) {
+      // Strategy 1: Exact ID / slug match
+      yamlSection = yamlData.sections.find(
+        (s: any) => s.id === sectionPlan.id || s.slug === sectionPlan.id
       );
+
+      // Strategy 2: Type match (e.g., "outcome" vs "outcomes")
+      if (!yamlSection) {
+        yamlSection = yamlData.sections.find((s: any) => {
+          const type = (s.type || "").toLowerCase();
+          const planId = (sectionPlan.id || "").toLowerCase();
+          if (!type || !planId) return false;
+          return (
+            type === planId ||
+            planId.includes(type) ||
+            type.includes(planId) ||
+            // Handle plural/singular variations
+            (planId === "outcomes" && type === "outcome") ||
+            (planId === "outcome" && type === "outcomes")
+          );
+        });
+      }
+
+      // Strategy 3: Sequential matching - match by position in canonical order
+      if (!yamlSection && sectionPlan.id !== "hero") {
+        // Canonical section order: context, problem, solution, process, outcome, reflections
+        const canonicalOrder = ["context", "problem", "solution", "process", "outcome", "reflections"];
+        const planIndex = canonicalOrder.indexOf(sectionPlan.id);
+        if (planIndex >= 0) {
+          // Find sections in the same order, skipping hero
+          const nonHeroSections = yamlData.sections.filter(
+            (s: any) => s.id !== "hero" && s.type !== "hero"
+          );
+          if (planIndex < nonHeroSections.length) {
+            yamlSection = nonHeroSections[planIndex];
+          }
+        }
+      }
+
+      // Strategy 4: Index-based fallback (last resort)
+      if (!yamlSection && sectionPlan.id !== "hero") {
+        const sectionIndex = layoutPlan.sections.findIndex(
+          (s) => s.id === sectionPlan.id
+        );
+        // Use the section at the same index in YAML (accounting for hero)
+        const nonHeroSections = yamlData.sections.filter(
+          (s: any) => s.id !== "hero" && s.type !== "hero"
+        );
+        const yamlIndex = sectionIndex - 1; // -1 because hero is first in layout plan
+        if (yamlIndex >= 0 && yamlIndex < nonHeroSections.length) {
+          yamlSection = nonHeroSections[yamlIndex];
+        }
+      }
+    }
 
     const sectionId = sectionPlan.id || `section-${index}`;
 
-    const title = yamlSection?.title || yamlSection?.heading;
-    const body =
+    // Log section matching
+    if (sectionPlan.id !== "hero") {
+      logDiagnostic("section-matching", {
+        sectionPlanId: sectionPlan.id,
+        foundYamlSection: !!yamlSection,
+        yamlSectionId: yamlSection?.id,
+        yamlSectionType: yamlSection?.type,
+        availableSections: Array.isArray(yamlData?.sections)
+          ? yamlData.sections.map((s: any) => ({ id: s.id, type: s.type }))
+          : [],
+      }, runId);
+    }
+
+    // Extract content with fallbacks
+    let title = yamlSection?.title || yamlSection?.heading;
+    let body =
       typeof yamlSection?.body === "string"
         ? yamlSection.body
         : Array.isArray(yamlSection?.body)
         ? yamlSection.body.join("\n\n")
         : "";
-    const eyebrow =
+    let eyebrow =
       yamlSection?.summary ||
       yamlSection?.eyebrow ||
       yamlData?.summary?.one_liner ||
       undefined;
+
+    // Fallback: synthesize when missing
+    if (!yamlSection && sectionPlan.id !== "hero") {
+      const synthesized = synthesizeSectionContent(
+        sectionPlan.id,
+        yamlData,
+        sectionPlan.variant
+      );
+      if (synthesized) {
+        title = synthesized.title || title;
+        body = synthesized.body || body;
+        eyebrow = synthesized.eyebrow || eyebrow;
+      }
+    }
+
+    // Final fallback: if still no content, use a default
+    if (!title && !body && sectionPlan.id !== "hero") {
+      title = sectionPlan.id.charAt(0).toUpperCase() + sectionPlan.id.slice(1);
+      body = `Content for the ${sectionPlan.id} section.`;
+    }
+    
+    // For hero, ensure we have at least something
+    if (sectionPlan.id === "hero" && !body) {
+      body = yamlData?.summary?.elevator_pitch || 
+             yamlData?.summary?.one_liner || 
+             "Welcome to this case study.";
+    }
+
+    // Log content extraction
+    logDiagnostic("content-extraction", {
+      sectionId,
+      title: title || "(empty)",
+      bodyLength: body?.length || 0,
+      bodyPreview: body ? body.substring(0, 100) : "(empty)",
+      eyebrow: eyebrow || "(none)",
+      synthesized: !yamlSection && sectionPlan.id !== "hero",
+    }, runId);
 
     const sectionBlock: Block = {
       id: `${sectionId}-section`,
@@ -408,6 +496,46 @@ function buildPageJSONFromLayoutPlan(
       props: {},
       children: [],
     };
+
+    // Check if this section should be an answer_block
+    const isAnswerBlock = yamlSection?.type === "answer_block";
+
+    if (isAnswerBlock) {
+      // Generate AnswerBlock instead of ContentSection
+      const answerBlockProps: any = {
+        eyebrow: eyebrow || yamlSection?.eyebrow,
+        heading: title || yamlSection?.heading || yamlSection?.title || "",
+        body: body || yamlSection?.body || "",
+      };
+
+      // Resolve image from imageId if provided
+      if (yamlSection?.imageId) {
+        const imageResolution = validateMediaResolution(
+          mediaResolutionMap.get(yamlSection.imageId) || null
+        );
+        if (imageResolution && validateSupabaseURL(imageResolution.url)) {
+          answerBlockProps.imageSrc = imageResolution.url;
+          answerBlockProps.imageAlt = imageResolution.alt || answerBlockProps.heading || "Answer block image";
+        }
+      } else {
+        // Try to get media from section media array
+        const media = takeNextMedia();
+        if (media && validateSupabaseURL(media.url)) {
+          answerBlockProps.imageSrc = media.url;
+          answerBlockProps.imageAlt = media.alt || answerBlockProps.heading || "Answer block image";
+        }
+      }
+
+      const answerBlock: Block = {
+        id: `${sectionId}-answer`,
+        component: "AnswerBlock",
+        props: answerBlockProps,
+        children: [],
+      };
+
+      blocks.push(answerBlock);
+      continue; // Skip the ContentSection creation for answer_block
+    }
 
     const contentSectionProps: any = {
       variant: sectionPlan.variant,
@@ -426,17 +554,16 @@ function buildPageJSONFromLayoutPlan(
     if (sectionPlan.variant === "card-gallery") {
       const galleryItems: { url: string; alt: string }[] = [];
 
-      // Collect gallery media (validate each one is from Supabase)
+      // Collect gallery media
       while (galleryMediaQueue.length > 0) {
         const m = galleryMediaQueue.shift()!;
         if (validateSupabaseURL(m.url)) {
           galleryItems.push({ url: m.url, alt: m.alt });
         } else {
-          console.error(`Invalid gallery media URL (not from Supabase): ${m.url}. Skipping.`);
+          logToLangSmith("error", `Invalid gallery media URL (not from Supabase): ${m.url}. Skipping.`, { mediaId: m.id, mediaUrl: m.url }, runId);
         }
       }
 
-      // If no gallery items, try to get media from other queues
       if (galleryItems.length === 0) {
         const media = shouldUseHero
           ? takeNextMedia({ forceHero: true })
@@ -446,13 +573,10 @@ function buildPageJSONFromLayoutPlan(
         }
       }
 
-      // Always use placeholder if no media found (getPlaceholder() always returns a valid placeholder)
       if (galleryItems.length === 0) {
         const ph = getPlaceholder();
         galleryItems.push(ph);
-        console.warn(
-          `No Supabase media found for gallery section "${sectionId}". Using placeholder image.`
-        );
+        logToLangSmith("warn", `No Supabase media found for gallery section "${sectionId}". Using placeholder image.`, { sectionId: sectionId }, runId);
       }
 
       contentSectionProps.galleryImages = galleryItems;
@@ -469,47 +593,42 @@ function buildPageJSONFromLayoutPlan(
       if (media && validateSupabaseURL(media.url)) {
         contentSectionProps.imageSrc = media.url;
         contentSectionProps.imageAlt = media.alt;
-        console.log(`Assigned media to section "${sectionId}":`, {
-          imageSrc: media.url.substring(0, 100),
-          imageAlt: media.alt,
-          mediaId: media.id,
-        });
+        logToLangSmith("info", `Assigned media to section "${sectionId}":`, { imageSrc: media.url.substring(0, 100), imageAlt: media.alt, mediaId: media.id }, runId);
       } else {
-        // Always use placeholder if no media found (getPlaceholder() always returns a valid placeholder)
         const ph = getPlaceholder();
         contentSectionProps.imageSrc = ph.url;
         contentSectionProps.imageAlt = ph.alt;
-        console.warn(
-          `No Supabase media found for section "${sectionId}". Using placeholder image.`
-        );
-        console.log(`Placeholder assigned:`, {
-          imageSrc: ph.url.substring(0, 100),
-          imageAlt: ph.alt,
-        });
+        logToLangSmith("warn", `No Supabase media found for section "${sectionId}". Using placeholder image.`, { sectionId: sectionId }, runId);
+        logToLangSmith("info", `Placeholder assigned:`, { imageSrc: ph.url.substring(0, 100), imageAlt: ph.alt }, runId);
       }
     }
-    
-    // Final check: ensure imageSrc is set if variant requires an image
-    // (getPlaceholder() always returns a valid placeholder)
-    const variantsRequiringImage = ["full-width", "2-column-image-right", "2-column-image-left", "text-with-image", "annotated-visual"];
-    if (variantsRequiringImage.includes(sectionPlan.variant) && !contentSectionProps.imageSrc) {
+
+    const variantsRequiringImage = [
+      "full-width",
+      "2-column-image-right",
+      "2-column-image-left",
+      "text-with-image",
+      "annotated-visual",
+    ];
+    if (
+      variantsRequiringImage.includes(sectionPlan.variant) &&
+      !contentSectionProps.imageSrc
+    ) {
       const ph = getPlaceholder();
-      console.warn(`Variant "${sectionPlan.variant}" requires an image but none was assigned. Using placeholder.`);
+      logToLangSmith("warn", `Variant "${sectionPlan.variant}" requires an image but none was assigned. Using placeholder.`, { sectionId: sectionId, variant: sectionPlan.variant }, runId);
       contentSectionProps.imageSrc = ph.url;
       contentSectionProps.imageAlt = ph.alt;
     }
 
-    // Log final props before creating block
-    console.log(`ContentSection block "${sectionId}" final props:`, {
+    // Log final props
+    logDiagnostic("section-final-props", {
+      sectionId,
       variant: contentSectionProps.variant,
+      headline: contentSectionProps.headline || "(empty)",
+      bodyLength: contentSectionProps.body?.length || 0,
       hasImageSrc: !!contentSectionProps.imageSrc,
-      imageSrc: contentSectionProps.imageSrc ? contentSectionProps.imageSrc.substring(0, 100) : null,
-      imageAlt: contentSectionProps.imageAlt,
-      headline: contentSectionProps.headline ? contentSectionProps.headline.substring(0, 50) : null,
-      body: contentSectionProps.body ? contentSectionProps.body.substring(0, 50) : null,
-      eyebrow: contentSectionProps.eyebrow,
       allProps: Object.keys(contentSectionProps),
-    });
+    }, runId);
 
     const contentSectionBlock: Block = {
       id: `${sectionId}-content`,
@@ -521,7 +640,19 @@ function buildPageJSONFromLayoutPlan(
     containerBlock.children!.push(contentSectionBlock);
     sectionBlock.children!.push(containerBlock);
     blocks.push(sectionBlock);
-  });
+  }
+
+  // Log summary
+  logDiagnostic("page-rendering-summary", {
+    pageId: layoutPlan.pageId,
+    kind: layoutPlan.kind,
+    totalSections: layoutPlan.sections.length,
+    totalBlocks: blocks.length,
+    sectionsWithContent: blocks.filter((block) => {
+      const contentBlock = block.children?.[0]?.children?.[0];
+      return contentBlock?.props?.headline || contentBlock?.props?.body;
+    }).length,
+  }, runId);
 
   const page: PageJSON["page"] = {
     id: layoutPlan.pageId,
@@ -535,60 +666,426 @@ function buildPageJSONFromLayoutPlan(
   };
 }
 
-// ---- Main Orchestrator ----
+/**
+ * Ensure hero section exists in YAML data
+ * (You want all case studies / overview pages to start with a hero)
+ */
+function ensureHeroSection(yamlData: any): any {
+  const root = yamlData && typeof yamlData === "object" ? yamlData : {};
+  const summary = root.summary || {};
+  const media = root.media || {};
+
+  // Try to get hero content from existing sections if summary is empty
+  let heroTitle = summary.title;
+  let heroBody = summary.elevator_pitch || summary.one_liner;
+  
+  // If summary is empty, try to get content from first section
+  if (!heroTitle || !heroBody) {
+    const sections = Array.isArray(root.sections) ? root.sections : [];
+    const firstSection = sections.find((s: any) => s.type !== "hero") || sections[0];
+    if (firstSection) {
+      heroTitle = heroTitle || firstSection.title || firstSection.heading || "Overview";
+      heroBody = heroBody || firstSection.body || firstSection.summary || "";
+    }
+  }
+
+  const heroSection = {
+    id: "hero",
+    type: "hero",
+    title: heroTitle || "Overview",
+    body: heroBody || "",
+    media: media.hero ? [media.hero] : [],
+  };
+
+  const sections = Array.isArray(root.sections) ? root.sections : [];
+  const withoutExistingHero = sections.filter(
+    (s: any) => s.id !== "hero" && s.type !== "hero"
+  );
+
+  return {
+    ...root,
+    summary: {
+      ...summary,
+      title: heroTitle || summary.title,
+      elevator_pitch: heroBody || summary.elevator_pitch,
+      one_liner: heroBody || summary.one_liner,
+    },
+    sections: [heroSection, ...withoutExistingHero],
+  };
+}
+
+// ---- Layout Recipe Types ----
+
+type LayoutRecipeArgs = {
+  layoutPlanBase: {
+    pageId: string;
+    kind: string;
+  };
+  yamlData: any;
+  mediaResolutionMap: Map<string, MediaResolution>;
+  questionFocus: QuestionFocus;
+};
+
+type LayoutRecipe = (args: LayoutRecipeArgs) => PageJSON;
+
+// ---- Layout Recipes ----
+
+/**
+ * Case study overview recipe (canonical full case study)
+ */
+const caseStudyOverviewRecipe: LayoutRecipe = ({
+  layoutPlanBase,
+  yamlData,
+  mediaResolutionMap,
+}) => {
+  const yamlWithHero = ensureHeroSection(yamlData);
+
+  const layoutPlan: LayoutPlan = {
+    pageId: layoutPlanBase.pageId,
+    kind: layoutPlanBase.kind,
+    sections: [
+      { id: "hero", variant: "full-width", useHeroMedia: true },
+      { id: "context", variant: "2-column-image-right" },
+      { id: "problem", variant: "2-column-image-left" },
+      { id: "solution", variant: "2-column-image-right" },
+      { id: "process", variant: "timeline" },
+      { id: "outcome", variant: "text-with-image" },
+      { id: "reflections", variant: "half-and-half-column" },
+    ],
+  };
+
+  return buildPageJSONFromLayoutPlan(
+    layoutPlan,
+    yamlWithHero,
+    mediaResolutionMap
+  );
+};
+
+/**
+ * Case study tools recipe
+ */
+const caseStudyToolsRecipe: LayoutRecipe = ({
+  layoutPlanBase,
+  yamlData,
+  mediaResolutionMap,
+}) => {
+  const yamlWithHero = ensureHeroSection(yamlData);
+
+  const layoutPlan: LayoutPlan = {
+    pageId: `${layoutPlanBase.pageId}-tools`,
+    kind: layoutPlanBase.kind,
+    sections: [
+      { id: "hero", variant: "full-width", useHeroMedia: true },
+      { id: "tools", variant: "2-column-split" },
+      { id: "solution", variant: "2-column-image-right" },
+      { id: "process", variant: "timeline" },
+    ],
+  };
+
+  return buildPageJSONFromLayoutPlan(
+    layoutPlan,
+    yamlWithHero,
+    mediaResolutionMap
+  );
+};
+
+/**
+ * Case study process recipe
+ */
+const caseStudyProcessRecipe: LayoutRecipe = ({
+  layoutPlanBase,
+  yamlData,
+  mediaResolutionMap,
+}) => {
+  const yamlWithHero = ensureHeroSection(yamlData);
+
+  const layoutPlan: LayoutPlan = {
+    pageId: `${layoutPlanBase.pageId}-process`,
+    kind: layoutPlanBase.kind,
+    sections: [
+      { id: "hero", variant: "full-width", useHeroMedia: true },
+      { id: "context", variant: "2-column-image-right" },
+      { id: "process", variant: "timeline" },
+      { id: "outcome", variant: "text-with-image" },
+    ],
+  };
+
+  return buildPageJSONFromLayoutPlan(
+    layoutPlan,
+    yamlWithHero,
+    mediaResolutionMap
+  );
+};
+
+/**
+ * Case study outcomes recipe
+ */
+const caseStudyOutcomesRecipe: LayoutRecipe = ({
+  layoutPlanBase,
+  yamlData,
+  mediaResolutionMap,
+}) => {
+  const yamlWithHero = ensureHeroSection(yamlData);
+
+  const layoutPlan: LayoutPlan = {
+    pageId: `${layoutPlanBase.pageId}-outcomes`,
+    kind: layoutPlanBase.kind,
+    sections: [
+      { id: "hero", variant: "full-width", useHeroMedia: true },
+      { id: "solution", variant: "2-column-image-left" },
+      { id: "outcome", variant: "text-with-image" },
+      { id: "reflections", variant: "half-and-half-column" },
+    ],
+  };
+
+  return buildPageJSONFromLayoutPlan(
+    layoutPlan,
+    yamlWithHero,
+    mediaResolutionMap
+  );
+};
+
+/**
+ * Case study reflections recipe
+ */
+const caseStudyReflectionsRecipe: LayoutRecipe = ({
+  layoutPlanBase,
+  yamlData,
+  mediaResolutionMap,
+}) => {
+  const yamlWithHero = ensureHeroSection(yamlData);
+
+  const layoutPlan: LayoutPlan = {
+    pageId: `${layoutPlanBase.pageId}-reflections`,
+    kind: layoutPlanBase.kind,
+    sections: [
+      { id: "hero", variant: "full-width", useHeroMedia: true },
+      { id: "process", variant: "timeline" },
+      { id: "reflections", variant: "half-and-half-column" },
+      { id: "outcome", variant: "text-with-image" },
+    ],
+  };
+
+  return buildPageJSONFromLayoutPlan(
+    layoutPlan,
+    yamlWithHero,
+    mediaResolutionMap
+  );
+};
+
+// ---- Recipe Selector ----
+
+const layoutRecipes: Record<string, LayoutRecipe> = {
+  "case_study:overview": caseStudyOverviewRecipe,
+  "case_study:tools": caseStudyToolsRecipe,
+  "case_study:process": caseStudyProcessRecipe,
+  "case_study:outcomes": caseStudyOutcomesRecipe,
+  "case_study:reflections": caseStudyReflectionsRecipe,
+  // You can add "overview:*", "skills:*", etc. later
+};
+
+function getLayoutRecipe(
+  pageKind: string,
+  questionFocus: QuestionFocus
+): LayoutRecipe {
+  const key = `${pageKind}:${questionFocus}`;
+  const recipe = layoutRecipes[key];
+
+  if (recipe) {
+    return recipe;
+  }
+
+  // For now, any missing combo falls back to the full case study layout
+  return caseStudyOverviewRecipe;
+}
+
+// ---- Main Orchestrator (canonical layout) ----
 
 const generateOrchestratorJSONInternal = async (
   input: OrchestratorInput
 ): Promise<PageJSON> => {
   console.time("orchestrator-total");
+  
+  // Get run ID from LangSmith context if available
+  const runId = (global as any).__langsmith_run_id || "orchestrator-run";
 
-  const { yaml: yamlText } = input;
+  const { yaml: yamlText, intent } = input;
 
   try {
+    // Parse YAML
     let yamlData: any;
     try {
       yamlData = yaml.load(yamlText);
-    } catch (error) {
-      throw new Error(`Invalid YAML: ${error}`);
+
+      if (!yamlData || typeof yamlData !== "object") {
+        logToLangSmith("warn", "YAML root is empty or non-object", { yamlPreview: yamlText.substring(0, 200) }, runId);
+        yamlData = {};
+      }
+    } catch (error: any) {
+      logToLangSmith("error", "YAML parsing error", {
+        message: error.message,
+        line: error.mark?.line,
+        column: error.mark?.column,
+        yamlPreview: yamlText.substring(0, 1000),
+      }, runId);
+      throw new Error(
+        `Invalid YAML at line ${error.mark?.line ?? "unknown"}: ${error.message}`
+      );
     }
 
-    const mediaIds = extractMediaIdsFromYAML(yamlText);
-    const mediaResolutionMap = await resolveMediaIds(mediaIds);
+    // Extract answer_blocks from YAML
+    const answerBlocksRaw = yamlData.answer_blocks || [];
+    
+    if (!Array.isArray(answerBlocksRaw) || answerBlocksRaw.length === 0) {
+      logToLangSmith("warn", "No answer_blocks found in YAML", { 
+        yamlData: JSON.stringify(yamlData, null, 2).substring(0, 1000),
+        hasAnswerBlocks: !!yamlData.answer_blocks,
+        answerBlocksType: typeof yamlData.answer_blocks,
+        answerBlocksLength: Array.isArray(yamlData.answer_blocks) ? yamlData.answer_blocks.length : 0,
+      }, runId);
+      throw new Error("Copywriter must return at least one answer_block. YAML structure may be incorrect.");
+    }
 
-    const pagePlan = buildPagePlanFromYaml(yamlData);
-
-    console.time("orchestrator-layout-plan");
-    const layoutPlan = await layoutPlannerChain.invoke({
-      pagePlan: JSON.stringify(pagePlan, null, 2),
-      format_instructions: layoutPlanParser.getFormatInstructions(),
+    // Validate and parse answer_blocks
+    const answerBlocks = answerBlocksRaw.map((block: any, index: number) => {
+      try {
+        return AnswerBlockSchema.parse({
+          type: "answer_block",
+          eyebrow: block.eyebrow || "",
+          heading: block.heading || "",
+          body: block.body || "",
+          imageId: block.image_id || block.imageId,
+        });
+      } catch (error) {
+        logToLangSmith("error", `Invalid answer_block at index ${index}`, {
+          block,
+          error: error instanceof Error ? error.message : String(error),
+        }, runId);
+        throw new Error(`Invalid answer_block at index ${index}: ${error instanceof Error ? error.message : String(error)}`);
+      }
     });
-    console.timeEnd("orchestrator-layout-plan");
 
-    const result = buildPageJSONFromLayoutPlan(
-      layoutPlan,
-      yamlData,
-      mediaResolutionMap
-    );
+    // Determine projectId
+    const projectId = intent.topic?.projectSlug || yamlData.meta?.primary_project_slug || null;
 
-    // Validate components via registry
-    const validateBlock = (block: Block): void => {
-      if (!componentRegistry[block.component]) {
-        throw new Error(
-          `Component "${block.component}" not found in registry`
-        );
+    // Build blocks array (using schema Block type)
+    const blocks: SchemaBlock[] = [];
+
+    // Add hero block if projectId exists
+    if (projectId) {
+      const heroFacts = await getHeroFacts(projectId);
+      if (heroFacts) {
+        const heroBlock = HeroCaseStudyBlockSchema.parse({
+          type: "hero_case_study",
+          ...heroFacts,
+          imageId: yamlData.media?.hero?.id,
+        });
+        blocks.push(heroBlock);
+      } else {
+        logToLangSmith("warn", `Hero facts not found for projectId: ${projectId}`, { projectId }, runId);
       }
-      if (block.children) {
-        block.children.forEach(validateBlock);
+    }
+
+    // Add answer blocks
+    answerBlocks.forEach((answerBlock) => {
+      blocks.push(answerBlock);
+    });
+
+    // Resolve media IDs for answer blocks
+    const mediaIds = new Set<string>();
+    answerBlocks.forEach((block) => {
+      if (block.imageId) {
+        mediaIds.add(block.imageId);
       }
+    });
+    if (yamlData.media?.hero?.id) {
+      mediaIds.add(yamlData.media.hero.id);
+    }
+
+    const mediaResolutionMap = await resolveMediaIds(Array.from(mediaIds));
+
+    // Build PageJSON - map block types to component names
+    const pageId = projectId || yamlData.kind || "general";
+    const page: PageJSON["page"] = {
+      id: pageId,
+      kind: yamlData.kind || intent.pageKind,
+      blocks: blocks.map((block, index) => {
+        // Map schema block type to Renderer Block format
+        if (block.type === "hero_case_study") {
+          return {
+            id: `hero-${index}`,
+            component: "CaseStudyHero",
+            props: {
+              projectId: block.projectId,
+              client: block.client,
+              projectNameOrUrl: block.projectNameOrUrl,
+              role: block.role,
+              description: block.description,
+              yearOrTimeline: block.yearOrTimeline,
+              team: block.team,
+            },
+            children: [],
+          } as Block;
+        } else if (block.type === "answer_block") {
+          // Resolve imageId to imageSrc if present
+          let imageSrc: string | undefined;
+          let imageAlt: string | undefined;
+          if (block.imageId) {
+            const media = mediaResolutionMap.get(block.imageId);
+            if (media && validateSupabaseURL(media.url)) {
+              imageSrc = media.url;
+              imageAlt = media.alt || block.heading;
+            }
+          }
+          return {
+            id: `answer-block-${index}`,
+            component: "AnswerBlock",
+            props: {
+              eyebrow: block.eyebrow,
+              heading: block.heading,
+              body: block.body,
+              imageId: block.imageId,
+              imageSrc,
+              imageAlt,
+            },
+            children: [],
+          } as Block;
+        }
+        // Fallback (should not happen)
+        return {
+          id: `block-${index}`,
+          component: "BodyText",
+          props: { body: "Unknown block type" },
+          children: [],
+        } as Block;
+      }),
     };
 
-    result.page.blocks.forEach(validateBlock);
+    const result: PageJSON = {
+      version: "1",
+      page,
+    };
+
+    // Note: Blocks are already validated as SchemaBlocks before conversion to Renderer format
+    // The Renderer Block format uses 'component' instead of 'type', so we don't validate here
+    // Schema validation happens earlier when parsing answer_blocks and hero blocks
+
+    logDiagnostic("orchestrator-result", {
+      pageId: result.page.id,
+      kind: result.page.kind,
+      blocksCount: result.page.blocks.length,
+      hasHero: result.page.blocks.some((b: any) => b.component === "CaseStudyHero"),
+      answerBlocksCount: result.page.blocks.filter((b: any) => b.component === "AnswerBlock").length,
+    }, runId);
 
     console.timeEnd("orchestrator-total");
     return result;
   } catch (error) {
     console.timeEnd("orchestrator-total");
-    console.error("Error generating orchestrator JSON:", error);
+    logToLangSmith("error", "Orchestrator error", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    }, runId);
     throw error;
   }
 };
@@ -603,5 +1100,6 @@ export const generateOrchestratorJSON = traceable(
     metadata: {
       agent: "orchestrator",
     },
+    
   }
 );
