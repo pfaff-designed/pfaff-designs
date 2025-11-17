@@ -12,6 +12,7 @@ import {
   AnnotatedVisual,
   HalfAndHalfColumn,
   Timeline,
+  DefaultSection,
 } from "./variants";
 
 export type ContentSectionVariant =
@@ -23,7 +24,8 @@ export type ContentSectionVariant =
   | "text-with-image"
   | "annotated-visual"
   | "half-and-half-column"
-  | "timeline";
+  | "timeline"
+  | "default";
 
 export interface ContentSectionProps {
   variant: ContentSectionVariant;
@@ -34,6 +36,11 @@ export interface ContentSectionProps {
   imageSrc?: string;
   imageAlt?: string;
   // Special props for specific variants
+  contentBlocks?: Array<{
+    eyebrow?: string;
+    body: string;
+    richText?: boolean;
+  }>;
   galleryImages?: Array<{
     url: string;
     alt?: string;
@@ -77,6 +84,7 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
       eyebrow,
       imageSrc,
       imageAlt = "",
+      contentBlocks,
       galleryImages,
       annotations,
       timelineItems,
@@ -178,13 +186,25 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
         case "timeline":
           return <Timeline timelineItems={timelineItems} />;
 
+        case "default":
+          return (
+            <DefaultSection
+              headline={headline}
+              body={body}
+              eyebrow={eyebrow}
+              imageSrc={imageSrc}
+              imageAlt={imageAlt}
+              contentBlocks={contentBlocks}
+            />
+          );
+
         default:
           return null;
       }
     };
 
-    // For full-width, card-gallery, annotated-visual, and text-with-image variants, don't wrap in Container/Section as they handle their own layout
-    if (variant === "full-width" || variant === "card-gallery" || variant === "annotated-visual" || variant === "text-with-image") {
+    // For full-width, card-gallery, annotated-visual, text-with-image, and default variants, don't wrap in Container/Section as they handle their own layout
+    if (variant === "full-width" || variant === "card-gallery" || variant === "annotated-visual" || variant === "text-with-image" || variant === "default") {
       return (
         <div ref={ref as any} className={className}>
           {renderVariant()}

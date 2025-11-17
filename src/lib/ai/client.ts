@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Client } from "langsmith";
 
+
 // Initialize LangSmith client for tracing
 let langsmithClient: Client | null = null;
 if (process.env.LANGSMITH_API_KEY) {

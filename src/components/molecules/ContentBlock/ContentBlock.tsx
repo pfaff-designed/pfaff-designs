@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 export interface ContentBlockItem {
   eyebrow?: string;
   body: string;
+  richText?: boolean;
 }
 
 export interface ContentBlockProps {
@@ -64,6 +65,7 @@ const ContentBlock = React.forwardRef<HTMLDivElement, ContentBlockProps>(
               {/* Body Text */}
               <BodyText
                 body={item.body}
+                richText={item.richText}
                 className={cn("flex-1 max-w-[388px]", bodyClassName)}
               />
             </div>
