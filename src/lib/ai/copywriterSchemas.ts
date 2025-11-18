@@ -31,6 +31,8 @@ export type CopywriterInput = {
   question: string;
   context: string; // concatenated retrieved chunks from vector search
   projectId?: string | null;
+  sectionTitle: string;
+  sectionBody: string;
   projectShortFacts?: {
     client?: string;
     projectNameOrUrl?: string;

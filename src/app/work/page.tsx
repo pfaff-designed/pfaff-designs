@@ -1,4 +1,5 @@
 import { caseStudies } from "@/lib/caseStudies/data";
+import { workPageData } from "@/lib/pages/work/data";
 import { ContentSection } from "@/components/page-components/ContentSection";
 import { Section } from "@/components/layout/Section";
 import { Container } from "@/components/layout/Container";
@@ -6,7 +7,9 @@ import Link from "next/link";
 import { Heading } from "@/components/atoms/Heading";
 import { BodyText } from "@/components/atoms/BodyText";
 
+
 export default function Work() {
+
   return (
     <main className="min-h-screen bg-[var(--bg-default)]">
       {/* Hero Section */}
@@ -14,9 +17,9 @@ export default function Work() {
         <Container>
           <ContentSection
             variant="default"
-            eyebrow="Work"
-            headline="Case studies"
-            body="A collection of projects where I've applied design engineering principles to build scalable, user-focused products. Each case study explores the context, process, and impact of the work."
+            eyebrow={workPageData.hero.eyebrow}
+            headline={workPageData.hero.headline}
+            body={workPageData.hero.body}
           />
         </Container>
       </Section>

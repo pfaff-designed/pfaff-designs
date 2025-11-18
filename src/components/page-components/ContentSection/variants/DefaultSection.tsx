@@ -8,6 +8,7 @@ export interface DefaultSectionProps {
   eyebrow?: string;
   imageSrc?: string;
   imageAlt?: string;
+  isAI?: boolean;
   contentBlocks?: Array<{
     eyebrow?: string;
     body: string;
@@ -21,27 +22,33 @@ export const DefaultSection: React.FC<DefaultSectionProps> = ({
   eyebrow,
   imageSrc,
   imageAlt = "",
+  isAI = false,
   contentBlocks,
 }) => {
+  // When isAI is true, override eyebrow with "AI · Generated Response"
+  const displayEyebrow = isAI ? "AI · Generated Response" : eyebrow;
+
   // Convert contentBlocks to ContentBlockItem format
   const contentBlockItems: ContentBlockItem[] = contentBlocks
     ? contentBlocks.map((block) => ({
-        eyebrow: block.eyebrow,
+        eyebrow: isAI ? "AI · Generated Response" : block.eyebrow,
         body: block.body,
         richText: block.richText,
+        isAI: isAI,
       }))
     : body
     ? [
         {
-          eyebrow: eyebrow,
+          eyebrow: displayEyebrow,
           body: body,
           richText: false,
+          isAI: isAI,
         },
       ]
     : [];
 
   return (
-    <div className="flex flex-col items-center justify-center w-full">
+    <div className="flex flex-col items-center justify-center w-full mb-20">
       {/* Content Blocks */}
       {contentBlockItems.length > 0 && (
         <div className="w-full mt-[1.5rem] max-w-[33.625rem]">

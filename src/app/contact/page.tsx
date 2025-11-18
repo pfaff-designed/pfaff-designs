@@ -9,6 +9,7 @@ import { Container } from "@/components/layout/Container";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { contactPageData } from "@/lib/pages/contact/data";
 
 function ContactForm() {
   const searchParams = useSearchParams();
@@ -34,9 +35,9 @@ function ContactForm() {
           <div className="max-w-2xl mx-auto">
             <ContentSection
               variant="default"
-              eyebrow="Contact"
-              headline="Let's talk"
-              body="I'm always interested in hearing about new opportunities, projects, or collaborations. Whether you're looking for a design-minded engineer to help build AI products, or you want to discuss generative UI and RAG-driven interfaces, feel free to reach out."
+              eyebrow={contactPageData.intro.eyebrow}
+              headline={contactPageData.intro.headline}
+              body={contactPageData.intro.body}
             />
           </div>
         </Container>
@@ -52,7 +53,7 @@ function ContactForm() {
                   htmlFor="email"
                   className="text-sm font-medium text-[var(--text-default)]"
                 >
-                  Email
+                  {contactPageData.form.emailLabel}
                 </label>
                 <Input
                   id="email"
@@ -60,7 +61,7 @@ function ContactForm() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your.email@example.com"
+                  placeholder={contactPageData.form.emailPlaceholder}
                   className="w-full"
                 />
               </div>
@@ -70,14 +71,14 @@ function ContactForm() {
                   htmlFor="message"
                   className="text-sm font-medium text-[var(--text-default)]"
                 >
-                  Message
+                  {contactPageData.form.messageLabel}
                 </label>
                 <Textarea
                   id="message"
                   required
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Tell me about your project or opportunity..."
+                  placeholder={contactPageData.form.messagePlaceholder}
                   className="w-full min-h-[8rem]"
                 />
               </div>
@@ -88,7 +89,7 @@ function ContactForm() {
                   variant="default"
                   className="w-full md:w-auto"
                 >
-                  Send message
+                  {contactPageData.form.submitButtonText}
                 </Button>
               </div>
             </form>
@@ -108,9 +109,9 @@ export default function Contact() {
             <div className="max-w-2xl mx-auto">
               <ContentSection
                 variant="default"
-                eyebrow="Contact"
-                headline="Let's talk"
-                body="I'm always interested in hearing about new opportunities, projects, or collaborations. Whether you're looking for a design-minded engineer to help build AI products, or you want to discuss generative UI and RAG-driven interfaces, feel free to reach out."
+                eyebrow={contactPageData.intro.eyebrow}
+                headline={contactPageData.intro.headline}
+                body={contactPageData.intro.body}
               />
             </div>
           </Container>

@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleQuery } from "@/lib/ai/queryHandler";
 
+export async function GET() {
+  const hasKey = !!process.env.LANGCHAIN_API_KEY;
+  console.log("🔍 LANGCHAIN_API_KEY present?", hasKey);
+  // NEVER return the key to the client – just a boolean
+  return NextResponse.json({
+    langchainKeyPresent: hasKey,
+  });}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -12,6 +20,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    
 
     const pageJSON = await handleQuery(query);
 
