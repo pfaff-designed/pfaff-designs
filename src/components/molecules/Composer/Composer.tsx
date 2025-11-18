@@ -166,7 +166,7 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
           "fixed left-1/2 -translate-x-1/2 z-50 flex flex-col gap-[1rem] w-[24.875rem] pb-6",
           "transition-[filter] duration-200",
           isFocused
-            ? "drop-shadow-[0_-2px_8px_rgba(231,111,81,0.25),0_-1px_2px_rgba(255,255,255,0.5)]"
+            ? "drop-shadow-[0_-2px_8px_rgba(158,200,210,0.8),0_-1px_2px_rgba(255,255,255,0.5)]"
             : "drop-shadow-[0_-2px_8px_rgba(0,0,0,0.08),0_-1px_2px_rgba(255,255,255,0.5)]",
           className
         )}
@@ -196,8 +196,10 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
             className={cn(
               "relative flex items-center w-full rounded-full",
               "bg-[#FDF9F4]",
-              "border border-[rgba(38,41,29,0.1)]",
-              "pr-2 pl-6 py-[0.5rem] transition-all"
+              "border pr-2 pl-6 py-[0.5rem] transition-all",
+              isFocused
+                ? "border-[#9EC8D2]"
+                : "border-[rgba(38,41,29,0.1)]"
             )}
           >
             <div className="relative z-[1] flex-1 pr-0.5" style={{ isolation: 'isolate' }}>

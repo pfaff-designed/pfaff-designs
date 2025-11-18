@@ -134,17 +134,17 @@ export default function Home() {
   );
 
   return (
-    <main className="min-h-screen bg-default">
+    <main className="h-[calc(100vh-5rem)] bg-default flex justify-center items-center">
       {/* Renderer Content Area */}
       <div>
         {status === "loading" ? (
-          <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="flex items-center justify-center">
             <TypingIndicator />
           </div>
         ) : status === "idle" && !renderedContent ? (
-          <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="flex items-center justify-center">
             <div className="max-w-[25rem] text-left">
-              <p className="text-base leading-5 text-[#26291d]">
+              <p className="text-base leading-5 text-dark">
                 Hey 👋, my name is Charles, I'm a design-minded engineer interested in helping you build scalable ai products using generative ui. Thanks for checking out my portfolio don't forget to say hi below vvv
               </p>
             </div>
