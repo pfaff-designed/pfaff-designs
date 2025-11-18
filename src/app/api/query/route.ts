@@ -13,13 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("API route: Processing query:", query);
     const pageJSON = await handleQuery(query);
-    console.log("API route: Query handler returned:", { 
-      version: pageJSON.version, 
-      pageId: pageJSON.page?.id, 
-      blocksCount: pageJSON.page?.blocks?.length 
-    });
 
     // Generate response ID (UUID-like format with timestamp)
     const responseId = `resp_${new Date().toISOString().replace(/[:.]/g, "-")}`;

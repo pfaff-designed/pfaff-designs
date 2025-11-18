@@ -77,9 +77,6 @@ export default function Home() {
 
         const apiResponse = await response.json();
 
-        // Debug: Log the received response
-        console.log("Received API response:", apiResponse);
-
         // Validate that we received a valid response structure (not an error)
         if (apiResponse.error) {
           console.error("API returned error:", apiResponse);
