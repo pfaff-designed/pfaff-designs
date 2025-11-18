@@ -164,7 +164,7 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
         ref={ref}
         className={cn(
           "fixed left-1/2 -translate-x-1/2 z-50 flex flex-col gap-[1rem] w-[24.875rem] pb-6",
-          "transition-all duration-200",
+          "transition-[filter] duration-200",
           isFocused
             ? "drop-shadow-[0_-2px_8px_rgba(231,111,81,0.25),0_-1px_2px_rgba(255,255,255,0.5)]"
             : "drop-shadow-[0_-2px_8px_rgba(0,0,0,0.08),0_-1px_2px_rgba(255,255,255,0.5)]",
