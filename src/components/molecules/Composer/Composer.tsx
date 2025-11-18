@@ -164,7 +164,10 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
         ref={ref}
         className={cn(
           "fixed left-1/2 -translate-x-1/2 z-50 flex flex-col gap-[1rem] w-[24.875rem] pb-6",
-          "drop-shadow-[0_-2px_8px_rgba(0,0,0,0.08),0_-1px_2px_rgba(255,255,255,0.5)]",
+          "transition-all duration-200",
+          isFocused
+            ? "drop-shadow-[0_-2px_8px_rgba(231,111,81,0.25),0_-1px_2px_rgba(255,255,255,0.5)]"
+            : "drop-shadow-[0_-2px_8px_rgba(0,0,0,0.08),0_-1px_2px_rgba(255,255,255,0.5)]",
           className
         )}
         style={{
@@ -192,14 +195,12 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
             ref={containerRef}
             className={cn(
               "relative flex items-center w-full rounded-full",
-              "bg-[rgba(253,249,244,0.7)] backdrop-blur-md",
+              "bg-[#FDF9F4]",
               "border border-[rgba(38,41,29,0.1)]",
-              "pr-2 pl-6 py-[0.5rem] transition-all",
-              isFocused && "outline-none ring-2 ring-[#9ec8d2] ring-offset-6"
+              "pr-2 pl-6 py-[0.5rem] transition-all"
             )}
-            style={isFocused ? { isolation: 'isolate' } : undefined}
           >
-            <div className="relative z-[1] flex-1" style={{ isolation: 'isolate' }}>
+            <div className="relative z-[1] flex-1 pr-0.5" style={{ isolation: 'isolate' }}>
               <BaseInput
                 ref={inputRef}
                 value={inputValue}

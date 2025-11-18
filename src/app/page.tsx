@@ -150,12 +150,14 @@ export default function Home() {
             </div>
           </div>
         ) : (
+          <div className="flex items-center justify-center w-full">
           <Renderer 
             data={renderedContent} 
             status={status}
             responseId={currentResponseId || lastUpdatedAt || renderedContent?.page?.id}
             isLatest={true}
           />
+          </div>
         )}
       </div>
 
