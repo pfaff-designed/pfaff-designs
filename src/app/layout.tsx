@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Header } from "@/components/page-components/Header";
 import { Footer } from "@/components/page-components/Footer";
+import { GlobalComposer } from "@/components/layout/GlobalComposer";
 
 export const metadata: Metadata = {
   title: "pfaff-designs",
@@ -25,6 +26,7 @@ export default function RootLayout({
         <Header />
         {children}
         <Footer />
+        <GlobalComposer />
       </body>
     </html>
   );

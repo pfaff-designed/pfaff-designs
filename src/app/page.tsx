@@ -2,13 +2,13 @@
 
 import * as React from "react";
 import { caseStudies } from "@/lib/caseStudies/data";
+import { homePageData } from "@/lib/pages/home/data";
 import { ContentSection } from "@/components/page-components/ContentSection";
 import { Section } from "@/components/layout/Section";
 import { Container } from "@/components/layout/Container";
 import Link from "next/link";
 import { Heading } from "@/components/atoms/Heading";
 import { BodyText } from "@/components/atoms/BodyText";
-import { Composer } from "@/components/molecules/Composer";
 import { Renderer } from "@/components/utility/Renderer";
 import type { PageJSON } from "@/components/utility/Renderer";
 import { TypingIndicator } from "@/components/ui/TypingIndicator";
@@ -88,9 +88,9 @@ export default function Home() {
             <Container>
               <ContentSection
                 variant="default"
-                eyebrow="Design-minded engineer · Applied AI"
-                headline="Building scalable AI products with generative UI"
-                body="I'm a design-minded engineer focused on creating RAG-driven front-ends and generative UI experiences. I work at the intersection of design, engineering, and AI to build products that are both beautiful and intelligent. This portfolio showcases my work building scalable AI products that help teams deliver better user experiences."
+                eyebrow={homePageData.hero.eyebrow}
+                headline={homePageData.hero.headline}
+                body={homePageData.hero.body}
               />
             </Container>
           </Section>
@@ -101,9 +101,9 @@ export default function Home() {
               <div className="space-y-[3rem] md:space-y-[4rem]">
                 <ContentSection
                   variant="default"
-                  eyebrow="Selected Work"
-                  headline="Case studies"
-                  body="A selection of projects where I've applied design engineering principles to build scalable, user-focused products."
+                  eyebrow={homePageData.selectedWork.eyebrow}
+                  headline={homePageData.selectedWork.headline}
+                  body={homePageData.selectedWork.body}
                 />
 
                 {/* Case Studies Grid */}
@@ -161,7 +161,7 @@ export default function Home() {
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="max-w-[25rem] text-left">
             <p className="text-base leading-5 text-[var(--text-default)]">
-              Hey 👋, my name is Charles, I'm a design-minded engineer interested in helping you build scalable ai products using generative ui. Thanks for checking out my portfolio don't forget to say hi below vvv
+              {homePageData.welcomeMessage}
             </p>
           </div>
         </div>
@@ -175,16 +175,6 @@ export default function Home() {
           isLatest={true}
         />
       )}
-
-      {/* Composer - Fixed at bottom */}
-      <Composer
-        placeholder="Tell me about yourself"
-        onSubmit={handleComposerSubmit}
-        recentQuery={currentQuery}
-        status={status}
-        lastPrompt={lastPrompt}
-        lastUpdatedAt={lastUpdatedAt}
-      />
     </main>
   );
 }
