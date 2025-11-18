@@ -44,7 +44,7 @@ export const DefaultSection: React.FC<DefaultSectionProps> = ({
     <div className="flex flex-col items-center justify-center w-full">
       {/* Content Blocks */}
       {contentBlockItems.length > 0 && (
-        <div className="w-full mt-[1.5rem]">
+        <div className="w-full mt-[1.5rem] max-w-[33.625rem]">
           <ContentBlock
             headline={headline || ""}
             items={contentBlockItems}
