@@ -5,6 +5,7 @@ import { ContentSection } from "@/components/page-components/ContentSection";
 import { useTypewriter } from "@/hooks/useTypewriter";
 import { useResponseContext } from "@/components/utility/Renderer/ResponseContext";
 import { markdownToHtml } from "@/lib/utils/markdown";
+import { cn } from "@/lib/utils";
 
 export interface AnswerBlockProps {
   eyebrow?: string;
@@ -68,7 +69,7 @@ const AnswerBlock = React.forwardRef<HTMLElement, AnswerBlockProps>(
         contentBlocks={contentBlocks}
         imageSrc={imageSrc}
         imageAlt={imageAlt || heading || "Answer block image"}
-        className={className}
+        className={cn(className, "w-[31.25rem]")}
       />
     );
   }

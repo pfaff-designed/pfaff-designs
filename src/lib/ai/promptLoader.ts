@@ -1,19 +1,10 @@
 import { langsmithClient } from "./client";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import type { IntentResult } from "./intentResolver";
-import type { KBData } from "@/lib/kb/loader";
-
-interface PromptVariables {
-  userQuery: string;
-  intent: IntentResult;
-  projectsContext: any;
-  identityContext: any;
-  mediaContext: any;
-  ragContext?: string; // Optional RAG context from vector search
-}
+import type { CopywriterInput } from "./copywriterSchemas";
 
 /**
  * Get the copywriter prompt template from LangSmith or fallback to default
+ * Prompt name: pfaff-copywriter-answer-blocks-v1
  */
 export async function getCopywriterPromptTemplate(): Promise<ChatPromptTemplate> {
   // Try to load from LangSmith first
@@ -22,7 +13,7 @@ export async function getCopywriterPromptTemplate(): Promise<ChatPromptTemplate>
       // Use pullPromptCommit which returns the actual prompt content
       // PromptCommit has: { owner, repo, commit_hash, manifest, examples }
       // The actual prompt data is in the manifest property
-      const promptCommit = await langsmithClient.pullPromptCommit("copywriter-agent-prompt", {
+      const promptCommit = await langsmithClient.pullPromptCommit("pfaff-copywriter-answer-blocks-v1", {
         includeModel: false,
       });
       
@@ -31,39 +22,46 @@ export async function getCopywriterPromptTemplate(): Promise<ChatPromptTemplate>
       
       if (!manifest) {
         console.warn("Prompt commit has no manifest, using fallback");
-        const fallback = getFallbackPromptTemplate();
-        console.log("📝 Copywriter Prompt: Using FALLBACK prompt");
-        return fallback;
+        return getFallbackPromptTemplate();
       }
       
       // The manifest can contain messages or template
       // Try to extract messages first (most common format)
       if (manifest.messages && Array.isArray(manifest.messages)) {
-        const template = ChatPromptTemplate.fromMessages(
-          manifest.messages.map((msg: any) => {
-            // Handle different message formats
-            const role = msg.role || (msg.type === "system" ? "system" : "human");
-            const content = typeof msg.content === "string" 
-              ? msg.content 
-              : (msg.template || "");
-            return [role, content];
-          })
-        );
-        console.log("📝 Copywriter Prompt: Loaded from LangSmith (messages format)");
-        console.log("📝 Prompt messages:", manifest.messages.map((msg: any) => ({
-          role: msg.role || msg.type,
-          contentLength: typeof msg.content === "string" ? msg.content.length : 0,
-          contentPreview: typeof msg.content === "string" ? msg.content.substring(0, 200) + "..." : "N/A"
-        })));
-        return template;
+        try {
+          const template = ChatPromptTemplate.fromMessages(
+            manifest.messages.map((msg: any) => {
+              // Handle different message formats
+              const role = msg.role || (msg.type === "system" ? "system" : "human");
+              const content = typeof msg.content === "string" 
+                ? msg.content 
+                : (msg.template || "");
+              return [role, content];
+            })
+          );
+          return template;
+        } catch (templateError: any) {
+          console.error("❌ Error creating template from LangSmith messages:", templateError.message);
+          console.error("Stack:", templateError.stack);
+          console.error("This usually means the prompt has unescaped braces ({{ or }}).");
+          console.error("Falling back to default prompt...");
+          // Don't throw - return fallback instead
+          return getFallbackPromptTemplate();
+        }
       }
       
       // If it's a template string format
       if (manifest.template && typeof manifest.template === "string") {
-        const template = ChatPromptTemplate.fromTemplate(manifest.template);
-        console.log("📝 Copywriter Prompt: Loaded from LangSmith (template format)");
-        console.log("📝 Prompt template preview:", manifest.template.substring(0, 200) + "...");
-        return template;
+        try {
+          const template = ChatPromptTemplate.fromTemplate(manifest.template);
+          return template;
+        } catch (templateError: any) {
+          console.error("❌ Error creating template from LangSmith template string:", templateError.message);
+          console.error("This usually means the prompt has unescaped braces ({{ or }}).");
+          console.error("Falling back to default prompt...");
+          // Don't throw - return fallback instead
+          return getFallbackPromptTemplate();
+        }
       }
       
       // If manifest itself is a string (JSON), try to parse it
@@ -71,20 +69,28 @@ export async function getCopywriterPromptTemplate(): Promise<ChatPromptTemplate>
         try {
           const parsed = JSON.parse(manifest);
           if (parsed.messages && Array.isArray(parsed.messages)) {
-            const template = ChatPromptTemplate.fromMessages(
-              parsed.messages.map((msg: any) => {
-                const role = msg.role || (msg.type === "system" ? "system" : "human");
-                const content = typeof msg.content === "string" ? msg.content : (msg.template || "");
-                return [role, content];
-              })
-            );
-            console.log("📝 Copywriter Prompt: Loaded from LangSmith (parsed JSON messages)");
-            return template;
+            try {
+              const template = ChatPromptTemplate.fromMessages(
+                parsed.messages.map((msg: any) => {
+                  const role = msg.role || (msg.type === "system" ? "system" : "human");
+                  const content = typeof msg.content === "string" ? msg.content : (msg.template || "");
+                  return [role, content];
+                })
+              );
+              return template;
+            } catch (templateError: any) {
+              console.error("❌ Error creating template from parsed JSON messages:", templateError.message);
+              return getFallbackPromptTemplate();
+            }
           }
           if (parsed.template) {
-            const template = ChatPromptTemplate.fromTemplate(parsed.template);
-            console.log("📝 Copywriter Prompt: Loaded from LangSmith (parsed JSON template)");
-            return template;
+            try {
+              const template = ChatPromptTemplate.fromTemplate(parsed.template);
+              return template;
+            } catch (templateError: any) {
+              console.error("❌ Error creating template from parsed JSON template:", templateError.message);
+              return getFallbackPromptTemplate();
+            }
           }
         } catch (parseError) {
           // Not JSON, continue to fallback
@@ -92,161 +98,87 @@ export async function getCopywriterPromptTemplate(): Promise<ChatPromptTemplate>
       }
       
       console.warn("LangSmith prompt format not recognized, using fallback");
-    } catch (error) {
-      console.warn("Failed to load prompt from LangSmith, using fallback:", error);
+      return getFallbackPromptTemplate();
+    } catch (error: any) {
+      console.warn("Failed to load prompt from LangSmith, using fallback:", error?.message || error);
+      // Ensure we always return a valid template, never throw
+      return getFallbackPromptTemplate();
     }
   }
 
   // Fallback to default prompt template
-  console.log("📝 Copywriter Prompt: Using FALLBACK prompt (LangSmith not available or failed)");
-  const fallback = getFallbackPromptTemplate();
-  // Log the fallback prompt structure
-  console.log("📝 Fallback prompt structure:");
-  try {
-    const fallbackMessages = await fallback.formatMessages({
-      userQuery: "[EXAMPLE]",
-      intent: "[EXAMPLE]",
-      pageKind: "[EXAMPLE]",
-      audience: "[EXAMPLE]",
-      projectSlug: "[EXAMPLE]",
-      projects: "{}",
-      identity: "{}",
-      media: "{}",
-    });
-    fallbackMessages.forEach((msg, index) => {
-      const content = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
-      const preview = content.length > 500 ? content.substring(0, 500) + "..." : content;
-      console.log(`  [${index}] ${msg.constructor.name}:`, preview);
-    });
-  } catch (error) {
-    console.log("📝 (Could not format fallback prompt for preview)");
-  }
-  return fallback;
+  return getFallbackPromptTemplate();
 }
 
 /**
- * Fallback prompt template (matches current hardcoded prompt structure)
+ * Fallback prompt template for answer blocks generation
+ * This is used when LangSmith prompt is not available
  */
+export function getFallbackCopywriterPromptTemplate(): ChatPromptTemplate {
+  return getFallbackPromptTemplate();
+}
+
 function getFallbackPromptTemplate(): ChatPromptTemplate {
   return ChatPromptTemplate.fromMessages([
     [
       "system",
-      `You are a Copywriter Agent for a portfolio website.
-Your job is to transform knowledge base data into structured YAML that describes page content.
+      `You are a copywriter for a design-minded engineer's portfolio.
+Your goal is to produce recruiter-friendly, scannable content.
 
-GOALS
-- Stay fully grounded in the provided data.
-- Produce recruiter-friendly, skimmable content.
-- Use the schema below as a GUIDE, not strict boilerplate.
+OUTPUT RULES
+- You must output a single JSON object (not YAML, not markdown).
+- Use ONLY the information in the provided context and project_short_facts.
+- Do not invent projects, companies, or metrics.
+- Output strictly valid JSON that matches this schema:
 
-OUTPUT RULES (IMPORTANT)
-1. Output ONLY valid YAML. No prose, explanations, or markdown fences.
-2. Use ONLY the provided KB data. Never invent, fabricate, or guess.
-3. Reference media ONLY by ID (e.g., id: "img-123"). Never use URLs.
-4. If some information is missing, leave fields short or empty rather than inventing.
-5. Keep the YAML compact and skimmable.
-6. Always write in the first person.
-7. Do not use passive voice.
-8. Headlines should ALWAYS answer the user query.
+{{
+  "answer_blocks": [
+    {{
+      "type": "answer_block",
+      "eyebrow": "Overview" | "Role" | "Tools" | "Impact" | "Process" | "Comparison" | etc.,
+      "heading": "one sentence that directly answers the user's question",
+      "body": "1-3 short paragraphs or bullet points, using **bold** formatting sparingly to highlight key phrases",
+      "image_id": "optional string matching a known image ID when relevant"
+    }}
+  ],
+  "question_type": "overview" | "role" | "tools" | "process" | "impact" | "comparison" | "general" (optional),
+  "focus_tags": ["tag1", "tag2"] (optional array of short tags)
+}}
 
-STRUCTURE GUIDE (approximate):
-- version: "1"
-- kind: one of ["case_study", "overview", "skills", "experience", "mixed"] based on the intent.
-- query: the original user query.
-- audience: one of ["recruiter", "freelance_client", "unknown"].
-- meta:
-  - primary_project_slug: slug or null
-  - related_project_slugs: list of slugs (can be empty)
-  - focus: list of topic tags (skills, tools, themes)
-  - missing: optional notes about missing data
-- media:
-  - hero: optional hero media {{ id }}
-  - gallery: list of media {{ id }}
-  - inline: list of inline media {{ id }}
-- summary:
-  - title: page title
-  - one_liner: 1-sentence summary
-  - elevator_pitch: 2–4 sentence overview (use | or > for multiline)
-- answer_blocks: array of answer blocks (1-3 blocks)
-  Each answer_block must have:
-  - eyebrow: string (e.g., "Overview", "Role", "Tools", "Process", "Outcomes")
-  - heading: string (one sentence directly answering the question)
-  - body: string (crisp, skimmable text with **bold** key facts using markdown)
-  - image_id: optional string (media ID if image should be included)
-  
-  Rules for answer_blocks:
-  - Always return 1-3 answer_blocks
-  - heading = one sentence directly answering the question
-  - body = crisp, skimmable, use **bold** for key facts
-  - No layout instructions
-  - No extra keys beyond: eyebrow, heading, body, image_id
+BEHAVIOR
+- Always produce at least 1 and at most 3 answer_blocks.
+- The first answer_block should almost always have eyebrow "Overview" for high-level questions, or a more specific label (e.g. "Role") for role-focused questions.
+- Use heading for the main takeaway; do not exceed one sentence.
+- Keep body content tight and focused on: what was done, why it mattered, how it was done (surface-level).
+- Do not discuss the prompt format or schema in the output.
+- Do not include any commentary or explanation outside the JSON object.
 
-PAGE-KIND BEHAVIOR
-- If intent.pageKind == "case_study":
-  Generate 1-3 answer_blocks that directly answer the user's question about the case study.
-  Focus on the most relevant aspects (overview, role, tools, process, outcomes, etc.).
-  The hero section will be generated automatically from project facts (do not include it).
-- If "overview":
-  Generate 1-3 answer_blocks about identity (who Charles is, what he does) and recent flagship work.
-- If "skills":
-  Generate 1-3 answer_blocks organized by skill areas and tools from the data.
-- If "experience":
-  Generate 1-3 answer_blocks organized by roles / companies and highlight impact.
+QUESTION TYPE DETECTION
+- If question is about a specific project → question_type = "overview"
+- If "What was your role on X?" → question_type = "role"
+- If "What tools did you use on X?" → question_type = "tools"
+- If "What impact did this have?" → question_type = "impact"
+- If comparison question → question_type = "comparison"
+- Otherwise → question_type = "general"
 
-TRUTHFULNESS
-- Use ONLY provided KB data below.
-- Prefer omission or short text over guessing.
-- Do NOT make up metrics, company names, or tools.`,
+Output strictly valid JSON that matches the schema; no extra text before or after the JSON.`,
     ],
     [
       "user",
-      `USER QUERY: {userQuery}
+      `QUESTION: {question}
 
-INTENT
-- intent: {intent}
-- pageKind: {pageKind}
-- audience: {audience}
-- topic.projectSlug: {projectSlug}
+CONTEXT (from vector search):
+{context}
 
-{ragContext}
+PROJECT ID: {project_id}
 
-PROJECTS DATA (already filtered for relevance):
-{projects}
+PROJECT SHORT FACTS:
+{project_short_facts}
 
-IDENTITY DATA:
-{identity}
+GLOBAL STYLE GUIDE: {global_style_guide}
 
-MEDIA DATA (IDs only, already filtered):
-{media}
-
-Now generate ONLY the YAML for this page in the structure described above. Remember:
-- No markdown fences.
-- No commentary.
-- No prose before or after.
-- Just the YAML document.`,
+Now generate ONLY the JSON object matching the schema above. No markdown fences, no commentary, just valid JSON.`,
     ],
   ]);
-}
-
-/**
- * Format prompt variables for the template
- */
-export function formatPromptVariables(variables: PromptVariables): Record<string, string> {
-  // Format RAG context if provided
-  const ragContextSection = variables.ragContext
-    ? `RELEVANT CONTEXT (from vector search):\n${variables.ragContext}\n\n`
-    : "";
-
-  return {
-    userQuery: variables.userQuery,
-    intent: variables.intent.intent,
-    pageKind: variables.intent.pageKind,
-    audience: variables.intent.audience || "unknown",
-    projectSlug: variables.intent.topic?.projectSlug || "general",
-    ragContext: ragContextSection,
-    projects: JSON.stringify(variables.projectsContext, null, 2),
-    identity: JSON.stringify(variables.identityContext, null, 2),
-    media: JSON.stringify(variables.mediaContext, null, 2),
-  };
 }
 

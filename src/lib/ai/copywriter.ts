@@ -1,234 +1,113 @@
 import { anthropic } from "./client";
-import type { KBData } from "@/lib/kb/loader";
-import type { IntentResult } from "./intentResolver";
-import * as yaml from "js-yaml";
-import {
-  getCopywriterPromptTemplate,
-  formatPromptVariables,
-} from "./promptLoader";
-
-export interface CopywriterInput {
-  userQuery: string;
-  intent: IntentResult;
-  kbData: KBData;
-  ragContext?: string; // Optional RAG context from vector search
-}
+import type { CopywriterInput, CopywriterOutput } from "./copywriterSchemas";
+import { CopywriterOutputSchema } from "./copywriterSchemas";
+import { getCopywriterPromptTemplate, getFallbackCopywriterPromptTemplate } from "./promptLoader";
 
 /**
- * Fix duplicate "sections:" keys in YAML by merging them.
- * This is a lightweight, defensive repair for a known model quirk.
+ * In-memory cache for copywriter output.
+ * Keyed by (question, projectId, context hash).
  */
-function fixDuplicateSectionsKey(yamlText: string): string {
-  const sectionsPattern = /^(\s{0,2})sections:\s*$/gm;
-  const matches = Array.from(yamlText.matchAll(sectionsPattern));
-
-  if (!matches || matches.length <= 1) {
-    return yamlText;
-  }
-
-  const lines = yamlText.split("\n");
-  const result: string[] = [];
-  let seenSections = false;
-  let collectingSections = false;
-  const allSections: string[] = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmed = line.trim();
-
-    const isSectionsKey =
-      trimmed === "sections:" && line.match(/^\s{0,2}sections:\s*$/);
-
-    if (isSectionsKey) {
-      if (!seenSections) {
-        result.push(line);
-        seenSections = true;
-        collectingSections = true;
-      } else {
-        console.warn(`Skipping duplicate "sections:" key at line ${i + 1}`);
-        collectingSections = true;
-      }
-    } else if (collectingSections) {
-      const isTopLevelKey =
-        trimmed &&
-        trimmed.match(/^[a-z_][a-z0-9_]*:\s*$/i) &&
-        (line.startsWith(trimmed) || line.match(/^\s{0,2}[a-z_]/i));
-
-      if (isTopLevelKey && trimmed !== "sections:") {
-        collectingSections = false;
-        if (allSections.length > 0) {
-          result.push(...allSections);
-          allSections.length = 0;
-        }
-        result.push(line);
-      } else if (trimmed === "" && i < lines.length - 1) {
-        const nextLine = lines[i + 1]?.trim() || "";
-        if (
-          nextLine.match(/^[a-z_][a-z0-9_]*:\s*$/i) &&
-          nextLine !== "sections:"
-        ) {
-          collectingSections = false;
-          if (allSections.length > 0) {
-            result.push(...allSections);
-            allSections.length = 0;
-          }
-          result.push(line);
-        } else {
-          allSections.push(line);
-        }
-      } else {
-        allSections.push(line);
-      }
-    } else {
-      result.push(line);
-    }
-  }
-
-  if (allSections.length > 0) {
-    result.push(...allSections);
-  }
-
-  const repairedText = result.join("\n");
-
-  try {
-    yaml.load(repairedText);
-    return repairedText;
-  } catch {
-    return repairedText;
-  }
-}
-
-/**
- * In-memory cache for copywriter YAML.
- * Keyed by (pageKind, intent, projectSlug, audience).
- * NOTE: userQuery is intentionally NOT part of the key so different phrasings reuse the same YAML.
- */
-const copywriterCache = new Map<string, string>();
+const copywriterCache = new Map<string, CopywriterOutput>();
 
 function makeCopywriterCacheKey(input: CopywriterInput): string {
-  const { intent } = input;
+  // Create a simple hash of the context to cache based on content
+  const contextHash = input.context.substring(0, 100).replace(/\s/g, "");
   return JSON.stringify({
-    kind: intent.pageKind,
-    intent: intent.intent,
-    projectSlug: intent.topic?.projectSlug ?? null,
-    audience: intent.audience ?? "unknown",
+    question: input.question,
+    projectId: input.projectId ?? null,
+    contextHash,
   });
 }
 
 /**
- * Select a small, relevant slice of the KB to keep prompts lean and fast.
+ * Repair common JSON issues from LLM output
  */
-function buildProjectsContext(kbData: KBData, intent: IntentResult) {
-  const allProjects = kbData.projects || [];
+function repairJSON(jsonText: string): string {
+  let repaired = jsonText.trim();
 
-  let selected = allProjects;
-
-  if (intent.topic?.projectSlug) {
-    selected = allProjects.filter(
-      (p) => p.facts.projectId === intent.topic!.projectSlug
-    );
-  } else {
-    // For general queries, just send a couple of flagship projects
-    selected = allProjects.slice(0, 3);
+  // Remove markdown code fences if present
+  const codeBlockMatch = repaired.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (codeBlockMatch) {
+    repaired = codeBlockMatch[1].trim();
   }
 
-  return selected.map((project) => {
-    const facts = project.facts;
-    const longform = project.longform;
-    return {
-      id: facts.projectId,
-      title: longform?.project?.title || facts.client,
-      client: facts.client,
-      role: facts.role,
-      summary: facts.projectSummary,
-      timeline: facts.timeline
-        ? `${facts.timeline.year} - ${facts.timeline.duration}`
-        : null,
-      skills: facts.skillsUsed || [],
-      problem: facts.problem?.summary || longform?.problem,
-      solution: longform?.solution,
-      process: longform?.process,
-      outcomes: facts.outcomes || [],
-      reflections: longform?.reflections,
-      context: longform?.context,
-    };
-  });
-}
-
-function buildIdentityContext(kbData: KBData) {
-  if (!kbData.identity) return null;
-
-  return {
-    headline: kbData.identity.headline,
-    summary_short: kbData.identity.summary_short,
-    summary_long: kbData.identity.summary_long,
-    skills: kbData.identity.primary_skills || [],
-    tools: kbData.identity.tools || [],
-  };
-}
-
-function buildMediaContext(kbData: KBData, intent: IntentResult) {
-  const allMedia = kbData.media || [];
-
-  if (!allMedia.length) return [];
-
-  if (intent.topic?.projectSlug) {
-    return allMedia
-      .filter((m) => m.project_slug === intent.topic!.projectSlug)
-      .map((m) => ({
-        id: m.id,
-        project_slug: m.project_slug,
-        type: m.type,
-        role: m.role,
-        alt: m.alt,
-        caption: m.caption,
-      }));
+  // Remove any leading/trailing prose
+  const jsonStart = repaired.indexOf("{");
+  const jsonEnd = repaired.lastIndexOf("}");
+  if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+    repaired = repaired.substring(jsonStart, jsonEnd + 1);
   }
 
-  // For general queries, cap media to avoid huge prompts
-  return allMedia.slice(0, 20).map((m) => ({
-    id: m.id,
-    project_slug: m.project_slug,
-    type: m.type,
-    role: m.role,
-    alt: m.alt,
-    caption: m.caption,
-  }));
+  return repaired;
 }
 
 /**
  * Internal Copywriter Agent
- * — Calls Anthropic
- * — Builds prompt from KB
- * — Repairs YAML
+ * Calls LangSmith-managed prompt and returns structured JSON
  */
-const generateCopywriterYAMLInternal = async (
+const generateCopywriterOutputInternal = async (
   input: CopywriterInput
-): Promise<string> => {
-  const { userQuery, intent, kbData, ragContext } = input;
-
-  const projectsContext = buildProjectsContext(kbData, intent);
-  const identityContext = buildIdentityContext(kbData);
-  const mediaContext = buildMediaContext(kbData, intent);
+): Promise<CopywriterOutput> => {
+  const { question, context, projectId, projectShortFacts } = input;
 
   // Load prompt template from LangSmith (with fallback)
-  const promptTemplate = await getCopywriterPromptTemplate();
-  
+  let promptTemplate;
+  try {
+    promptTemplate = await getCopywriterPromptTemplate();
+  } catch (error: any) {
+    console.error("❌ Error loading template, using fallback:", error.message);
+    promptTemplate = getFallbackCopywriterPromptTemplate();
+  }
+
   // Format variables for the template
-  const variables = formatPromptVariables({
-    userQuery,
-    intent,
-    projectsContext,
-    identityContext,
-    mediaContext,
-    ragContext,
-  });
+  // Convert null to empty string to avoid template issues
+  const variables = {
+    question,
+    context,
+    project_id: projectId ?? "",
+    project_short_facts: JSON.stringify(projectShortFacts ?? {}),
+    global_style_guide:
+      "Tone: warm, confident, concise. Audience: recruiters and hiring managers.",
+  };
 
   // Format the prompt with variables
-  const formattedMessages = await promptTemplate.formatMessages(variables);
+  let formattedMessages;
+  try {
+    formattedMessages = await promptTemplate.formatMessages(variables);
+  } catch (error: any) {
+    // If template formatting fails (e.g., "Single '}' in template"), 
+    // it's likely an issue with the LangSmith prompt template having unescaped braces
+    console.error("❌ Template formatting error:", error.message);
+    console.error("Error type:", error.constructor.name);
+    console.error("Stack:", error.stack);
+    console.error("Variables being passed:", {
+      question: variables.question.substring(0, 100),
+      context: variables.context.substring(0, 100),
+      project_id: variables.project_id,
+      project_short_facts: variables.project_short_facts.substring(0, 200),
+    });
+    console.error("Falling back to default prompt...");
+    // Fallback to default prompt (bypasses LangSmith)
+    try {
+      const fallbackTemplate = getFallbackCopywriterPromptTemplate();
+      formattedMessages = await fallbackTemplate.formatMessages(variables);
+    } catch (fallbackError: any) {
+      console.error("❌ Even fallback template failed:", fallbackError.message);
+      // Last resort: create a simple prompt manually
+      formattedMessages = [
+        {
+          constructor: { name: "SystemMessage" },
+          content: "You are a copywriter. Output JSON with answer_blocks array.",
+        },
+        {
+          constructor: { name: "HumanMessage" },
+          content: `Question: ${variables.question}\n\nContext: ${variables.context}\n\nGenerate JSON answer_blocks.`,
+        },
+      ];
+    }
+  }
   
   // Combine system and user messages into a single user message for Anthropic
-  // (Anthropic doesn't have a separate system role, so we combine them)
   const systemParts: string[] = [];
   const userParts: string[] = [];
   
@@ -253,9 +132,10 @@ const generateCopywriterYAMLInternal = async (
     : userContent;
 
   try {
+    console.time("copywriter-haiku");
     const message = await anthropic.messages.create({
       model: "claude-3-5-haiku-latest",
-      max_tokens: 600,
+      max_tokens: 2000,
       messages: [
         {
           role: "user",
@@ -263,69 +143,65 @@ const generateCopywriterYAMLInternal = async (
         },
       ],
     });
+    console.timeEnd("copywriter-haiku");
 
     const content = message.content[0];
     if (content.type !== "text") {
       throw new Error("Unexpected response type from Anthropic");
     }
 
-    // Model has been instructed not to use fences, but be defensive in case it does.
-    let yamlText = content.text.trim();
-    const yamlBlockMatch = yamlText.match(/```(?:yaml)?\s*([\s\S]*?)```/i);
-    if (yamlBlockMatch) {
-      yamlText = yamlBlockMatch[1].trim();
-    }
+    // Extract and repair JSON
+    let rawJson = content.text.trim();
+    rawJson = repairJSON(rawJson);
 
-    // Fix duplicate sections keys if present
-    yamlText = fixDuplicateSectionsKey(yamlText);
-
-    // Validate YAML can be parsed (fail fast for debugging)
+    // Parse JSON
+    let parsed: unknown;
     try {
-      yaml.load(yamlText);
-    } catch (yamlError: any) {
-      console.error("Copywriter generated invalid YAML:", {
-        error: yamlError.message,
-        line: yamlError.mark?.line,
-        column: yamlError.mark?.column,
-        snippet: yamlText
-          .split("\n")
-          .slice(
-            Math.max(0, (yamlError.mark?.line || 0) - 2),
-            (yamlError.mark?.line || 0) + 3
-          )
-          .join("\n"),
+      parsed = JSON.parse(rawJson);
+    } catch (parseError) {
+      console.error("Failed to parse copywriter JSON:", {
+        error: parseError instanceof Error ? parseError.message : String(parseError),
+        rawPreview: rawJson.substring(0, 500),
       });
-      throw new Error(
-        `Failed to generate valid YAML: ${yamlError.message}. Snippet: ${yamlText.substring(
-          0,
-          400
-        )}`
-      );
+      throw new Error("COPYWRITER_INVALID_JSON");
     }
 
-    return yamlText;
+    // Validate with Zod schema
+    const result = CopywriterOutputSchema.safeParse(parsed);
+
+    if (!result.success) {
+      console.error("Copywriter output failed validation:", {
+        errors: result.error.issues,
+        parsedPreview: JSON.stringify(parsed, null, 2).substring(0, 1000),
+      });
+      throw new Error("COPYWRITER_SCHEMA_VALIDATION_FAILED");
+    }
+
+    return result.data;
   } catch (error) {
-    console.error("Error generating copywriter YAML:", error);
+    console.error("Error generating copywriter output:", error);
     throw error;
   }
 };
 
 /**
  * Public Copywriter API with in-memory caching.
+ * Returns structured CopywriterOutput (answer_blocks + optional metadata)
  */
-export const generateCopywriterYAML = async (
+export const runCopywriter = async (
   input: CopywriterInput
-): Promise<string> => {
+): Promise<CopywriterOutput> => {
   const cacheKey = makeCopywriterCacheKey(input);
 
   const cached = copywriterCache.get(cacheKey);
   if (cached) {
-    console.log("Copywriter cache HIT:", cacheKey);
     return cached;
   }
 
-  console.log("Copywriter cache MISS:", cacheKey);
-  const yamlText = await generateCopywriterYAMLInternal(input);
-  copywriterCache.set(cacheKey, yamlText);
-  return yamlText;
+  const output = await generateCopywriterOutputInternal(input);
+  copywriterCache.set(cacheKey, output);
+  return output;
 };
+
+// Re-export types for convenience
+export type { CopywriterInput, CopywriterOutput } from "./copywriterSchemas";
