@@ -269,9 +269,6 @@ const normalizeProps = (name: string, props: Record<string, any> = {}): Record<s
 
 const renderBlock = (block: Block, parentComponent?: string): React.ReactNode => {
   const { id, component: componentName, props = {}, children = [], text } = block;
-  
-  // Debug: Log block rendering
-  console.log(`Rendering block: ${componentName} (id: ${id})`, { props, childrenCount: children.length, parentComponent });
 
   // Check if component exists in registry
   if (!hasComponent(componentName)) {
@@ -351,44 +348,6 @@ const renderBlock = (block: Block, parentComponent?: string): React.ReactNode =>
   // Normalize props based on component expectations
   const normalizedProps = normalizeProps(componentName, propsWithText);
 
-  // Debug: Log ContentSection props specifically
-  if (componentName === "ContentSection") {
-    console.log(`ContentSection ${id} props:`, {
-      variant: normalizedProps.variant,
-      headline: normalizedProps.headline,
-      body: normalizedProps.body,
-      eyebrow: normalizedProps.eyebrow,
-      imageSrc: normalizedProps.imageSrc,
-      imageAlt: normalizedProps.imageAlt,
-      hasImageSrc: !!normalizedProps.imageSrc,
-      imageSrcType: normalizedProps.imageSrc ? typeof normalizedProps.imageSrc : "none",
-      imageSrcLength: normalizedProps.imageSrc ? normalizedProps.imageSrc.length : 0,
-      // Original props for comparison
-      originalProps: {
-        headline: props.headline,
-        body: props.body,
-        eyebrow: props.eyebrow,
-        imageSrc: props.imageSrc,
-        imageUrl: props.imageUrl,
-        title: props.title,
-        description: props.description,
-      },
-      allNormalizedProps: Object.keys(normalizedProps),
-    });
-  }
-
-  // Debug: Log BodyText and Heading props to see why text isn't rendering
-  if (componentName === "BodyText" || componentName === "Heading") {
-    console.log(`${componentName} ${id} props:`, {
-      originalProps: props,
-      normalizedProps: normalizedProps,
-      blockText: text,
-      hasBody: !!normalizedProps.body,
-      hasText: !!normalizedProps.text,
-      propsChildren: props.children,
-    });
-  }
-
   // Get component from registry
   const Component = getComponent(componentName);
   if (!Component) {
@@ -452,16 +411,6 @@ export const Renderer: React.FC<RendererProps> = ({
   responseId,
   isLatest = true,
 }) => {
-  // Debug: Log what we receive
-  console.log("Renderer received data:", data);
-  if (data) {
-    try {
-      console.log("Renderer debug content:", JSON.stringify(data, null, 2));
-    } catch (error) {
-      console.warn("Renderer: Failed to stringify debug content", error);
-    }
-  }
-  
   const contextValue: ResponseContextValue = {
     status,
     responseId: responseId || data?.page?.id,
@@ -469,7 +418,6 @@ export const Renderer: React.FC<RendererProps> = ({
   };
   
   if (!data) {
-    console.log("Renderer: No data provided");
     return (
       <div 
         className={cn("flex items-center justify-center", className)}
@@ -508,14 +456,10 @@ export const Renderer: React.FC<RendererProps> = ({
     );
   }
 
-  console.log("Renderer: Rendering blocks", data.page.blocks.length, "blocks");
-
   // Render all blocks with timing
   console.time("renderer-render");
   const renderedBlocks = data.page.blocks.map((block) => renderBlock(block));
   console.timeEnd("renderer-render");
-  
-  console.log("Renderer: Rendered blocks count", renderedBlocks.length);
 
   return (
     <ResponseContext.Provider value={contextValue}>

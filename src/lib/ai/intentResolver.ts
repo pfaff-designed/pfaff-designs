@@ -208,7 +208,5 @@ export async function resolveIntent(query: string): Promise<IntentResult> {
     questionFocus,
   };
 
-  console.log("resolveIntent (rule-based) result:", result);
-
   return result;
 }
