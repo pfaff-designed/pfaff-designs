@@ -164,7 +164,10 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
         ref={ref}
         className={cn(
           "fixed left-1/2 -translate-x-1/2 z-50 flex flex-col gap-[1rem] w-[24.875rem] pb-6",
-          "drop-shadow-[0_-2px_8px_rgba(0,0,0,0.08),0_-1px_2px_rgba(255,255,255,0.5)]",
+          "transition-[filter] duration-200",
+          isFocused
+            ? "drop-shadow-[0_-2px_8px_rgba(158,200,210,0.8),0_-1px_2px_rgba(255,255,255,0.5)]"
+            : "drop-shadow-[0_-2px_8px_rgba(0,0,0,0.08),0_-1px_2px_rgba(255,255,255,0.5)]",
           className
         )}
         style={{
@@ -192,12 +195,10 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
             ref={containerRef}
             className={cn(
               "relative flex items-center w-full rounded-full",
-              "bg-[rgba(253,249,244,0.7)] backdrop-blur-md",
+              "bg-[#FDF9F4]",
               "border border-[rgba(38,41,29,0.1)]",
-              "pr-2 pl-6 py-[0.5rem] transition-all",
-              isFocused && "outline-none ring-2 ring-[#9ec8d2] ring-offset-6"
+              "pr-2 pl-6 py-[0.5rem] transition-all"
             )}
-            style={isFocused ? { isolation: 'isolate' } : undefined}
           >
             <div className="relative z-[1] flex-1" style={{ isolation: 'isolate' }}>
               <BaseInput
@@ -211,7 +212,7 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
                 disabled={status === "loading"}
                 className={cn(
                   "relative w-full border-0 bg-transparent px-0 py-0 text-base leading-5 text-[#26291d] placeholder:text-[#26291d] placeholder:opacity-50",
-                  "focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none",
+                  "focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none focus-visible:outline-none",
                   status === "loading" && "opacity-50 cursor-not-allowed",
                   inputClassName
                 )}
