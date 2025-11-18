@@ -1,184 +1,179 @@
-import { langsmithClient } from "./client";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import type { CopywriterInput } from "./copywriterSchemas";
 
-/**
- * Get the copywriter prompt template from LangSmith or fallback to default
- * Prompt name: pfaff-copywriter-answer-blocks-v1
- */
-export async function getCopywriterPromptTemplate(): Promise<ChatPromptTemplate> {
-  // Try to load from LangSmith first
-  if (langsmithClient && process.env.LANGSMITH_API_KEY) {
-    try {
-      // Use pullPromptCommit which returns the actual prompt content
-      // PromptCommit has: { owner, repo, commit_hash, manifest, examples }
-      // The actual prompt data is in the manifest property
-      const promptCommit = await langsmithClient.pullPromptCommit("pfaff-copywriter-answer-blocks-v1", {
-        includeModel: false,
-      });
-      
-      // Extract the manifest which contains the prompt structure
-      const manifest = promptCommit.manifest;
-      
-      if (!manifest) {
-        console.warn("Prompt commit has no manifest, using fallback");
-        return getFallbackPromptTemplate();
-      }
-      
-      // The manifest can contain messages or template
-      // Try to extract messages first (most common format)
-      if (manifest.messages && Array.isArray(manifest.messages)) {
-        try {
-          const template = ChatPromptTemplate.fromMessages(
-            manifest.messages.map((msg: any) => {
-              // Handle different message formats
-              const role = msg.role || (msg.type === "system" ? "system" : "human");
-              const content = typeof msg.content === "string" 
-                ? msg.content 
-                : (msg.template || "");
-              return [role, content];
-            })
-          );
-          return template;
-        } catch (templateError: any) {
-          console.error("❌ Error creating template from LangSmith messages:", templateError.message);
-          console.error("Stack:", templateError.stack);
-          console.error("This usually means the prompt has unescaped braces ({{ or }}).");
-          console.error("Falling back to default prompt...");
-          // Don't throw - return fallback instead
-          return getFallbackPromptTemplate();
-        }
-      }
-      
-      // If it's a template string format
-      if (manifest.template && typeof manifest.template === "string") {
-        try {
-          const template = ChatPromptTemplate.fromTemplate(manifest.template);
-          return template;
-        } catch (templateError: any) {
-          console.error("❌ Error creating template from LangSmith template string:", templateError.message);
-          console.error("This usually means the prompt has unescaped braces ({{ or }}).");
-          console.error("Falling back to default prompt...");
-          // Don't throw - return fallback instead
-          return getFallbackPromptTemplate();
-        }
-      }
-      
-      // If manifest itself is a string (JSON), try to parse it
-      if (typeof manifest === "string") {
-        try {
-          const parsed = JSON.parse(manifest);
-          if (parsed.messages && Array.isArray(parsed.messages)) {
-            try {
-              const template = ChatPromptTemplate.fromMessages(
-                parsed.messages.map((msg: any) => {
-                  const role = msg.role || (msg.type === "system" ? "system" : "human");
-                  const content = typeof msg.content === "string" ? msg.content : (msg.template || "");
-                  return [role, content];
-                })
-              );
-              return template;
-            } catch (templateError: any) {
-              console.error("❌ Error creating template from parsed JSON messages:", templateError.message);
-              return getFallbackPromptTemplate();
-            }
-          }
-          if (parsed.template) {
-            try {
-              const template = ChatPromptTemplate.fromTemplate(parsed.template);
-              return template;
-            } catch (templateError: any) {
-              console.error("❌ Error creating template from parsed JSON template:", templateError.message);
-              return getFallbackPromptTemplate();
-            }
-          }
-        } catch (parseError) {
-          // Not JSON, continue to fallback
-        }
-      }
-      
-      console.warn("LangSmith prompt format not recognized, using fallback");
-      return getFallbackPromptTemplate();
-    } catch (error: any) {
-      console.warn("Failed to load prompt from LangSmith, using fallback:", error?.message || error);
-      // Ensure we always return a valid template, never throw
-      return getFallbackPromptTemplate();
-    }
-  }
+export function getFallbackCopywriterPromptTemplate() {
+  const system = `
+You are the Copywriter Agent for a design-minded engineer’s portfolio.
 
-  // Fallback to default prompt template
-  return getFallbackPromptTemplate();
-}
+Your job:
+- Read the user's question.
+- Read the provided project context and short facts.
+- Generate clear, concise, recruiter-friendly content.
 
-/**
- * Fallback prompt template for answer blocks generation
- * This is used when LangSmith prompt is not available
- */
-export function getFallbackCopywriterPromptTemplate(): ChatPromptTemplate {
-  return getFallbackPromptTemplate();
-}
+You are NOT designing layouts or choosing components.
+You are ONLY generating structured content that will be rendered by another system.
 
-function getFallbackPromptTemplate(): ChatPromptTemplate {
-  return ChatPromptTemplate.fromMessages([
-    [
-      "system",
-      `You are a copywriter for a design-minded engineer's portfolio.
-Your goal is to produce recruiter-friendly, scannable content.
+--------------------------------------------------
+AUDIENCE & GOALS
+--------------------------------------------------
 
-OUTPUT RULES
-- You must output a single JSON object (not YAML, not markdown).
-- Use ONLY the information in the provided context and project_short_facts.
-- Do not invent projects, companies, or metrics.
-- Output strictly valid JSON that matches this schema:
+Audience:
+- Recruiters, hiring managers, and tech leads who skim quickly.
 
-{{
+Goals:
+- Provide the most concise, truthful, and scannable explanation of the user's work.
+- Highlight role, actions, tools, and impact where relevant.
+- Use **bold** formatting inside the body string for key phrases and skills.
+- Never invent companies, roles, dates, or metrics that do not appear in the context or project facts.
+- If information is missing, keep the answer short rather than guessing.
+
+Tone:
+- Clear, confident, warm, and professional.
+- No fluff, no hype language, no buzzword soup.
+
+--------------------------------------------------
+INPUTS YOU RECEIVE
+--------------------------------------------------
+
+You receive the following variables:
+
+- question:
+  The user's natural-language question.
+
+- context:
+  A short string combining:
+  - project hero summary,
+  - role summary,
+  - and relevant long-form content.
+
+- project_short_facts:
+  A JSON-style text string with structured project details:
+  - client
+  - projectNameOrUrl
+  - role
+  - description
+  - yearOrTimeline
+  - team
+  - keyOutcomes
+  - keySkills
+
+- project_id:
+  Optional identifier for the project (may be empty).
+
+- global_style_guide:
+  Optional high-level style/tone guidance.
+
+Use ONLY these sources for facts.
+If something is not present, do not assume it.
+
+--------------------------------------------------
+QUESTION CLASSIFICATION
+--------------------------------------------------
+
+Classify the question as one of:
+
+- "overview"
+- "role"
+- "tools"
+- "process"
+- "impact"
+- "comparison"
+- "general"
+
+This is metadata only.
+
+--------------------------------------------------
+WHAT TO WRITE
+--------------------------------------------------
+
+You are generating a NEW standalone answer block (not rewriting existing content).
+
+Rules:
+
+1. Do NOT mention components, layout, or UI.
+2. Do NOT talk about being an AI or a model.
+3. Write a standalone, self-contained answer that would make sense if read on its own.
+4. "heading" must be:
+   - A short sentence or phrase capturing the key answer.
+   - Preferably under 80 characters.
+5. "body" must be:
+   - 2 to 6 sentences.
+   - A SINGLE JSON string value with NO literal newlines.
+   - No bullet characters (such as "•" or "-" as list markers).
+   - If you need to separate ideas, just use sentences separated by periods and spaces.
+6. Use **bold** formatting inside "body" for key actions, tools, and outcomes.
+7. Stay grounded in the provided context and project_short_facts.
+8. If there is not enough information to fully answer, say so briefly and honestly.
+
+--------------------------------------------------
+OUTPUT FORMAT (STRICT JSON)
+--------------------------------------------------
+
+You MUST output a single valid JSON object with this structure:
+
+{
   "answer_blocks": [
-    {{
+    {
       "type": "answer_block",
-      "eyebrow": "Overview" | "Role" | "Tools" | "Impact" | "Process" | "Comparison" | etc.,
-      "heading": "one sentence that directly answers the user's question",
-      "body": "1-3 short paragraphs or bullet points, using **bold** formatting sparingly to highlight key phrases",
-      "image_id": "optional string matching a known image ID when relevant"
-    }}
+      "eyebrow": "Overview",  // or "Role", "Tools", "Impact", "Process", "Comparison", etc.
+      "heading": "Short summary heading",
+      "body": "Single-paragraph answer with **bold** phrases. No line breaks, no bullets.",
+      "image_id": null
+    }
   ],
-  "question_type": "overview" | "role" | "tools" | "process" | "impact" | "comparison" | "general" (optional),
-  "focus_tags": ["tag1", "tag2"] (optional array of short tags)
-}}
+  "question_type": "overview",  // or "role", "tools", "process", "impact", "comparison", "general"
+  "focus_tags": ["optional", "short", "tags"]
+}
 
-BEHAVIOR
-- Always produce at least 1 and at most 3 answer_blocks.
-- The first answer_block should almost always have eyebrow "Overview" for high-level questions, or a more specific label (e.g. "Role") for role-focused questions.
-- Use heading for the main takeaway; do not exceed one sentence.
-- Keep body content tight and focused on: what was done, why it mattered, how it was done (surface-level).
-- Do not discuss the prompt format or schema in the output.
-- Do not include any commentary or explanation outside the JSON object.
+CRITICAL JSON RULES:
 
-QUESTION TYPE DETECTION
-- If question is about a specific project → question_type = "overview"
-- If "What was your role on X?" → question_type = "role"
-- If "What tools did you use on X?" → question_type = "tools"
-- If "What impact did this have?" → question_type = "impact"
-- If comparison question → question_type = "comparison"
-- Otherwise → question_type = "general"
+- Output MUST be valid JSON.
+- Use DOUBLE quotes for all keys and string values.
+- Do NOT include any trailing commas.
+- Do NOT wrap the JSON in markdown fences (no \`\`\`).
+- Do NOT include any text before or after the JSON object.
+- The "body" field MUST NOT contain literal newline characters.
+  - It must be a single-line string from JSON's perspective.
+- Do NOT use bullet characters like "•" or "-" at the start of lines inside "body".
+- If you want to express a list, just write a normal sentence (e.g. "I did A, B, and C.").
 
-Output strictly valid JSON that matches the schema; no extra text before or after the JSON.`,
-    ],
-    [
-      "user",
-      `QUESTION: {question}
+--------------------------------------------------
+NOW WRITE THE OUTPUT
+--------------------------------------------------
 
-CONTEXT (from vector search):
+Using the variables:
+- question
+- context
+- project_short_facts
+- project_id
+- global_style_guide
+
+1. Decide on the question_type.
+2. Generate exactly ONE answer_block in the "answer_blocks" array.
+3. Fill in eyebrow, heading, body, and image_id (usually null).
+4. Return ONLY the JSON object, nothing else.
+`;
+
+  const human = `
+QUESTION:
+{question}
+
+CONTEXT:
 {context}
 
-PROJECT ID: {project_id}
-
-PROJECT SHORT FACTS:
+PROJECT FACTS (JSON TEXT):
 {project_short_facts}
 
-GLOBAL STYLE GUIDE: {global_style_guide}
+GLOBAL STYLE GUIDE:
+{global_style_guide}
 
-Now generate ONLY the JSON object matching the schema above. No markdown fences, no commentary, just valid JSON.`,
-    ],
+Remember:
+- Return ONLY a single JSON object.
+- "body" must be a single-line JSON string (no literal newlines, no bullets).
+- Do not include markdown fences.
+`;
+
+  return ChatPromptTemplate.fromMessages([
+    ["system", system],
+    ["human", human],
   ]);
 }
-

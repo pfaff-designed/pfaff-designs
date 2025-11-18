@@ -12,7 +12,7 @@ const Section = React.forwardRef<HTMLElement, SectionProps>(
       <section
         ref={ref}
         className={cn(
-          "w-full",
+          "w-full mx-auto max-w-7xl",
           // Modular spacing: 48px (py-12), 72px (py-18), 96px (py-24)
           "py-12 md:py-18 lg:py-24",
           {

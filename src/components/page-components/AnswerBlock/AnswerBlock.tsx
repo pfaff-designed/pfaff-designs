@@ -16,6 +16,7 @@ export interface AnswerBlockProps {
   imageAlt?: string;
   className?: string;
   animate?: boolean;
+  isAI?: boolean;
 }
 
 const AnswerBlock = React.forwardRef<HTMLElement, AnswerBlockProps>(
@@ -29,6 +30,7 @@ const AnswerBlock = React.forwardRef<HTMLElement, AnswerBlockProps>(
       imageAlt,
       className,
       animate = true,
+      isAI = false,
     },
     ref
   ) => {
@@ -52,12 +54,16 @@ const AnswerBlock = React.forwardRef<HTMLElement, AnswerBlockProps>(
     // Convert markdown to HTML for rich text rendering
     const bodyHtml = markdownToHtml(displayBody);
     
+    // When isAI is true, override eyebrow with "AI · Generated Response"
+    const displayEyebrow = isAI ? "AI · Generated Response" : eyebrow;
+
     // Use contentBlocks to support richText rendering
     const contentBlocks = [
       {
-        eyebrow: eyebrow,
+        eyebrow: displayEyebrow,
         body: bodyHtml,
         richText: true,
+        isAI: isAI,
       },
     ];
     
