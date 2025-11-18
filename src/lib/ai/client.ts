@@ -10,7 +10,6 @@ if (process.env.LANGSMITH_API_KEY) {
       apiKey: process.env.LANGSMITH_API_KEY,
       apiUrl: process.env.LANGSMITH_API_URL || "https://api.smith.langchain.com",
     });
-    console.log("LangSmith tracing enabled");
   } catch (error) {
     console.warn("Failed to initialize LangSmith client:", error);
   }

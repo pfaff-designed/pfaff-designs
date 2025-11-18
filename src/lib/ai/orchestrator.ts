@@ -11,6 +11,7 @@ import type { QuestionFocus, IntentResult } from "./intentResolver";
 import { logToLangSmith, logDiagnostic } from "./langsmithLogger";
 import { getHeroFacts } from "@/lib/kb/CaseStudyHeroFacts";
 import { AnswerBlockSchema, HeroCaseStudyBlockSchema, BlockSchema, type Block as SchemaBlock } from "@/lib/layout/blockSchema";
+import type { CopywriterOutput } from "./copywriterSchemas";
 
 // Configure LangSmith tracing for LangChain
 // This will automatically trace if LANGSMITH_API_KEY is set
@@ -24,7 +25,7 @@ if (process.env.LANGSMITH_API_KEY) {
 }
 
 export interface OrchestratorInput {
-  yaml: string;
+  copywriterOutput: CopywriterOutput;
   intent: IntentResult;
   registrySummary: {
     components: string[];
@@ -909,64 +910,22 @@ const generateOrchestratorJSONInternal = async (
   // Get run ID from LangSmith context if available
   const runId = (global as any).__langsmith_run_id || "orchestrator-run";
 
-  const { yaml: yamlText, intent } = input;
+  const { copywriterOutput, intent } = input;
 
   try {
-    // Parse YAML
-    let yamlData: any;
-    try {
-      yamlData = yaml.load(yamlText);
-
-      if (!yamlData || typeof yamlData !== "object") {
-        logToLangSmith("warn", "YAML root is empty or non-object", { yamlPreview: yamlText.substring(0, 200) }, runId);
-        yamlData = {};
-      }
-    } catch (error: any) {
-      logToLangSmith("error", "YAML parsing error", {
-        message: error.message,
-        line: error.mark?.line,
-        column: error.mark?.column,
-        yamlPreview: yamlText.substring(0, 1000),
-      }, runId);
-      throw new Error(
-        `Invalid YAML at line ${error.mark?.line ?? "unknown"}: ${error.message}`
-      );
-    }
-
-    // Extract answer_blocks from YAML
-    const answerBlocksRaw = yamlData.answer_blocks || [];
+    // CopywriterOutput is already validated, so we can use it directly
+    const answerBlocks = copywriterOutput.answer_blocks;
     
-    if (!Array.isArray(answerBlocksRaw) || answerBlocksRaw.length === 0) {
-      logToLangSmith("warn", "No answer_blocks found in YAML", { 
-        yamlData: JSON.stringify(yamlData, null, 2).substring(0, 1000),
-        hasAnswerBlocks: !!yamlData.answer_blocks,
-        answerBlocksType: typeof yamlData.answer_blocks,
-        answerBlocksLength: Array.isArray(yamlData.answer_blocks) ? yamlData.answer_blocks.length : 0,
+    if (!Array.isArray(answerBlocks) || answerBlocks.length === 0) {
+      logToLangSmith("warn", "No answer_blocks found in CopywriterOutput", { 
+        copywriterOutput: JSON.stringify(copywriterOutput, null, 2).substring(0, 1000),
+        answerBlocksLength: answerBlocks.length,
       }, runId);
-      throw new Error("Copywriter must return at least one answer_block. YAML structure may be incorrect.");
+      throw new Error("Copywriter must return at least one answer_block.");
     }
 
-    // Validate and parse answer_blocks
-    const answerBlocks = answerBlocksRaw.map((block: any, index: number) => {
-      try {
-        return AnswerBlockSchema.parse({
-          type: "answer_block",
-          eyebrow: block.eyebrow || "",
-          heading: block.heading || "",
-          body: block.body || "",
-          imageId: block.image_id || block.imageId,
-        });
-      } catch (error) {
-        logToLangSmith("error", `Invalid answer_block at index ${index}`, {
-          block,
-          error: error instanceof Error ? error.message : String(error),
-        }, runId);
-        throw new Error(`Invalid answer_block at index ${index}: ${error instanceof Error ? error.message : String(error)}`);
-      }
-    });
-
-    // Determine projectId
-    const projectId = intent.topic?.projectSlug || yamlData.meta?.primary_project_slug || null;
+    // Determine projectId from intent (no longer from YAML meta)
+    const projectId = intent.topic?.projectSlug || null;
 
     // Build blocks array (using schema Block type)
     const blocks: SchemaBlock[] = [];
@@ -978,7 +937,7 @@ const generateOrchestratorJSONInternal = async (
         const heroBlock = HeroCaseStudyBlockSchema.parse({
           type: "hero_case_study",
           ...heroFacts,
-          imageId: yamlData.media?.hero?.id,
+          imageId: undefined, // Hero images can be added later if needed
         });
         blocks.push(heroBlock);
       } else {
@@ -998,17 +957,14 @@ const generateOrchestratorJSONInternal = async (
         mediaIds.add(block.imageId);
       }
     });
-    if (yamlData.media?.hero?.id) {
-      mediaIds.add(yamlData.media.hero.id);
-    }
 
     const mediaResolutionMap = await resolveMediaIds(Array.from(mediaIds));
 
     // Build PageJSON - map block types to component names
-    const pageId = projectId || yamlData.kind || "general";
+    const pageId = projectId || intent.pageKind || "general";
     const page: PageJSON["page"] = {
       id: pageId,
-      kind: yamlData.kind || intent.pageKind,
+      kind: intent.pageKind,
       blocks: blocks.map((block, index) => {
         // Map schema block type to Renderer Block format
         if (block.type === "hero_case_study") {
