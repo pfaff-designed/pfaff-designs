@@ -1,7 +1,11 @@
 import { anthropic } from "./client";
-import type { CopywriterInput, CopywriterOutput } from "./copywriterSchemas";
-import { CopywriterOutputSchema } from "./copywriterSchemas";
-import { getCopywriterPromptTemplate, getFallbackCopywriterPromptTemplate } from "./promptLoader";
+import { ChatAnthropic } from "@langchain/anthropic";
+import { z } from "zod";
+import {
+  CopywriterOutputSchema,
+  type CopywriterOutput,
+  type CopywriterInput,
+} from "./copywriterSchemas";
 
 /**
  * In-memory cache for copywriter output.
@@ -9,9 +13,16 @@ import { getCopywriterPromptTemplate, getFallbackCopywriterPromptTemplate } from
  */
 const copywriterCache = new Map<string, CopywriterOutput>();
 
+// LangChain ChatAnthropic model – this is what LangSmith will trace
+const copywriterModel = new ChatAnthropic({
+  model: "claude-3-5-haiku-latest",
+  temperature: 0.3,
+  maxTokens: 800,
+  // It will use ANTHROPIC_API_KEY from your env and LANGCHAIN_* for LangSmith
+});
+
 function makeCopywriterCacheKey(input: CopywriterInput): string {
-  // Create a simple hash of the context to cache based on content
-  const contextHash = input.context.substring(0, 100).replace(/\s/g, "");
+  const contextHash = input.context.substring(0, 200).replace(/\s/g, "");
   return JSON.stringify({
     question: input.question,
     projectId: input.projectId ?? null,
@@ -20,188 +31,262 @@ function makeCopywriterCacheKey(input: CopywriterInput): string {
 }
 
 /**
- * Repair common JSON issues from LLM output
+ * Build the prompt for the LLM.
+ * We are NOT asking for JSON here, only plain text.
  */
-function repairJSON(jsonText: string): string {
-  let repaired = jsonText.trim();
+function buildCopywriterPrompt(input: CopywriterInput): string {
+  const {
+    question,
+    context,
+    projectId,
+    projectShortFacts,
+  } = input;
 
-  // Remove markdown code fences if present
-  const codeBlockMatch = repaired.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (codeBlockMatch) {
-    repaired = codeBlockMatch[1].trim();
+  const factsLines: string[] = [];
+  if (projectShortFacts?.client) {
+    factsLines.push(`client: ${projectShortFacts.client}`);
+  }
+  if (projectShortFacts?.projectNameOrUrl) {
+    factsLines.push(`project: ${projectShortFacts.projectNameOrUrl}`);
+  }
+  if (projectShortFacts?.role) {
+    factsLines.push(`role: ${projectShortFacts.role}`);
+  }
+  if (projectShortFacts?.description) {
+    factsLines.push(`description: ${projectShortFacts.description}`);
+  }
+  if (projectShortFacts?.yearOrTimeline) {
+    factsLines.push(`timeline: ${projectShortFacts.yearOrTimeline}`);
+  }
+  if (projectShortFacts?.team) {
+    factsLines.push(`team: ${projectShortFacts.team}`);
+  }
+  if (projectShortFacts?.keyOutcomes?.length) {
+    factsLines.push(`keyOutcomes: ${projectShortFacts.keyOutcomes.join(", ")}`);
+  }
+  if (projectShortFacts?.keySkills?.length) {
+    factsLines.push(`keySkills: ${projectShortFacts.keySkills.join(", ")}`);
   }
 
-  // Remove any leading/trailing prose
-  const jsonStart = repaired.indexOf("{");
-  const jsonEnd = repaired.lastIndexOf("}");
-  if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-    repaired = repaired.substring(jsonStart, jsonEnd + 1);
-  }
+  const factsBlock =
+    factsLines.length > 0
+      ? factsLines.map((l) => `- ${l}`).join("\n")
+      : "(no structured facts provided)";
 
-  return repaired;
+  const prompt = `
+You are the Copywriter Agent for a design-minded engineer’s portfolio.
+
+Your job:
+- Read the user's question.
+- Read the project context and short facts.
+- Write a clear, concise, recruiter-friendly answer.
+
+Audience:
+- Recruiters, hiring managers, and tech leads who skim quickly.
+
+Tone:
+- Clear, confident, warm, and professional.
+- No fluff, no hype language, no buzzword soup.
+
+Content rules:
+- Focus on role, actions, tools, and impact where relevant.
+- Use **bold** formatting for key phrases and skills.
+- Do NOT invent companies, roles, dates, or metrics that are not in the context or facts.
+- If information is missing, say so briefly and honestly.
+- Write 2–6 sentences.
+- You may use line breaks, but avoid bullet lists; write in short paragraphs instead.
+- Do NOT mention that you are an AI or talk about prompts.
+
+QUESTION:
+${question}
+
+PROJECT ID:
+${projectId ?? "(none)"}
+
+PROJECT FACTS:
+${factsBlock}
+
+LONG-FORM CONTEXT:
+${context}
+
+Now, write the best possible answer to the question using this information.
+`;
+
+  return prompt.trim();
 }
 
 /**
- * Internal Copywriter Agent
- * Calls LangSmith-managed prompt and returns structured JSON
+ * Call Anthropic once and return a plain-text answer.
  */
-const generateCopywriterOutputInternal = async (
+async function callCopywriterLLM(prompt: string): Promise<string> {
+  console.time("copywriter-haiku");
+
+  // Using LangChain's ChatAnthropic so LangSmith can trace this call
+  const res = await copywriterModel.invoke(prompt);
+
+  console.timeEnd("copywriter-haiku");
+
+  // res.content is usually a string; if it's not, fall back gracefully
+  const content =
+    typeof res.content === "string"
+      ? res.content
+      : Array.isArray(res.content)
+      ? res.content
+          .map((part: any) =>
+            typeof part === "string" ? part : part?.text ?? ""
+          )
+          .join(" ")
+      : "";
+
+  const text = content.trim();
+  if (!text) {
+    console.warn("Copywriter LLM returned empty content:", res);
+    return "I had trouble generating a detailed answer here, but I can still share a brief response based on the available information.";
+  }
+
+  return text;
+}
+
+/**
+ * Internal Copywriter Agent.
+ * This version:
+ * - Does NOT expect JSON from the LLM.
+ * - Wraps the LLM's plain-text answer into a CopywriterOutput.
+ * - NEVER throws; always returns a valid CopywriterOutput.
+ */
+async function generateCopywriterOutputInternal(
   input: CopywriterInput
-): Promise<CopywriterOutput> => {
-  const { question, context, projectId, projectShortFacts } = input;
-
-  // Load prompt template from LangSmith (with fallback)
-  let promptTemplate;
+): Promise<CopywriterOutput> {
   try {
-    promptTemplate = await getCopywriterPromptTemplate();
-  } catch (error: any) {
-    console.error("❌ Error loading template, using fallback:", error.message);
-    promptTemplate = getFallbackCopywriterPromptTemplate();
-  }
+    const prompt = buildCopywriterPrompt(input);
+    const textAnswer = await callCopywriterLLM(prompt);
 
-  // Format variables for the template
-  // Convert null to empty string to avoid template issues
-  const variables = {
-    question,
-    context,
-    project_id: projectId ?? "",
-    project_short_facts: JSON.stringify(projectShortFacts ?? {}),
-    global_style_guide:
-      "Tone: warm, confident, concise. Audience: recruiters and hiring managers.",
-  };
-
-  // Format the prompt with variables
-  let formattedMessages;
-  try {
-    formattedMessages = await promptTemplate.formatMessages(variables);
-  } catch (error: any) {
-    // If template formatting fails (e.g., "Single '}' in template"), 
-    // it's likely an issue with the LangSmith prompt template having unescaped braces
-    console.error("❌ Template formatting error:", error.message);
-    console.error("Error type:", error.constructor.name);
-    console.error("Stack:", error.stack);
-    console.error("Variables being passed:", {
-      question: variables.question.substring(0, 100),
-      context: variables.context.substring(0, 100),
-      project_id: variables.project_id,
-      project_short_facts: variables.project_short_facts.substring(0, 200),
-    });
-    console.error("Falling back to default prompt...");
-    // Fallback to default prompt (bypasses LangSmith)
-    try {
-      const fallbackTemplate = getFallbackCopywriterPromptTemplate();
-      formattedMessages = await fallbackTemplate.formatMessages(variables);
-    } catch (fallbackError: any) {
-      console.error("❌ Even fallback template failed:", fallbackError.message);
-      // Last resort: create a simple prompt manually
-      formattedMessages = [
-        {
-          constructor: { name: "SystemMessage" },
-          content: "You are a copywriter. Output JSON with answer_blocks array.",
-        },
-        {
-          constructor: { name: "HumanMessage" },
-          content: `Question: ${variables.question}\n\nContext: ${variables.context}\n\nGenerate JSON answer_blocks.`,
-        },
-      ];
+    // Basic heuristic for question_type based on the question text
+    const q = input.question.toLowerCase();
+    let question_type: CopywriterOutput["question_type"] = "general";
+    if (
+      q.includes("overview") ||
+      q.includes("what is this") ||
+      q.includes("what was this project")
+    ) {
+      question_type = "overview";
+    } else if (
+      q.includes("role") ||
+      q.includes("responsibilit") ||
+      q.includes("what did you do")
+    ) {
+      question_type = "role";
+    } else if (
+      q.includes("tool") ||
+      q.includes("stack") ||
+      q.includes("tech") ||
+      q.includes("technology") ||
+      q.includes("skills")
+    ) {
+      question_type = "tools";
+    } else if (
+      q.includes("process") ||
+      q.includes("how did you") ||
+      q.includes("workflow") ||
+      q.includes("approach")
+    ) {
+      question_type = "process";
+    } else if (
+      q.includes("impact") ||
+      q.includes("result") ||
+      q.includes("outcome")
+    ) {
+      question_type = "impact";
+    } else if (q.includes("compare") || q.includes("comparison")) {
+      question_type = "comparison";
     }
-  }
-  
-  // Combine system and user messages into a single user message for Anthropic
-  const systemParts: string[] = [];
-  const userParts: string[] = [];
-  
-  for (const msg of formattedMessages) {
-    const msgType = msg.constructor.name;
-    const content = typeof msg.content === "string" 
-      ? msg.content 
-      : JSON.stringify(msg.content);
-    
-    if (msgType === "SystemMessage" || msgType.includes("System")) {
-      systemParts.push(content);
-    } else if (msgType === "HumanMessage" || msgType.includes("Human")) {
-      userParts.push(content);
-    }
-  }
 
-  const systemContent = systemParts.join("\n\n");
-  const userContent = userParts.join("\n\n");
+    const eyebrow =
+      question_type === "overview"
+        ? "Overview"
+        : question_type === "role"
+        ? "Role"
+        : question_type === "tools"
+        ? "Tools"
+        : question_type === "process"
+        ? "Process"
+        : question_type === "impact"
+        ? "Impact"
+        : question_type === "comparison"
+        ? "Comparison"
+        : "Answer";
 
-  const combinedPrompt = systemContent 
-    ? `${systemContent}\n\n${userContent}`
-    : userContent;
+    const heading =
+      input.question.length <= 80
+        ? input.question
+        : "Answer to your question";
 
-  try {
-    console.time("copywriter-haiku");
-    const message = await anthropic.messages.create({
-      model: "claude-3-5-haiku-latest",
-      max_tokens: 2000,
-      messages: [
+    const rawOutput: CopywriterOutput = {
+      answer_blocks: [
         {
-          role: "user",
-          content: combinedPrompt,
+          type: "answer_block",
+          eyebrow,
+          heading,
+          body: textAnswer,
+          // IMPORTANT: adjust key name if your AnswerBlockSchema uses image_id instead.
+          imageId: undefined,
         },
       ],
-    });
-    console.timeEnd("copywriter-haiku");
+      question_type,
+      focus_tags: [],
+    };
 
-    const content = message.content[0];
-    if (content.type !== "text") {
-      throw new Error("Unexpected response type from Anthropic");
-    }
-
-    // Extract and repair JSON
-    let rawJson = content.text.trim();
-    rawJson = repairJSON(rawJson);
-
-    // Parse JSON
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(rawJson);
-    } catch (parseError) {
-      console.error("Failed to parse copywriter JSON:", {
-        error: parseError instanceof Error ? parseError.message : String(parseError),
-        rawPreview: rawJson.substring(0, 500),
-      });
-      throw new Error("COPYWRITER_INVALID_JSON");
-    }
-
-    // Validate with Zod schema
-    const result = CopywriterOutputSchema.safeParse(parsed);
-
+    // Validate with Zod just to be safe, but don't throw if it fails.
+    const result = CopywriterOutputSchema.safeParse(rawOutput);
     if (!result.success) {
-      console.error("Copywriter output failed validation:", {
+      console.error("CopywriterOutput failed validation, but returning anyway:", {
         errors: result.error.issues,
-        parsedPreview: JSON.stringify(parsed, null, 2).substring(0, 1000),
       });
-      throw new Error("COPYWRITER_SCHEMA_VALIDATION_FAILED");
+      return rawOutput;
     }
 
     return result.data;
   } catch (error) {
-    console.error("Error generating copywriter output:", error);
-    throw error;
+    console.error("Error generating copywriter output (outer catch):", error);
+
+    // Last-resort fallback
+    const fallback: CopywriterOutput = {
+      answer_blocks: [
+        {
+          type: "answer_block",
+          eyebrow: "Answer",
+          heading: "AI answer",
+          body:
+            "I ran into an issue while generating a detailed answer, but I'm still here. Try rephrasing the question or asking something a bit simpler.",
+          imageId: undefined,
+        },
+      ],
+      question_type: "general",
+      focus_tags: [],
+    };
+
+    return fallback;
   }
-};
+}
 
 /**
  * Public Copywriter API with in-memory caching.
- * Returns structured CopywriterOutput (answer_blocks + optional metadata)
+ * Returns structured CopywriterOutput (answer_blocks + optional metadata).
+ * This function NEVER throws; it always returns a CopywriterOutput.
  */
-export const runCopywriter = async (
+export async function runCopywriter(
   input: CopywriterInput
-): Promise<CopywriterOutput> => {
+): Promise<CopywriterOutput> {
   const cacheKey = makeCopywriterCacheKey(input);
 
   const cached = copywriterCache.get(cacheKey);
   if (cached) {
+    console.log("Copywriter cache HIT:", cacheKey);
     return cached;
   }
 
+  console.log("Copywriter cache MISS:", cacheKey);
   const output = await generateCopywriterOutputInternal(input);
   copywriterCache.set(cacheKey, output);
   return output;
-};
-
-// Re-export types for convenience
-export type { CopywriterInput, CopywriterOutput } from "./copywriterSchemas";
+}

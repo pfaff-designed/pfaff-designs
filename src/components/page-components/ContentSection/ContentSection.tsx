@@ -4,6 +4,7 @@ import { Container } from "@/components/layout/Container";
 import { Heading } from "@/components/atoms/Heading";
 import { BodyText } from "@/components/atoms/BodyText";
 import type { ContentBlockItem } from "@/components/molecules/ContentBlock";
+import { cn } from "@/lib/utils";
 import {
   FullWidth,
   TwoColumnImage,
@@ -35,6 +36,7 @@ export interface ContentSectionProps {
   eyebrow?: string;
   imageSrc?: string;
   imageAlt?: string;
+  isAI?: boolean;
   // Special props for specific variants
   contentBlocks?: Array<{
     eyebrow?: string;
@@ -84,6 +86,7 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
       eyebrow,
       imageSrc,
       imageAlt = "",
+      isAI = false,
       contentBlocks,
       galleryImages,
       annotations,
@@ -194,6 +197,7 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
               eyebrow={eyebrow}
               imageSrc={imageSrc}
               imageAlt={imageAlt}
+              isAI={isAI}
               contentBlocks={contentBlocks}
             />
           );
@@ -214,7 +218,7 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
     }
 
     return (
-      <Section ref={ref} variant={sectionVariant} className={className}>
+      <Section ref={ref} variant={sectionVariant} className={cn(className, '')}>
         <Container size={containerSize}>
           {renderVariant()}
           {children}
