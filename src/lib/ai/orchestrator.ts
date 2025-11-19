@@ -32,6 +32,9 @@ export interface OrchestratorInput {
     categories: string[];
   };
   questionFocus?: QuestionFocus;
+  // Intent-driven layout strategy
+  audienceIntent?: "recruiter" | "hiring_manager" | "client" | "general";
+  preferredComponents?: string[];
 }
 
 // ---- Layout planner schemas ----
@@ -910,9 +913,18 @@ const generateOrchestratorJSONInternal = async (
   // Get run ID from LangSmith context if available
   const runId = (global as any).__langsmith_run_id || "orchestrator-run";
 
-  const { copywriterOutput, intent } = input;
+  const { copywriterOutput, intent, audienceIntent, preferredComponents } = input;
 
   try {
+    // Log intent and layout strategy for debugging
+    if (audienceIntent || preferredComponents) {
+      logDiagnostic("orchestrator-intent-strategy", {
+        audienceIntent: audienceIntent || "none",
+        preferredComponents: preferredComponents || [],
+        availableComponents: input.registrySummary.components.slice(0, 10), // Log first 10
+      }, runId);
+    }
+
     // CopywriterOutput is already validated, so we can use it directly
     const answerBlocks = copywriterOutput.answer_blocks;
     
@@ -923,6 +935,12 @@ const generateOrchestratorJSONInternal = async (
       }, runId);
       throw new Error("Copywriter must return at least one answer_block.");
     }
+
+    // TODO: In the future, use preferredComponents to:
+    // 1. Filter or reorder answer blocks based on intent
+    // 2. Map answer blocks to different component types (e.g., Card for recruiter, ContentSection for hiring_manager)
+    // 3. Adjust layout structure based on intent (e.g., grid for recruiter, stack for hiring_manager)
+    // For now, we maintain the current deterministic mapping: answer_block → AnswerBlock component
 
     // Determine projectId from intent (no longer from YAML meta)
     const projectId = intent.topic?.projectSlug || null;
@@ -1032,6 +1050,10 @@ const generateOrchestratorJSONInternal = async (
       blocksCount: result.page.blocks.length,
       hasHero: result.page.blocks.some((b: any) => b.component === "CaseStudyHero"),
       answerBlocksCount: result.page.blocks.filter((b: any) => b.component === "AnswerBlock").length,
+      audienceIntent: audienceIntent || "none",
+      usedPreferredComponents: preferredComponents?.filter(comp => 
+        result.page.blocks.some((b: any) => b.component === comp)
+      ).length || 0,
     }, runId);
 
     console.timeEnd("orchestrator-total");

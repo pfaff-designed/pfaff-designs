@@ -15,8 +15,8 @@ import {
   convertSectionsToLongform,
 } from "@/lib/kb/adapter";
 import { kbCache } from "@/lib/kb/cache";
-import { runCopywriter, type CopywriterOutput } from "./copywriter";
-import type { CopywriterInput } from "./copywriterSchemas";
+import { runCopywriter } from "./copywriter";
+import type { CopywriterInput, CopywriterOutput } from "./copywriterSchemas";
 import { generateOrchestratorJSON } from "./orchestrator";
 import { getHeroFacts } from "@/lib/kb/CaseStudyHeroFacts";
 import { componentRegistry } from "@/lib/registry/componentRegistry";
@@ -141,6 +141,8 @@ async function getCopywriterOutputForQuery(
     question: query,
     context,
     projectId,
+    sectionTitle: "General",
+    sectionBody: "",
     projectShortFacts,
   });
 

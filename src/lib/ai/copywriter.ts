@@ -40,6 +40,9 @@ function buildCopywriterPrompt(input: CopywriterInput): string {
     context,
     projectId,
     projectShortFacts,
+    intent,
+    contentGoals,
+    requiredSections,
   } = input;
 
   const factsLines: string[] = [];
@@ -73,29 +76,62 @@ function buildCopywriterPrompt(input: CopywriterInput): string {
       ? factsLines.map((l) => `- ${l}`).join("\n")
       : "(no structured facts provided)";
 
+  // Build intent-specific audience and content guidance
+  let audienceGuidance = "Recruiters, hiring managers, and tech leads who skim quickly.";
+  let contentGuidance = "Focus on role, actions, tools, and impact where relevant.";
+
+  if (intent === "recruiter") {
+    audienceGuidance = "Recruiters and talent acquisition professionals who need a quick, scannable overview.";
+    contentGuidance = "Focus on skills, qualifications, proof points, and concise summaries. Make it easy to skim.";
+  } else if (intent === "hiring_manager") {
+    audienceGuidance = "Hiring managers and tech leads who want depth, architecture reasoning, and technical process details.";
+    contentGuidance = "Focus on technical depth, decision-making process, collaboration style, and architectural choices.";
+  } else if (intent === "client") {
+    audienceGuidance = "Potential clients and collaborators who want to understand services, outcomes, and how you work.";
+    contentGuidance = "Focus on trust-building, services offered, concrete outcomes, and working style.";
+  } else if (intent === "general") {
+    audienceGuidance = "General visitors seeking an overview of work and experience.";
+    contentGuidance = "Provide a balanced overview that covers key aspects without assuming specific needs.";
+  }
+
+  const contentGoalsBlock = contentGoals && contentGoals.length > 0
+    ? `\nCONTENT GOALS:\n${contentGoals.map(g => `- ${g}`).join("\n")}`
+    : "";
+
+  const requiredSectionsBlock = requiredSections && requiredSections.length > 0
+    ? `\nREQUIRED SECTIONS (logical structure):\n${requiredSections.map(s => `- ${s}`).join("\n")}\n\nNote: Structure your answer to address these sections conceptually, even if you're writing a single answer block.`
+    : "";
+
+  const intentBlock = intent
+    ? `\nINTENT CATEGORY:\n- ${intent}\n\nThis question is from a ${intent === "recruiter" ? "recruiter" : intent === "hiring_manager" ? "hiring manager" : intent === "client" ? "potential client" : "general visitor"}.`
+    : "";
+
   const prompt = `
-You are the Copywriter Agent for a design-minded engineer’s portfolio.
+You are the Copywriter Agent for a design-minded engineer's portfolio.
 
 Your job:
 - Read the user's question.
 - Read the project context and short facts.
-- Write a clear, concise, recruiter-friendly answer.
+- Write a clear, concise answer tailored to the audience intent.
+
+${intentBlock}
 
 Audience:
-- Recruiters, hiring managers, and tech leads who skim quickly.
+- ${audienceGuidance}
 
 Tone:
 - Clear, confident, warm, and professional.
 - No fluff, no hype language, no buzzword soup.
 
 Content rules:
-- Focus on role, actions, tools, and impact where relevant.
+- ${contentGuidance}
 - Use **bold** formatting for key phrases and skills.
 - Do NOT invent companies, roles, dates, or metrics that are not in the context or facts.
 - If information is missing, say so briefly and honestly.
-- Write 2–6 sentences.
+- Write 2–6 sentences for brief answers, up to 10 sentences for complex questions about outcomes, team dynamics, challenges, or process.
 - You may use line breaks, but avoid bullet lists; write in short paragraphs instead.
 - Do NOT mention that you are an AI or talk about prompts.
+- IMPORTANT: The context includes both semantic search results AND the full project information. Use ALL available context to answer comprehensively - you have access to outcomes, team dynamics, challenges, process details, tools, impact, and more.${contentGoalsBlock}${requiredSectionsBlock}
 
 QUESTION:
 ${question}
@@ -106,10 +142,14 @@ ${projectId ?? "(none)"}
 PROJECT FACTS:
 ${factsBlock}
 
-LONG-FORM CONTEXT:
+CONTEXT (includes semantic search results AND full project information):
 ${context}
 
-Now, write the best possible answer to the question using this information.
+Now, write the best possible answer to the question using ALL available information from the context above. 
+- If the question is about outcomes, use the impact/outcomes information from the project sections.
+- If the question is about team dynamics, use the role, process, and collaboration details.
+- If the question is about challenges, use information about process, constraints, and problem-solving.
+- Draw from ALL relevant sections and information, not just what directly matches the question keywords.
 `;
 
   return prompt.trim();
@@ -250,23 +290,23 @@ async function generateCopywriterOutputInternal(
     console.error("Error generating copywriter output (outer catch):", error);
 
     // Last-resort fallback
-    const fallback: CopywriterOutput = {
-      answer_blocks: [
-        {
-          type: "answer_block",
-          eyebrow: "Answer",
-          heading: "AI answer",
+  const fallback: CopywriterOutput = {
+    answer_blocks: [
+      {
+        type: "answer_block",
+        eyebrow: "Answer",
+        heading: "AI answer",
           body:
             "I ran into an issue while generating a detailed answer, but I'm still here. Try rephrasing the question or asking something a bit simpler.",
           imageId: undefined,
-        },
-      ],
-      question_type: "general",
-      focus_tags: [],
-    };
+      },
+    ],
+    question_type: "general",
+    focus_tags: [],
+  };
 
-    return fallback;
-  }
+  return fallback;
+}
 }
 
 /**

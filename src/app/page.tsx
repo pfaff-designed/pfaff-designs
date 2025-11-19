@@ -10,78 +10,17 @@ import Link from "next/link";
 import { Heading } from "@/components/atoms/Heading";
 import { BodyText } from "@/components/atoms/BodyText";
 import { Renderer } from "@/components/utility/Renderer";
-import type { PageJSON } from "@/components/utility/Renderer";
 import { TypingIndicator } from "@/components/ui/TypingIndicator";
-
-type QueryStatus = "idle" | "loading" | "success" | "error";
+import { useAIAnswer } from "@/components/ai/AIAnswerContext";
 
 export default function Home() {
-  const [renderedContent, setRenderedContent] = React.useState<PageJSON | null>(null);
-  const [status, setStatus] = React.useState<QueryStatus>("idle");
-  const [lastPrompt, setLastPrompt] = React.useState<string | null>(null);
-  const [lastUpdatedAt, setLastUpdatedAt] = React.useState<string | null>(null);
-  const [currentResponseId, setCurrentResponseId] = React.useState<string | null>(null);
-  const [currentQuery, setCurrentQuery] = React.useState<string | undefined>();
-
-  const handleComposerSubmit = React.useCallback(
-    async (query: string) => {
-      setStatus("loading");
-      setLastPrompt(query);
-      setCurrentQuery(query);
-      setCurrentResponseId(null);
-
-      try {
-        const response = await fetch("/api/query", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ query }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          console.error("API error response:", errorData);
-          throw new Error(`API error: ${response.status} ${errorData.error?.message || response.statusText}`);
-        }
-
-        const apiResponse = await response.json();
-
-        if (apiResponse.error) {
-          console.error("API returned error:", apiResponse);
-          throw new Error(apiResponse.message || apiResponse.error || "API returned an error");
-        }
-
-        if (!apiResponse.id || !apiResponse.prompt || !apiResponse.createdAt || !apiResponse.layout) {
-          console.error("Invalid response structure:", apiResponse);
-          throw new Error("Invalid response structure from API");
-        }
-
-        const pageJSON = apiResponse.layout;
-        if (!pageJSON.version || !pageJSON.page || !pageJSON.page.blocks) {
-          console.error("Invalid layout structure:", pageJSON);
-          throw new Error("Invalid layout structure in API response");
-        }
-
-        setRenderedContent(pageJSON);
-        setStatus("success");
-        setLastUpdatedAt(apiResponse.createdAt);
-        setCurrentResponseId(apiResponse.id);
-      } catch (error) {
-        console.error("Error handling query:", error);
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error("Full error details:", error);
-        
-        setStatus("error");
-      }
-    },
-    []
-  );
+  const { state } = useAIAnswer();
+  const { answerLayout, status } = state;
 
   return (
     <main className="min-h-screen bg-[var(--bg-default)]">
       {/* Static Content - Only show when no AI content */}
-      {status === "idle" && !renderedContent && (
+      {status === "idle" && !answerLayout && (
         <>
           {/* Hero Section */}
           <Section className="pt-[6rem] md:pt-[8rem] pb-[4rem] md:pb-[6rem]">
@@ -157,7 +96,7 @@ export default function Home() {
         </div>
       )}
 
-      {status === "idle" && !renderedContent && (
+      {status === "idle" && !answerLayout && (
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="max-w-[25rem] text-left">
             <p className="text-base leading-5 text-[var(--text-default)]">
@@ -167,11 +106,11 @@ export default function Home() {
         </div>
       )}
 
-      {renderedContent && (
+      {answerLayout && (
         <Renderer 
-          data={renderedContent} 
+          data={answerLayout} 
           status={status}
-          responseId={currentResponseId || lastUpdatedAt || renderedContent?.page?.id}
+          responseId={state.lastUpdatedAt || answerLayout?.page?.id}
           isLatest={true}
         />
       )}
