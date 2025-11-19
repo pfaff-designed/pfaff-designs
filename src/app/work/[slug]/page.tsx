@@ -12,6 +12,8 @@ import { TypingIndicator } from "@/components/ui/TypingIndicator";
 import { useAIAnswer } from "@/components/ai/AIAnswerContext";
 import { useSection } from "@/components/ai/SectionContext";
 import { SectionAIAnswer } from "@/components/ai/SectionAIAnswer";
+import { MediaImage } from "@/components/media/MediaImage";
+import { getProjectBySlug } from "@/lib/projects/registry";
 import Link from "next/link";
 
 export default function CaseStudyPage() {
@@ -19,6 +21,7 @@ export default function CaseStudyPage() {
   const slug = params.slug as string;
   
   const caseStudy = getCaseStudyBySlug(slug);
+  const projectMeta = getProjectBySlug(slug);
   
   if (!caseStudy) {
     notFound();
@@ -64,23 +67,39 @@ export default function CaseStudyPage() {
           {/* Hero Section */}
           <Section className="pt-[6rem] md:pt-[8rem] pb-[4rem] md:pb-[6rem]">
             <Container>
-              <div className="max-w-4xl space-y-[1.5rem]">
-                <ContentSection
-                  variant="default"
-                  eyebrow={`Case Study · ${caseStudy.client}`}
-                  headline={caseStudy.projectName}
-                  body={`${caseStudy.timeframe ? `${caseStudy.timeframe} — ` : ""}${caseStudy.roleSummary} ${caseStudy.heroSummary}`}
-                />
-                {caseStudy.url && (
-                  <div>
-                    <Link
-                      href={caseStudy.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[var(--accent-primary)] hover:opacity-80 transition-opacity text-sm"
-                    >
-                      Visit {caseStudy.projectName} →
-                    </Link>
+              <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1.5fr)] gap-[2rem] md:gap-[4rem] items-center">
+                <div className="space-y-[1.5rem]">
+                  <ContentSection
+                    variant="default"
+                    eyebrow={`Case Study · ${caseStudy.client}`}
+                    headline={caseStudy.projectName}
+                    body={`${caseStudy.timeframe ? `${caseStudy.timeframe} — ` : ""}${caseStudy.roleSummary} ${caseStudy.heroSummary}`}
+                  />
+                  {caseStudy.url && (
+                    <div>
+                      <Link
+                        href={caseStudy.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--accent-primary)] hover:opacity-80 transition-opacity text-sm"
+                      >
+                        Visit {caseStudy.projectName} →
+                      </Link>
+                    </div>
+                  )}
+                </div>
+                {/* Hero Image */}
+                {projectMeta && (
+                  <div className="w-full">
+                    <MediaImage
+                      mediaId={projectMeta.heroImageId}
+                      className="w-full"
+                      priority
+                      fill={false}
+                      width={1600}
+                      height={900}
+                      aspectRatio="16/9"
+                    />
                   </div>
                 )}
               </div>
