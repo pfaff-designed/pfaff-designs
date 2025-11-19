@@ -3,6 +3,8 @@ import "./globals.css";
 import { Header } from "@/components/page-components/Header";
 import { Footer } from "@/components/page-components/Footer";
 import { GlobalComposer } from "@/components/layout/GlobalComposer";
+import { AIAnswerProvider } from "@/components/ai/AIAnswerContext";
+import { SectionProvider } from "@/components/ai/SectionContext";
 
 export const metadata: Metadata = {
   title: "pfaff-designs",
@@ -23,10 +25,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Header />
-        {children}
-        <Footer />
-        <GlobalComposer />
+        <AIAnswerProvider>
+          <SectionProvider>
+            <Header />
+            {children}
+            <Footer />
+            <GlobalComposer />
+          </SectionProvider>
+        </AIAnswerProvider>
       </body>
     </html>
   );
