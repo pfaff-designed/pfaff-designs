@@ -1,15 +1,14 @@
 /**
  * Media Resolver
- * Resolves media IDs from YAML to actual URLs for use in JSON components
- * Implements metadata-only retrieval to protect token budget
- * Gracefully handles Supabase not being configured
+ * Resolves media IDs from registry to Supabase Storage URLs
+ * Provides deterministic URL resolution for renderer components
+ * 
+ * This resolver uses the media registry (bucket + path) and generates
+ * public Supabase CDN URLs. It does NOT query the Supabase database.
  */
 
-import { getMediaById, getMediaByIds } from "@/lib/kb/supabaseLoader";
-import { getMediaURL } from "@/lib/supabase/storage";
-import type { MediaRow } from "@/lib/supabase/types";
-import { traceable } from "langsmith/traceable";
-import yaml from "js-yaml";
+import { getMediaItemById, type MediaId } from "@/lib/media/registry";
+import { getPublicStorageURL } from "@/lib/supabase/storage";
 
 export interface MediaResolution {
   id: string;
@@ -22,30 +21,37 @@ export interface MediaResolution {
 }
 
 /**
- * Resolve a single media ID to URL and metadata
- * Returns null if media not found or Supabase not configured
+ * Resolve a single media ID to Supabase Storage URL
+ * Returns null if media ID not found or Supabase not configured
  */
-const resolveMediaIdInternal = traceable(
-  async (mediaId: string): Promise<MediaResolution | null> => {
+export async function resolveMediaId(mediaId: string): Promise<MediaResolution | null> {
   try {
-    // Try Supabase first
-    const media = await getMediaById(mediaId);
-    if (!media) {
-      console.warn(`Media not found: ${mediaId}`);
+    // Look up media item in registry
+    const mediaItem = getMediaItemById(mediaId as MediaId);
+    
+    if (!mediaItem) {
+      console.warn(`Media ID not found in registry: ${mediaId}`);
       return null;
     }
 
-    // Get fresh URL (auto-refreshes if signed URL expired)
-    const url = await getMediaURL(media);
+    // Generate public Supabase Storage URL from bucket + path
+    const url = getPublicStorageURL(mediaItem.bucket, mediaItem.path);
+
+    console.log("[MediaResolver] Resolved media ID", {
+      mediaId: mediaItem.id,
+      bucket: mediaItem.bucket,
+      path: mediaItem.path,
+      url,
+    });
 
     return {
-      id: media.id,
+      id: mediaItem.id,
       url,
-      alt: media.alt,
-      type: media.type,
-      caption: media.caption || undefined,
-      width: media.width || undefined,
-      height: media.height || undefined,
+      alt: mediaItem.alt,
+      type: "image", // All current media items are images
+      caption: null,
+      width: null,
+      height: null,
     };
   } catch (error) {
     // Graceful fallback if Supabase not configured
@@ -56,107 +62,51 @@ const resolveMediaIdInternal = traceable(
     console.error(`Error resolving media ID ${mediaId}:`, error);
     return null;
   }
-  },
-  {
-    name: "resolve-media-id",
-    project_name: "pr-potable-commitment-61",
-    tags: ["media-resolver"],
-    metadata: {
-      component: "media-resolver",
-    },
-  }
-);
-
-export async function resolveMediaId(mediaId: string): Promise<MediaResolution | null> {
-  return resolveMediaIdInternal(mediaId);
 }
 
 /**
  * Resolve multiple media IDs to URLs (batch operation)
  * Returns a map of mediaId -> MediaResolution for efficient lookup
- * Gracefully handles Supabase not being configured
  */
-const resolveMediaIdsInternal = traceable(
-  async (mediaIds: string[]): Promise<Map<string, MediaResolution>> => {
-  if (mediaIds.length === 0) {
-    return new Map();
-  }
-
+export async function resolveMediaIds(mediaIds: string[]): Promise<Map<string, MediaResolution>> {
   const resolutionMap = new Map<string, MediaResolution>();
 
-  try {
-    // Batch fetch media from Supabase
-    const mediaRows = await getMediaByIds(mediaIds);
-
-    // If no media found and Supabase not configured, return empty map
-    if (mediaRows.length === 0) {
-      console.warn(`No media found for IDs: ${mediaIds.join(", ")}. Supabase may not be configured or media doesn't exist.`);
-      return resolutionMap;
-    }
-
-    // Resolve URLs for each media item
-    const resolutions = await Promise.all(
-      mediaRows.map(async (media) => {
-        try {
-          const url = await getMediaURL(media);
-          return {
-            id: media.id,
-            url,
-            alt: media.alt,
-            type: media.type,
-            caption: media.caption || undefined,
-            width: media.width || undefined,
-            height: media.height || undefined,
-          } as MediaResolution;
-        } catch (error) {
-          console.error(`Error resolving URL for media ${media.id}:`, error);
-          return null;
-        }
-      })
-    );
-
-    // Build map
-    resolutions.forEach((resolution) => {
-      if (resolution) {
-        resolutionMap.set(resolution.id, resolution);
-      }
-    });
-
-    // Log missing media IDs
-    const foundIds = new Set(mediaRows.map((m) => m.id));
-    const missingIds = mediaIds.filter((id) => !foundIds.has(id));
-    if (missingIds.length > 0) {
-      console.warn(`Media IDs not found: ${missingIds.join(", ")}`);
-    }
-  } catch (error) {
-    // Graceful fallback if Supabase not configured
-    if (error instanceof Error && error.message.includes("Supabase client not configured")) {
-      console.warn("Supabase not configured, media IDs will not be resolved. Media components will need URLs provided directly.");
-      return resolutionMap; // Return empty map
-    }
-    console.error("Error batch resolving media IDs:", error);
+  if (mediaIds.length === 0) {
+    return resolutionMap;
   }
+
+  // Resolve all media IDs in parallel
+  const resolutions = await Promise.all(
+    mediaIds.map(async (mediaId) => {
+      try {
+        const resolution = await resolveMediaId(mediaId);
+        return { mediaId, resolution };
+      } catch (error) {
+        console.error(`Error resolving media ID ${mediaId}:`, error);
+        return { mediaId, resolution: null };
+      }
+    })
+  );
+
+  // Build map from successful resolutions
+  resolutions.forEach(({ mediaId, resolution }) => {
+    if (resolution) {
+      resolutionMap.set(mediaId, resolution);
+    }
+  });
 
   return resolutionMap;
-  },
-  {
-    name: "resolve-media-ids",
-    project_name: "pr-potable-commitment-61",
-    tags: ["media-resolver"],
-    metadata: {
-      component: "media-resolver",
-    },
-  }
-);
-
-export async function resolveMediaIds(mediaIds: string[]): Promise<Map<string, MediaResolution>> {
-  return resolveMediaIdsInternal(mediaIds);
 }
 
 /**
  * Extract media IDs from YAML content
  * Parses YAML structure to find all media IDs
+ * 
+ * This function is used by the Orchestrator to extract media IDs
+ * from the Copywriter's YAML output before resolution.
  */
+import yaml from "js-yaml";
+
 export function extractMediaIdsFromYAML(yamlContent: string): string[] {
   const mediaIds: string[] = [];
   
@@ -165,7 +115,7 @@ export function extractMediaIdsFromYAML(yamlContent: string): string[] {
     const parsed = yaml.load(yamlContent);
     
     if (parsed && typeof parsed === "object" && "media" in parsed) {
-      const media = parsed.media as any; // Type assertion needed because yaml.load returns unknown
+      const media = parsed.media as any;
       
       // Extract hero media ID
       if (media && typeof media === "object" && media.hero && typeof media.hero === "object" && media.hero.id) {
@@ -191,7 +141,7 @@ export function extractMediaIdsFromYAML(yamlContent: string): string[] {
       }
       
       // Also check sections for inline media
-      const parsedObj = parsed as any; // Type assertion for parsed object
+      const parsedObj = parsed as any;
       if (parsedObj.sections && Array.isArray(parsedObj.sections)) {
         parsedObj.sections.forEach((section: any) => {
           if (section && section.media && Array.isArray(section.media)) {
@@ -243,4 +193,3 @@ export function extractMediaIdsFromYAML(yamlContent: string): string[] {
   
   return mediaIds;
 }
-
