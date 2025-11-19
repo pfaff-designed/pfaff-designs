@@ -43,5 +43,9 @@ export type CopywriterInput = {
     keyOutcomes?: string[];
     keySkills?: string[];
   };
+  // Intent-driven content strategy
+  intent?: "recruiter" | "hiring_manager" | "client" | "general";
+  contentGoals?: string[];
+  requiredSections?: string[];
 };
 

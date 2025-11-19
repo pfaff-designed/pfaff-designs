@@ -1,27 +1,54 @@
+"use client";
+
+import * as React from "react";
 import { ContentSection } from "@/components/page-components/ContentSection";
 import { Section } from "@/components/layout/Section";
 import { Container } from "@/components/layout/Container";
 import { aboutPageData } from "@/lib/pages/about/data";
+import { Renderer } from "@/components/utility/Renderer";
+import { TypingIndicator } from "@/components/ui/TypingIndicator";
+import { useAIAnswer } from "@/components/ai/AIAnswerContext";
 
 export default function About() {
+  const { state } = useAIAnswer();
+  const { answerLayout, status } = state;
+
   return (
     <main className="min-h-screen bg-[var(--bg-default)]">
-      {/* About Me Section */}
-      <Section className="pt-[6rem] md:pt-[8rem] pb-[4rem] md:pb-[6rem]">
-        <Container>
-          <div className="max-w-3xl mx-auto space-y-[4rem] md:space-y-[6rem]">
-            {aboutPageData.sections.map((section, index) => (
-              <ContentSection
-                key={index}
-                variant="default"
-                eyebrow={section.eyebrow}
-                headline={section.headline}
-                body={section.body}
-              />
-            ))}
-          </div>
-        </Container>
-      </Section>
+      {/* AI Content - Show when answerLayout is available */}
+      {status === "loading" && (
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <TypingIndicator />
+        </div>
+      )}
+
+      {answerLayout && (
+        <Renderer 
+          data={answerLayout} 
+          status={status}
+          responseId={state.lastUpdatedAt || answerLayout?.page?.id}
+          isLatest={true}
+        />
+      )}
+
+      {/* Static About Content - Show when no AI answer or idle */}
+      {(!answerLayout || status === "idle") && (
+        <Section className="pt-[6rem] md:pt-[8rem] pb-[4rem] md:pb-[6rem]">
+          <Container>
+            <div className="max-w-3xl mx-auto space-y-[4rem] md:space-y-[6rem]">
+              {aboutPageData.sections.map((section, index) => (
+                <ContentSection
+                  key={index}
+                  variant="default"
+                  eyebrow={section.eyebrow}
+                  headline={section.headline}
+                  body={section.body}
+                />
+              ))}
+            </div>
+          </Container>
+        </Section>
+      )}
     </main>
   );
 }
