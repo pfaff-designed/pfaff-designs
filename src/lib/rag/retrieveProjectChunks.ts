@@ -28,15 +28,29 @@ export async function retrieveProjectChunks(
 ): Promise<RetrievedChunk[]> {
   const { projectId, matchCount = 8 } = options ?? {};
 
+  console.log("[RAG] retrieveProjectChunks called", {
+    query: query.substring(0, 100),
+    projectId,
+    matchCount,
+  });
+
   if (!query || query.trim().length === 0) {
+    console.warn("[RAG] Empty query, returning empty array");
     return [];
   }
 
   try {
     // Generate embedding for the query
+    console.log("[RAG] Generating embedding for query");
     const queryEmbedding = await embeddings.embedQuery(query);
+    console.log("[RAG] Embedding generated, length:", queryEmbedding.length);
 
     // Call Supabase RPC function for similarity search
+    console.log("[RAG] Calling Supabase match_project_chunks", {
+      filter_project_id: projectId ?? null,
+      match_count: matchCount,
+    });
+
     const { data, error } = await supabase.rpc("match_project_chunks", {
       query_embedding: queryEmbedding,
       match_count: matchCount,
@@ -44,13 +58,28 @@ export async function retrieveProjectChunks(
     });
 
     if (error) {
-      console.error("Error calling match_project_chunks:", error);
+      console.error("[RAG] Error calling match_project_chunks:", error);
       throw error;
     }
 
-    return (data ?? []) as RetrievedChunk[];
+    const chunks = (data ?? []) as RetrievedChunk[];
+    console.log("[RAG] Retrieved chunks", {
+      count: chunks.length,
+      chunksPreview: chunks.slice(0, 2).map(c => ({
+        id: c.id,
+        project_id: c.project_id,
+        contentLength: c.content?.length || 0,
+        similarity: c.similarity,
+      })),
+    });
+
+    return chunks;
   } catch (error) {
-    console.error("Error retrieving project chunks:", error);
+    console.error("[RAG] Error retrieving project chunks:", error);
+    console.error("[RAG] Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     // Return empty array on error to allow pipeline to continue
     return [];
   }
