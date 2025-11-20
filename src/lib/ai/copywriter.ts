@@ -7,6 +7,30 @@ import {
   type CopywriterInput,
 } from "./copywriterSchemas";
 
+// ============================================================
+// MODAL COPYWRITER TYPES (NEW - Phase 6.1)
+// ============================================================
+
+export interface ModalCopywriterHistoryTurn {
+  role: "user" | "ai";
+  text: string;
+}
+
+export interface ModalCopywriterInput {
+  question: string;
+  context: string;
+  projectSlug?: string | null;
+  pagePath?: string | null;
+  sectionHeadline?: string | null;
+  sectionText?: string | null;
+  topicLabel?: string | null;
+  history?: ModalCopywriterHistoryTurn[];
+}
+
+export interface ModalCopywriterOutput {
+  answer: string;
+}
+
 /**
  * In-memory cache for copywriter output.
  * Keyed by (question, projectId, context hash).
@@ -329,4 +353,139 @@ export async function runCopywriter(
   const output = await generateCopywriterOutputInternal(input);
   copywriterCache.set(cacheKey, output);
   return output;
+}
+
+// ============================================================
+// MODAL COPYWRITER (NEW - Phase 6.1)
+// ============================================================
+
+/**
+ * Modal-specific copywriter optimized for concise, contextual Q&A.
+ * 
+ * Uses Claude Haiku for speed and cost efficiency.
+ * Designed for hybrid depth: concise by default, deeper on follow-ups.
+ * Strictly grounded in context to avoid hallucinations.
+ * 
+ * This function NEVER throws; always returns a ModalCopywriterOutput.
+ */
+export async function runModalCopywriter(
+  input: ModalCopywriterInput
+): Promise<ModalCopywriterOutput> {
+  try {
+    const {
+      question,
+      context,
+      projectSlug,
+      pagePath,
+      sectionHeadline,
+      sectionText,
+      topicLabel,
+      history,
+    } = input;
+
+    // Build conversation history text (last 2 turns = 4 messages max)
+    const historyText = (history ?? [])
+      .slice(-4)
+      .map((turn) => `${turn.role.toUpperCase()}: ${turn.text}`)
+      .join("\n");
+
+    // Build section context block
+    const sectionBlockLines: string[] = [];
+    if (sectionHeadline) sectionBlockLines.push(`Headline: ${sectionHeadline}`);
+    if (sectionText) sectionBlockLines.push(`Body: ${sectionText}`);
+
+    const sectionBlock =
+      sectionBlockLines.length > 0
+        ? sectionBlockLines.join("\n")
+        : topicLabel
+        ? `Topic: ${topicLabel}`
+        : "No specific section context available.";
+
+    const projectLine = projectSlug
+      ? `PROJECT: ${projectSlug}`
+      : pagePath
+      ? `PAGE: ${pagePath}`
+      : "PROJECT: (not specified)";
+
+    // System prompt optimized for modal Q&A
+    const systemPrompt = `
+You are an expert AI assistant embedded inside a portfolio website.
+
+BEHAVIOR RULES:
+- Always use only the provided context.
+- NEVER invent facts, roles, metrics, dates, or projects.
+- DEFAULT OUTPUT: concise answer (1–2 short paragraphs).
+- If the user clearly asks "why", "how", or "explain", give a deeper explanation (2–4 paragraphs).
+- If unsure due to missing context, say so and explain what you CAN answer.
+- Tone: confident, direct, professional.
+- Audience: recruiters, hiring managers, collaborators.
+- Output only plain text. No YAML, no markdown fences, no headings.
+
+Stay grounded. Stay precise.
+`.trim();
+
+    const modalContextText = `
+${projectLine}
+
+SECTION:
+${sectionBlock}
+
+CONTEXT:
+${context}
+
+CONVERSATION HISTORY:
+${historyText || "No prior conversation."}
+
+USER QUESTION:
+${question}
+`.trim();
+
+    // Create modal-specific model instance (Haiku, lower temp, lower tokens)
+    const modalModel = new ChatAnthropic({
+      modelName: "claude-3-haiku-20240307",
+      temperature: 0.2,
+      maxTokens: 450,
+    });
+
+    // Build the complete prompt
+    const fullPrompt = `${systemPrompt}\n\n${modalContextText}`;
+
+    if (process.env.NODE_ENV !== "production") {
+      console.time("modal-copywriter-haiku");
+    }
+
+    const res = await modalModel.invoke(fullPrompt);
+
+    if (process.env.NODE_ENV !== "production") {
+      console.timeEnd("modal-copywriter-haiku");
+    }
+
+    // Extract content
+    const content =
+      typeof res.content === "string"
+        ? res.content
+        : Array.isArray(res.content)
+        ? res.content
+            .map((part: any) =>
+              typeof part === "string" ? part : part?.text ?? ""
+            )
+            .join(" ")
+        : "";
+
+    const answerText =
+      content.trim() ||
+      "I couldn't generate an answer for that question based on the available context.";
+
+    return { answer: answerText };
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[runModalCopywriter] Error:", error);
+    }
+
+    // Fallback answer on error
+    return {
+      answer:
+        "I ran into an issue while generating an answer. Could you try rephrasing your question?",
+    };
+  }
 }
