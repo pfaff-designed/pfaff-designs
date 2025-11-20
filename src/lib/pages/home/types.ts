@@ -15,6 +15,11 @@ export interface HomePageData {
     headline: string;
     body: string;
   };
+  about: {
+    eyebrow: string;
+    headline: string;
+    body: string;
+  };
   welcomeMessage: string;
 }
 

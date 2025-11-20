@@ -110,7 +110,7 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
           // Footer is in view, position composer above it
           const spaceAboveFooter = viewportHeight - footerRect.top;
           // Position composer above footer with some spacing
-          setFooterHeight(spaceAboveFooter + 24); // 24px spacing
+          setFooterHeight(spaceAboveFooter); // 4.5rem spacing (72px)
         } else {
           // Footer is below viewport, composer can stay at bottom
           setFooterHeight(0);

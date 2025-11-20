@@ -231,6 +231,9 @@ const normalizeProps = (name: string, props: Record<string, any> = {}): Record<s
         p.rightImageSrc = p.rightImageUrl;
       }
       
+      // Section image props (projectSlug and sectionIndex) are set during block preprocessing
+      // No need to add them here as they're already in props
+      
       // Clean up old prop names
       delete p.title;
       delete p.description;
@@ -265,6 +268,29 @@ const normalizeProps = (name: string, props: Record<string, any> = {}): Record<s
   }
 
   return p;
+};
+
+
+/**
+ * Extract project slug from page ID
+ * Handles patterns like "project-slug" or "pmi-project-slug"
+ * The page ID is typically the project slug directly from the orchestrator
+ */
+const extractProjectSlug = (pageId: string | undefined, pageKind: string | undefined): string | undefined => {
+  if (!pageId || pageKind !== "case_study") {
+    return undefined;
+  }
+  
+  // Try to extract slug from page ID
+  // Common patterns: "project-slug", "pmi-project-slug", "page-project-slug", etc.
+  // Remove common prefixes if present
+  let slug = pageId
+    .replace(/^pmi-/, "")
+    .replace(/^case-study-/, "")
+    .replace(/^page-/, "")
+    .trim();
+  
+  return slug || undefined;
 };
 
 const renderBlock = (block: Block, parentComponent?: string): React.ReactNode => {
@@ -456,9 +482,56 @@ export const Renderer: React.FC<RendererProps> = ({
     );
   }
 
+  // Extract project slug for case study pages
+  const projectSlug = extractProjectSlug(data.page.id, data.page.kind);
+  console.log("[Renderer] Project slug extraction:", {
+    pageId: data.page.id,
+    pageKind: data.page.kind,
+    extractedSlug: projectSlug,
+    isCaseStudy: data.page.kind === "case_study",
+  });
+  
+  // Track section index for ContentSection components in case studies
+  let sectionIndex = 0;
+  
+  // Helper to traverse blocks and assign section indices
+  const assignSectionIndices = (blocks: Block[], context?: { projectSlug?: string }): Block[] => {
+    return blocks.map((block) => {
+      const newBlock = { ...block };
+      
+      // If this is a ContentSection in a case study, assign section index
+      if (block.component === "ContentSection" && context?.projectSlug) {
+        sectionIndex++;
+        newBlock.props = {
+          ...block.props,
+          projectSlug: context.projectSlug,
+          sectionIndex,
+        };
+        console.log("[Renderer] Assigned section props to ContentSection:", {
+          blockId: block.id,
+          projectSlug: context.projectSlug,
+          sectionIndex,
+          existingProps: Object.keys(block.props || {}),
+        });
+      }
+      
+      // Recursively process children
+      if (block.children && block.children.length > 0) {
+        newBlock.children = assignSectionIndices(block.children, context);
+      }
+      
+      return newBlock;
+    });
+  };
+  
+  // Assign section indices to ContentSection blocks
+  const blocksWithIndices = data.page.kind === "case_study" && projectSlug
+    ? assignSectionIndices(data.page.blocks, { projectSlug })
+    : data.page.blocks;
+
   // Render all blocks with timing
   console.time("renderer-render");
-  const renderedBlocks = data.page.blocks.map((block) => renderBlock(block));
+  const renderedBlocks = blocksWithIndices.map((block) => renderBlock(block));
   console.timeEnd("renderer-render");
 
   return (

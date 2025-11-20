@@ -56,8 +56,8 @@ export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
   );
 
   const containerClasses = imageOnRight
-    ? "flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-[13.1875rem]"
-    : "flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12";
+    ? "flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-[13.1875rem] lg:justify-center"
+    : "flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12 lg:justify-center";
 
   return (
     <div className={containerClasses}>

@@ -18,16 +18,17 @@ const variantClassMap: Record<TagVariant, string> = {
 const Tag = React.forwardRef<HTMLDivElement, TagProps>(
   ({ className, variant = "primary", ...props }, ref) => {
     return (
-      <BaseBadge
-        ref={ref}
-        variant="default"
-        className={cn(
-          "inline-flex h-[22px] items-center justify-center gap-1 rounded-full border-0 px-[9px] py-[3px] font-mono text-xs italic leading-[18px]",
-          variantClassMap[variant],
-          className
-        )}
-        {...props}
-      />
+      <div ref={ref}>
+        <BaseBadge
+          variant="default"
+          className={cn(
+            "inline-flex h-[22px] items-center justify-center gap-1 rounded-full border-0 px-[9px] py-[3px] font-mono text-xs italic leading-[18px]",
+            variantClassMap[variant],
+            className
+          )}
+          {...props}
+        />
+      </div>
     );
   }
 );
