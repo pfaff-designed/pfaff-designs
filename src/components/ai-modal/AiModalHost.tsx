@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 import { AiModal } from "./AiModal";
 import { AiConversationRow, type AiConversationRowProps } from "./AiConversationRow";
 import { AiActionsRow, type AiAction } from "./AiActionsRow";
 import { useAiModal } from "./AiModalContext";
 import { Composer } from "@/components/molecules/Composer";
-import { BodyText } from "@/components/atoms/BodyText";
+import type { ModalRequestBody, ModalResponseBody } from "@/app/api/ai/modal/route";
 
 /**
  * AiModalHost
@@ -29,12 +30,18 @@ export function AiModalHost() {
     openGlobal,
     submitQuestion,
     markAnswerReceived,
+    setError,
     close,
   } = useAiModal();
+
+  const pathname = usePathname();
 
   // Local state for messages and actions (NOT in state machine)
   const [messages, setMessages] = React.useState<AiConversationRowProps[]>([]);
   const [actions, setActions] = React.useState<AiAction[]>([]);
+  
+  // Ref for auto-scrolling to bottom of conversation
+  const bottomRef = React.useRef<HTMLDivElement>(null);
 
   // "Replace while open" helper for opening from selection
   const handleOpenFromSelection = React.useCallback(
@@ -58,7 +65,7 @@ export function AiModalHost() {
 
   // Handle composer submission
   const handleComposerSubmit = React.useCallback(
-    (query: string) => {
+    async (query: string) => {
       const trimmed = query.trim();
       if (!trimmed) return;
 
@@ -68,29 +75,92 @@ export function AiModalHost() {
       // 2. Add a user message locally
       setMessages((prev) => [...prev, { role: "user", body: trimmed }]);
 
-      // 3. Simulate async AI answer (FAKE - for Phase 3 only)
-      // TODO: Replace with real /api/ai/modal call in Phase 4
-      setTimeout(() => {
+      // 3. Call the real API
+      try {
+        const requestBody: ModalRequestBody = {
+          question: trimmed,
+          topicLabel: state.topicLabel ?? undefined,
+          topicId: state.topicId ?? undefined,
+          source: state.source ?? "hover-pill",
+          pagePath: pathname,
+        };
+
+        if (process.env.NODE_ENV !== "production") {
+          console.log("[AiModalHost] Calling /api/ai/modal", requestBody);
+        }
+
+        const res = await fetch("/api/ai/modal", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!res.ok) {
+          throw new Error(`Modal API failed with status ${res.status}`);
+        }
+
+        const data: ModalResponseBody = await res.json();
+        
+        if (process.env.NODE_ENV !== "production") {
+          console.log("[AiModalHost] API response received", {
+            answerLength: data.answer?.length || 0,
+            actionsCount: data.actions?.length || 0,
+          });
+        }
+
+        const answerText =
+          data.answer?.trim() ||
+          "I couldn't generate an answer for that question.";
+
+        // 4. Append AI message
         setMessages((prev) => [
           ...prev,
           {
             role: "ai",
-            body: "This is a fake AI response from AiModalHost. The real AI pipeline will replace this later.",
+            body: answerText,
           },
         ]);
 
-        // 4. Notify the state machine that an answer has been received
+        // 5. Update actions if any (for future use)
+        if (data.actions && data.actions.length > 0) {
+          setActions(data.actions);
+        }
+
+        // 6. Notify the state machine that an answer has been received
         markAnswerReceived();
-      }, 800);
+      } catch (error) {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[AiModalHost] Error calling API:", error);
+        }
+        
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Sorry, something went wrong answering that question.";
+        
+        setError(errorMessage);
+      }
     },
-    [submitQuestion, markAnswerReceived]
+    [submitQuestion, markAnswerReceived, setError, state.topicLabel, state.topicId, state.source, pathname]
   );
 
   // Handle action button clicks
   const handleActionClick = React.useCallback((action: AiAction) => {
     // For now, just log. Real behavior comes in a later phase.
-    console.log("AI action clicked", action);
+    if (process.env.NODE_ENV !== "production") {
+      console.log("AI action clicked", action);
+    }
   }, []);
+
+  // Auto-scroll to bottom when messages change or thinking state changes
+  React.useEffect(() => {
+    if (isOpen && bottomRef.current) {
+      // Small delay to ensure DOM has updated with new content
+      requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    }
+  }, [messages, isThinking, hasError, isOpen]);
 
   return (
     <>
@@ -113,7 +183,7 @@ export function AiModalHost() {
       <AiModal
         isOpen={isOpen}
         onClose={close}
-        headline={state.headline}
+        headline={state.headline ?? undefined}
         renderBody={() => (
           <>
             {/* Show selected text if present */}
@@ -121,7 +191,7 @@ export function AiModalHost() {
               <AiConversationRow
                 role="user"
                 body={state.selectedText}
-                eyebrowLabel="Selected text"
+                eyebrowLabel={state.source === "hover-pill" ? "Section context" : "Selected text"}
               />
             )}
 
@@ -135,19 +205,24 @@ export function AiModalHost() {
               />
             ))}
 
-            {/* Show thinking state */}
+            {/* Show thinking state as AI conversation row */}
             {isThinking && (
-              <div className="mt-[19px]">
-                <BodyText body="Thinking…" variant="muted" />
-              </div>
+              <AiConversationRow
+                role="ai"
+                body="Thinking…"
+              />
             )}
 
-            {/* Show error state */}
+            {/* Show error state as AI conversation row */}
             {hasError && state.errorMessage && (
-              <div className="mt-[19px]">
-                <BodyText body={`Error: ${state.errorMessage}`} variant="muted" />
-              </div>
+              <AiConversationRow
+                role="ai"
+                body={`Error: ${state.errorMessage}`}
+              />
             )}
+
+            {/* Sentinel element for auto-scroll with padding to ensure full visibility */}
+            <div ref={bottomRef} className="h-14" />
           </>
         )}
         renderActions={() => (
@@ -161,6 +236,7 @@ export function AiModalHost() {
             placeholder="Ask a question…"
             onSubmit={handleComposerSubmit}
             status={isThinking ? "loading" : "idle"}
+            hideStatus={true}
           />
         )}
       />

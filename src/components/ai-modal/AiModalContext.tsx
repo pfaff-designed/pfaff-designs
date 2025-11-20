@@ -15,17 +15,20 @@ export type AiModalStatus =
   | "error"
   | "closing";
 
-export type AiModalSource = "selection" | "command" | "inline";
+export type AiModalSource = "hover-pill" | "keyboard" | "button";
 
 export interface AiModalState {
   status: AiModalStatus;
   isOpen: boolean;
   source?: AiModalSource;
-  headline?: string;
+  headline?: string | null;
   selectedText?: string;
   composerValue: string;
   lastQuestion?: string;
   errorMessage?: string;
+  // Context fields for API calls
+  topicLabel?: string | null;
+  topicId?: string | null;
 }
 
 // ============================================================
@@ -34,7 +37,7 @@ export interface AiModalState {
 
 export type AiModalEvent =
   | { type: "OPEN_FROM_SELECTION"; payload: { selectedText: string; headline?: string } }
-  | { type: "OPEN_GLOBAL"; payload?: { headline?: string } }
+  | { type: "OPEN_GLOBAL"; payload?: { headline?: string; topicLabel?: string; topicId?: string; source?: AiModalSource; selectedText?: string } }
   | { type: "SET_COMPOSER_VALUE"; payload: { value: string } }
   | { type: "SUBMIT_QUESTION"; payload?: { question?: string } }
   | { type: "SET_THINKING" }
@@ -51,7 +54,14 @@ export type AiModalEvent =
 const initialState: AiModalState = {
   status: "idle",
   isOpen: false,
+  source: undefined,
+  headline: undefined,
+  selectedText: undefined,
   composerValue: "",
+  lastQuestion: undefined,
+  errorMessage: undefined,
+  topicLabel: null,
+  topicId: null,
 };
 
 // ============================================================
@@ -69,9 +79,11 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
           ...state,
           isOpen: true,
           status: "opening",
-          source: "selection",
+          source: "hover-pill",
           selectedText,
           headline,
+          topicLabel: headline ?? null,
+          topicId: null,
           errorMessage: undefined,
           composerValue: "",
           lastQuestion: undefined,
@@ -81,9 +93,11 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
         return {
           ...state,
           status: "opening",
-          source: "selection",
+          source: "hover-pill",
           selectedText,
           headline,
+          topicLabel: headline ?? null,
+          topicId: null,
           errorMessage: undefined,
           composerValue: "",
           lastQuestion: undefined,
@@ -93,7 +107,7 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
     }
 
     case "OPEN_GLOBAL": {
-      const headline = event.payload?.headline;
+      const { headline, topicLabel, topicId, source, selectedText } = event.payload || {};
       
       if (!state.isOpen) {
         // Modal closed → open it
@@ -101,9 +115,11 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
           ...state,
           isOpen: true,
           status: "opening",
-          source: "command",
-          selectedText: undefined,
-          headline,
+          source: source ?? "keyboard",
+          selectedText: selectedText ?? undefined,
+          headline: headline ?? state.headline ?? null,
+          topicLabel: topicLabel ?? state.topicLabel ?? null,
+          topicId: topicId ?? state.topicId ?? null,
           errorMessage: undefined,
           composerValue: "",
           lastQuestion: undefined,
@@ -113,9 +129,11 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
         return {
           ...state,
           status: "opening",
-          source: "command",
-          selectedText: undefined,
-          headline,
+          source: source ?? "keyboard",
+          selectedText: selectedText ?? undefined,
+          headline: headline ?? state.headline ?? null,
+          topicLabel: topicLabel ?? state.topicLabel ?? null,
+          topicId: topicId ?? state.topicId ?? null,
           errorMessage: undefined,
           composerValue: "",
           lastQuestion: undefined,
@@ -200,6 +218,8 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
         composerValue: "",
         lastQuestion: undefined,
         errorMessage: undefined,
+        topicLabel: null,
+        topicId: null,
       };
     }
 
@@ -216,6 +236,14 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
 // CONTEXT
 // ============================================================
 
+export interface OpenGlobalOptions {
+  headline?: string;
+  topicLabel?: string;
+  topicId?: string;
+  source?: AiModalSource;
+  selectedText?: string;
+}
+
 export interface AiModalContextValue {
   state: AiModalState;
   // Derived flags
@@ -224,7 +252,7 @@ export interface AiModalContextValue {
   hasError: boolean;
   // Actions
   openFromSelection: (payload: { selectedText: string; headline?: string }) => void;
-  openGlobal: (payload?: { headline?: string }) => void;
+  openGlobal: (payload?: OpenGlobalOptions) => void;
   setComposerValue: (value: string) => void;
   submitQuestion: (options?: { question?: string }) => void;
   markAnswerReceived: (options?: { headline?: string }) => void;

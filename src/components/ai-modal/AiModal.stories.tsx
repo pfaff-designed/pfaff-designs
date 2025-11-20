@@ -482,9 +482,11 @@ const StateMachineDemoInner = () => {
       { type: "scroll", label: "Jump to about", target: "about" },
     ]);
 
-    // Tell state machine to open global
+    // Tell state machine to open global with section context
     openGlobal({
       headline: "Ask about this portfolio",
+      source: "hover-pill",
+      selectedText: "This is a generative portfolio powered by AI agents. It uses RAG to retrieve relevant project information and render custom layouts for each case study. The system includes an orchestrator agent that generates PageJSON and a copywriter agent that creates editorial content.",
     });
   }, [openGlobal]);
 
@@ -547,7 +549,7 @@ const StateMachineDemoInner = () => {
       <AiModal
         isOpen={isOpen}
         onClose={close}
-        headline={state.headline}
+        headline={state.headline ?? undefined}
         renderBody={() => (
           <>
             {/* Show selected text if present */}
