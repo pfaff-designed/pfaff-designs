@@ -1,265 +1,302 @@
-<!-- Frontend Development Rules (dev-rules)
+dev-rules.md
 
-These rules govern how the frontend is built for the generative-UI portfolio project. They are written for:
-	•	Human developers
-	•	AI coding assistants (Cursor, etc.)
+Development & Implementation Rules for Cursor
 
-The goal is to keep the codebase:
-	•	Predictable
-	•	Testable
-	•	Accessible
-	•	Visually consistent
-	•	Safe for generative rendering
+These rules define exactly how Cursor must behave when reading, modifying, and generating code in the pfaff-designs project.
+They ensure stability, prevent drift, enforce design integrity, and guide Cursor to build features safely and predictably.
+
+Cursor must follow this document strictly.
 
 ⸻
 
-1. Tech Stack & Assumptions
-	•	Framework: Next.js (App Router)
-	•	Language: TypeScript (strict: true)
-	•	UI Library: React
-	•	Styling: Tailwind CSS (+ minimal global CSS)
-	•	Components: shadcn/ui + custom components
-	•	Validation: Zod
-	•	Testing: Jest + React Testing Library (unit) + Storybook for visual testing
+1. Source of Truth Hierarchy
 
-No component in the generative path performs data fetching or calls AI directly.
+Whenever there is a conflict:
 
-⸻
+1. The existing codebase is the ultimate source of truth.
 
-2. Project Structure
+2. design-rules.md
 
-All source code lives under src/.
+3. component-inventory.md
 
-src/
-  app/                 # Next.js routes
-  components/
-    atoms/
-    molecules/
-    organisms/
-    page-components/
-    templates/
-    pages/
-    ui/                # shadcn-derived primitives
-  lib/
-    ai/                # orchestrator/copywriter clients, schemas
-    kb/                # KB fetchers + mappers
-    registry/          # component registry + types
-    utils/             # generic helpers
-    validation/        # shared Zod schemas
-  styles/
-    globals.css
-  tests/
-    e2e/               # optional end-to-end tests
+4. architecture.md
 
-Each component gets its own folder:
+5. dev-rules.md (this file)
 
-src/components/<layer>/ComponentName/
-  ComponentName.tsx
-  ComponentName.stories.tsx
-  index.ts
-  tests/
-    ComponentName.test.tsx
-
-index.ts re-exports the main component.
+Cursor must NOT assume conceptual descriptions override implemented logic, tokens, or component structure.
 
 ⸻
 
-3. Component Layers & Responsibilities
+2. Required File Reading Order
 
-3.1 Atoms
-	•	Examples: Text, Heading, Badge, Button, Icon wrappers
-	•	Behavior:
-	•	Purely presentational
-	•	No data fetching
-	•	No domain knowledge (no “case study” awareness)
-	•	Minimal or no internal state (UI-only, like open/closed)
-	•	Props: Simple, explicit prop types
+Before making ANY changes, Cursor must read these files in this exact order:
+	1.	design-rules.md
+	2.	component-inventory.md
+	3.	architecture.md
+	4.	dev-rules.md
+	5.	Then the specific component(s) being modified
+	6.	Parent components
+	7.	Storybook files
+	8.	Test files
 
-3.2 Molecules
-	•	Examples: BadgeRow, MetricList, MediaFigure, BulletList
-	•	Behavior:
-	•	Compose atoms
-	•	Still no data fetching
-	•	Limited layout decisions
-	•	Domain light: they understand structures like metrics or points but not KB or AI
-
-3.3 Organisms
-	•	Examples: CaseStudySection, SkillsGrid, RoleSection, CaseStudyHero
-	•	Behavior:
-	•	Domain-shaped props (e.g. sectionType: "context" | "problem" | ...)
-	•	Can encode small domain layout rules (e.g. where metrics vs body vs media go)
-	•	No data fetching, no AI calls
-	•	Receive fully-resolved props from renderer or page-components
-
-3.4 Page Components
-	•	Examples: CaseStudyPageShell, ExperiencePageShell, SkillsPageShell
-	•	Behavior:
-	•	Compose organisms into a full page layout
-	•	Know about pageKind, audience, etc.
-	•	In generative path: mostly structured by renderer/orchestrator JSON
-	•	For non-AI pages: may receive data via props from the route file
-
-3.5 Templates
-	•	Examples: CaseStudyTemplate, SkillsTemplate
-	•	Behavior:
-	•	Higher-level layout recipes
-	•	Compose page-components + organisms
-	•	No data fetching
-	•	Not directly used by the Orchestrator in v1 (manual-only)
-
-3.6 Pages
-	•	Location: src/components/pages and route-level components in src/app
-	•	Behavior:
-	•	Route-aware
-	•	May perform data fetching (static/SSR) for non-AI content
-	•	Decide when to mount the Composer
-	•	No low-level presentational code (that lives in components)
+Cursor must confirm that it has read and aligned all files before generating code.
 
 ⸻
 
-4. Generative vs Manual Components
-	•	Components in atoms, molecules, organisms, and selected page-components may be used in the Component Registry for generative layouts.
-	•	Components in templates and pages are manual-only and must not be referenced by the Orchestrator.
+3. General Development Principles
 
-Registry entries must explicitly define which components are safe for AI orchestration.
+Cursor must:
+	•	Follow TypeScript strict mode (strict: true).
+	•	Use semantic color tokens (--bg-*, --text-*, --accent-*).
+	•	Use Tailwind utilities for spacing, type, color, and layout.
+	•	Use rem if raw CSS is required.
+	•	Respect existing layout, card, and typography systems.
+	•	Follow established Responsiveness and A11y patterns.
+	•	Use path aliases (@/components/..., @/lib/...).
 
-⸻
-
-5. TypeScript & Validation
-	•	tsconfig must use strict: true.
-	•	Avoid any in production code. If absolutely necessary, document why.
-	•	All props must have explicit TypeScript types.
-	•	Use Zod for:
-	•	Orchestrator JSON (PageJSON, BlockJSON, MediaJSON)
-	•	Registry entries (propsSchema)
-	•	API input/output validation
-
-Example registry entry type:
-
-export type RegistryEntry = {
-  name: string;
-  component: React.ComponentType<any>;
-  category: "atom" | "molecule" | "organism" | "layout" | "utility";
-  allowedChildren: string[];
-  allowedParents: string[] | "*";
-  propsSchema: z.ZodTypeAny;
-};
-
-The Renderer must validate all Orchestrator JSON using Zod before rendering.
+Cursor must NOT:
+	•	Introduce new components that duplicate existing ones.
+	•	Invent new design tokens.
+	•	Invent new component variants without updating docs.
+	•	Modify global CSS without confirmation.
 
 ⸻
 
-6. Styling & Layout
+4. Testing Requirements (Jest)
 
-6.1 Tailwind Usage
-	•	Tailwind is the primary styling mechanism.
-	•	Prefer utility classes over ad-hoc CSS.
-	•	Global CSS (styles/globals.css) is only for:
-	•	Reset/normalize
-	•	Typography base styles
-	•	CSS variables (colors, spacing, radii, etc.)
-	•	No component-specific CSS files.
-    •	ALWAYS use rem over px
-    
-6.2 shadcn/ui
-	•	All shadcn primitives live in src/components/ui.
-	•	Customize theme via design tokens (colors, radii, spacings) rather than inline overrides when possible.
-	•	When composing shadcn components into project-specific ones, place them in atoms/ or molecules/.
+This project uses Jest + React Testing Library.
 
-6.3 Layout Primitives
+Cursor must ensure:
 
-Create and reuse layout primitives instead of ad-hoc flex/grid.
+Required Files:
 
-Examples:
-	•	Container – centers content, sets max-width
-	•	Section – vertical spacing between sections, background variants
-	•	Stack – vertical stack with configurable gap
-	•	Grid – standardized grid for cards and galleries
+jest.config.ts  
+src/setupTests.ts  
 
-Pages and organisms must compose these primitives instead of reinventing layout each time.
+package.json must include:
 
-⸻
+"scripts": {
+  "test": "jest",
+  "test:watch": "jest --watch",
+  "test:coverage": "jest --coverage"
+}
 
-7. Data Fetching & Async Rules
-	•	No data fetching in registry components (atoms, molecules, organisms, generative page-components).
-	•	All generative data is fetched:
-	•	In API routes under app/api/
-	•	In lib/ai and lib/kb as reusable helpers
-	•	Route-level components (src/app/.../page.tsx) may fetch for static/non-AI content.
+Naming convention:
+	•	ComponentName.test.tsx
+	•	ComponentName.spec.tsx
 
-Generative components always receive plain props.
+Cursor MUST write tests for:
+	•	New components
+	•	Modified logic
+	•	All new AI modal components
+	•	All state machine behavior
+	•	Accessibility (focus, tab, ESC close, aria-roles)
+
+Cursor must run tests and ensure they pass before completing a step.
+
+If Jest is not fully configured, Cursor must ask for instructions before generating tests.
 
 ⸻
 
-8. AI / Generative Guardrails
+5. Storybook Requirements
 
-These rules are primarily for AI assistants (e.g., Cursor):
-	•	Do not modify:
-	•	Core architecture docs
-	•	dev-rules and design-rules
-	•	Registry type definitions
-	•	Renderer validation logic
-	•	Without explicit user instruction.
-	•	When adding a new generative component:
-	1.	Create it under the correct layer folder.
-	2.	Add ComponentName.tsx, .stories.tsx, index.ts, tests/ComponentName.test.tsx.
-	3.	Register it in the Component Registry with:
-	•	name
-	•	category
-	•	allowedChildren
-	•	allowedParents
-	•	propsSchema
-	•	Never:
-	•	Call AI directly from components
-	•	Fetch from the KB directly in components
-	•	Bypass Renderer validation
+Cursor MUST:
+	•	Create a *.stories.tsx file for each new component.
+	•	Include:
+	•	Default story
+	•	Variants (loading, long content, empty states if applicable)
+	•	Use tokens + structure defined in design-rules.md.
+
+Cursor must run Storybook (npm run storybook) to visually validate UI changes when relevant.
 
 ⸻
 
-9. Storybook & Testing
+6. Code Style, ESLint & Prettier Rules
 
-Storybook
-	•	Every component in atoms/, molecules/, organisms/, and page-components/ should have a Storybook file.
-	•	Stories should include at least:
-	•	Default state
-	•	Edge case (long text, no media, etc.)
-	•	Any variant props
+Cursor must:
+	•	Run npm run lint after changes.
+	•	Fix ESLint errors unless doing so would introduce new behavior.
+	•	Use consistent import order.
+	•	Format all code with Prettier.
 
-Unit Tests
-	•	Use Jest + React Testing Library for:
-	•	Critical interactive components
-	•	Renderer behavior
-	•	Registry/validation logic
-
-Focus tests on:
-	•	Accessibility behaviors
-	•	Conditional rendering (with/without media, metrics, etc.)
-	•	Regression coverage for orchestrated layouts.
+Cursor must NEVER disable ESLint rules unless instructed.
 
 ⸻
 
-10. Performance & Accessibility
-	•	Use Next/Image (or equivalent) for images where possible.
-	•	Lazy-load media-heavy sections.
-	•	Avoid unnecessary re-renders by keeping components pure.
+7. Motion, Easing & Animation Rules
 
-Accessibility rules:
-	•	All interactive elements must have proper roles and labels.
-	•	All media must have alt text.
-	•	Maintain sufficient color contrast.
-	•	Keyboard navigation must be supported across the site.
+Design-rules defines conceptual motion tokens. Since they are not yet implemented in CSS vars:
+
+Cursor must treat motion tokens as:
+
+Durations
+	•	Fast: 120ms
+	•	Medium: 180ms
+	•	Slow: 280ms
+
+Easing
+	•	Ease-out: cubic-bezier(0.33, 1, 0.68, 1)
+	•	Ease-in: cubic-bezier(0.32, 0, 0.67, 0)
+	•	Standard: cubic-bezier(0.25, 0.1, 0.25, 1)
+
+Use inline styles or Tailwind utilities; do NOT invent motion.* classes.
 
 ⸻
 
-11. Summary
+8. Component Modification Rules
 
-These dev rules define how the frontend is built:
-	•	Clear component layering
-	•	Strong TypeScript + Zod validation
-	•	Tailwind + shadcn for styling
-	•	No data fetching in generative components
-	•	Strict AI guardrails for registry and rendering
+Before modifying a component, Cursor must:
+	1.	Read the file and its index.
+	2.	Read its story.
+	3.	Read its tests.
+	4.	Read any variants or sibling components.
+	5.	Read its parent component.
+	6.	Check imports and ensure it uses tokens.
 
-They are the reference point for both humans and AI assistants when writing or modifying frontend code in this project.---
-alwaysApply: true
---- -->
+Cursor must NOT:
+	•	Change prop names without approval.
+	•	Add new props casually.
+	•	Modify design tokens.
+	•	Add new layout systems without updating documentation.
+	•	Break existing visual patterns.
+
+Cursor MUST:
+	•	Update stories if behavior changes.
+	•	Update or add tests covering new logic.
+	•	Maintain full responsiveness.
+	•	Maintain accessibility (focus trap, aria roles, keyboard support).
+
+⸻
+
+9. AI Modal Folder & Component Rules
+
+The new AI Modal must live in:
+
+src/components/ai-modal/
+
+NOT in src/components/ai/ (which contains legacy components).
+
+Cursor may create only the following new components:
+
+src/components/ai-modal/AiModal.tsx
+src/components/ai-modal/AiModalCard.tsx
+src/components/ai-modal/AiConversationRow.tsx
+src/components/ai-modal/AiActionsRow.tsx
+src/components/ai-modal/AiComposer.tsx
+src/components/ai-modal/AskAiPill.tsx
+
+Each must include:
+	•	A story
+	•	A test file
+	•	An index file
+
+Cursor must NOT create other AI-related components.
+
+⸻
+
+10. AI Modal Architecture Rules
+
+Cursor must follow the state machine defined in architecture.md.
+
+Valid States:
+
+IDLE
+OPENING
+THINKING
+ANSWER_SHOWING
+WAITING_FOR_INPUT
+ERROR
+CLOSING
+
+Cursor must implement:
+	•	Backdrop blur + dim
+	•	Centered card
+	•	Focus trap
+	•	ESC close
+	•	Typing animation
+	•	Deep dive action behavior
+	•	Scroll & navigation actions
+	•	Error UI
+	•	Safe close
+	•	Return focus to previously focused element
+
+Cursor must NOT:
+	•	Insert AI output into pages.
+	•	Modify ContentSection, CaseStudyHero, etc.
+	•	Use any legacy AI components (QuestionComposer, AIAnswerContext, etc.).
+
+⸻
+
+11. Legacy Component Policy
+
+These components are LEGACY:
+	•	QuestionComposer
+	•	Composer
+	•	GlobalComposer
+	•	AIAnswerContext
+	•	SectionContext
+	•	SectionAIAnswer
+	•	AnswerBlock
+
+Rules:
+	•	Legacy means: do NOT extend or build on them.
+	•	Cursor must search for references before removing them.
+	•	They may be cleaned up only after verifying nothing depends on them.
+
+⸻
+
+12. Import Path Rules
+
+Use:
+
+import Something from "@/components/...";
+
+Never:
+
+import Something from "../../../components/...";
+
+13. Error Prevention Rules
+
+Cursor must NOT:
+	•	Modify global CSS tokens
+	•	Add new dependencies without approval
+	•	Introduce circular imports
+	•	Generate code in folders that don’t exist
+	•	Break Storybook
+	•	Change environment variables
+
+Cursor must ensure safe, incremental changes.
+
+⸻
+
+14. Pruning Rules
+
+Cursor may remove code only if:
+	•	Component is marked LEGACY
+	•	Cursor confirmed via text search that it is unused
+	•	Related tests and stories are also updated
+	•	No pages import it
+	•	No logic depends on it
+
+Cursor must request confirmation if unsure.
+
+⸻
+
+15. Step-by-Step Execution Rules
+
+Cursor must:
+	1.	Break every implementation request into clear steps.
+	2.	After each step:
+	•	Run tests
+	•	Update stories
+	•	Ensure visual alignment with design rules
+	•	Clean up unused logic
+	3.	Ask clarifying questions when uncertain.
+
+Cursor must NOT attempt to do everything in one giant change.
+
+⸻
+
+16. Final Rule
+
+If any instruction is ambiguous, Cursor MUST ask before executing.
