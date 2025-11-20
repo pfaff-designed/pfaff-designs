@@ -1,10 +1,9 @@
 import * as React from "react";
 import { Section } from "@/components/layout/Section";
 import { Container } from "@/components/layout/Container";
-import { Heading } from "@/components/atoms/Heading";
-import { BodyText } from "@/components/atoms/BodyText";
-import type { ContentBlockItem } from "@/components/molecules/ContentBlock";
+import { ImageContainer } from "@/components/atoms/ImageContainer";
 import { cn } from "@/lib/utils";
+import { getSectionImageURLSync } from "@/lib/media/sectionImages";
 import {
   FullWidth,
   TwoColumnImage,
@@ -75,6 +74,11 @@ export interface ContentSectionProps {
   containerSize?: "default" | "narrow" | "wide";
   className?: string;
   children?: React.ReactNode;
+  // Section image props (for images below sections)
+  sectionImageSrc?: string;
+  sectionImageAlt?: string;
+  projectSlug?: string; // Auto-fetch section image if provided with sectionIndex
+  sectionIndex?: number; // 1-based section index for auto-fetching
 }
 
 const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
@@ -104,9 +108,37 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
       containerSize = "default",
       className,
       children,
+      sectionImageSrc,
+      sectionImageAlt,
+      projectSlug,
+      sectionIndex,
     },
     ref
   ) => {
+    // Determine section image URL
+    // Priority: sectionImageSrc > auto-fetch from projectSlug + sectionIndex
+    const [finalSectionImageSrc, setFinalSectionImageSrc] = React.useState<string | undefined>(
+      sectionImageSrc
+    );
+
+    React.useEffect(() => {
+      // Auto-fetch section image if projectSlug and sectionIndex are provided
+      console.log("[ContentSection] useEffect check:", {
+        finalSectionImageSrc,
+        projectSlug,
+        sectionIndex,
+        hasProjectSlug: !!projectSlug,
+        hasSectionIndex: !!sectionIndex,
+      });
+      
+      if (!finalSectionImageSrc && projectSlug && sectionIndex) {
+        const url = getSectionImageURLSync(projectSlug, sectionIndex);
+        console.log("[ContentSection] Generated URL:", url);
+        if (url) {
+          setFinalSectionImageSrc(url);
+        }
+      }
+    }, [finalSectionImageSrc, projectSlug, sectionIndex]);
     const renderVariant = () => {
       switch (variant) {
 
@@ -207,12 +239,44 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
       }
     };
 
+    // Render section image below content
+    const renderSectionImage = () => {
+      if (!finalSectionImageSrc) {
+        return null;
+      }
+
+      const altText = sectionImageAlt || 
+        (projectSlug && sectionIndex 
+          ? `${projectSlug} section ${sectionIndex} UI image`
+          : "Section image");
+
+      // Log section image (not hero images)
+      console.log("Section Image:", {
+        url: finalSectionImageSrc,
+        projectSlug,
+        sectionIndex,
+        alt: altText,
+      });
+
+      return (
+        <div className="w-full mt-12 md:mt-16 max-w-[52.5625rem] mx-auto">
+          <ImageContainer
+            imageSrc={finalSectionImageSrc}
+            alt={altText}
+            aspectRatio="wide"
+            containerClassName="w-full"
+          />
+        </div>
+      );
+    };
+
     // For full-width, card-gallery, annotated-visual, text-with-image, and default variants, don't wrap in Container/Section as they handle their own layout
     if (variant === "full-width" || variant === "card-gallery" || variant === "annotated-visual" || variant === "text-with-image" || variant === "default") {
       return (
         <div ref={ref as any} className={className}>
           {renderVariant()}
           {children}
+          {renderSectionImage()}
         </div>
       );
     }
@@ -222,6 +286,7 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
         <Container size={containerSize}>
           {renderVariant()}
           {children}
+          {renderSectionImage()}
         </Container>
       </Section>
     );

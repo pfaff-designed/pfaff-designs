@@ -14,6 +14,8 @@ import { useSection } from "@/components/ai/SectionContext";
 import { SectionAIAnswer } from "@/components/ai/SectionAIAnswer";
 import { MediaImage } from "@/components/media/MediaImage";
 import { getProjectBySlug } from "@/lib/projects/registry";
+import { getMediaItemById, SUPABASE_MEDIA_BUCKET } from "@/lib/media/registry";
+import { getPublicStorageURL } from "@/lib/supabase/storage";
 import Link from "next/link";
 
 export default function CaseStudyPage() {
@@ -65,63 +67,41 @@ export default function CaseStudyPage() {
       {(!answerLayout || status === "idle") && (
         <>
           {/* Hero Section */}
-          <Section className="pt-[6rem] md:pt-[8rem] pb-[4rem] md:pb-[6rem]">
-            <Container>
-              <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1.5fr)] gap-[2rem] md:gap-[4rem] items-center">
-                <div className="space-y-[1.5rem]">
-                  <ContentSection
-                    variant="default"
-                    eyebrow={`Case Study · ${caseStudy.client}`}
-                    headline={caseStudy.projectName}
-                    body={`${caseStudy.timeframe ? `${caseStudy.timeframe} — ` : ""}${caseStudy.roleSummary} ${caseStudy.heroSummary}`}
-                  />
-                  {caseStudy.url && (
-                    <div>
-                      <Link
-                        href={caseStudy.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[var(--accent-primary)] hover:opacity-80 transition-opacity text-sm"
-                      >
-                        Visit {caseStudy.projectName} →
-                      </Link>
-                    </div>
-                  )}
-                </div>
-                {/* Hero Image */}
-                {projectMeta && (
-                  <div className="w-full">
-                    <MediaImage
-                      mediaId={projectMeta.heroImageId}
-                      className="w-full"
-                      priority
-                      fill={false}
-                      width={1600}
-                      height={900}
-                      aspectRatio="16/9"
-                    />
-                  </div>
-                )}
-              </div>
-            </Container>
-          </Section>
+          {projectMeta && (() => {
+            const heroMedia = getMediaItemById(projectMeta.heroImageId);
+            const heroImageUrl = heroMedia ? getPublicStorageURL(SUPABASE_MEDIA_BUCKET, heroMedia.path) : undefined;
+            
+            // Truncate body to 30 words max
+            const truncateToWords = (text: string, maxWords: number): string => {
+              const words = text.trim().split(/\s+/);
+              if (words.length <= maxWords) return text;
+              return words.slice(0, maxWords).join(" ") + "...";
+            };
+            
+            // Use heroSummary and truncate to 30 words
+            const heroBody = truncateToWords(caseStudy.heroSummary || "", 30);
+            
+            return (
+              <ContentSection
+                variant="full-width"
+                eyebrow={`Case Study · ${caseStudy.client}`}
+                headline={caseStudy.projectName}
+                body={heroBody}
+                imageSrc={heroImageUrl}
+                imageAlt={heroMedia?.alt || `${caseStudy.projectName} hero image`}
+                projectDetails={{
+                  client: caseStudy.client,
+                  role: caseStudy.roleSummary,
+                  year: caseStudy.timeframe,
+                }}
+              />
+            );
+          })()}
 
           {/* Content Sections */}
           <div className="pb-[6rem] md:pb-[8rem]">
-            {caseStudy.sections.map((section) => {
+            {caseStudy.sections.map((section, index) => {
               const sectionAnswer = getSectionAnswer(section.id);
-              
-              // Debug logging
-              React.useEffect(() => {
-                console.log("[CaseStudyPage] Section render", {
-                  sectionId: section.id,
-                  sectionHeading: section.heading,
-                  hasSectionAnswer: !!sectionAnswer,
-                  answerStatus: sectionAnswer?.status,
-                  hasAnswerLayout: !!sectionAnswer?.answerLayout,
-                  allSectionIds: Array.from(state.sectionAnswers.keys()),
-                });
-              }, [section.id, sectionAnswer, state.sectionAnswers]);
               
               return (
                 <React.Fragment key={section.id}>
@@ -137,6 +117,8 @@ export default function CaseStudyPage() {
                         eyebrow={section.eyebrow}
                         headline={section.heading}
                         body={section.body}
+                        projectSlug={slug}
+                        sectionIndex={index + 1}
                       />
                       
                       {/* Inline AI answer (rendered below original content) */}
