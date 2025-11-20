@@ -1,5 +1,5 @@
 import * as React from "react";
-import Image from "next/image";
+import { ArrowDown } from "lucide-react";
 import { Input as BaseInput } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -196,8 +196,10 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
             className={cn(
               "relative flex items-center w-full rounded-full",
               "bg-[#FDF9F4]",
-              "border border-[rgba(38,41,29,0.1)]",
-              "pr-2 pl-6 py-[0.5rem] transition-all"
+              "pr-2 pl-6 py-[0.5rem] transition-all",
+              isFocused
+                ? "border-2 border-[#9ec8d2]"
+                : "border border-[rgba(38,41,29,0.1)]"
             )}
           >
             <div className="relative z-[1] flex-1" style={{ isolation: 'isolate' }}>
@@ -225,17 +227,15 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
               disabled={status === "loading"}
               aria-label="Submit query"
               className={cn(
-                "relative z-[1] flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e76f51] p-0 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e76f51] focus-visible:ring-offset-2",
+                "relative z-[1] flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e76f51] p-0 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e76f51] focus-visible:ring-offset-2 group",
                 status === "loading" && "opacity-50 cursor-not-allowed",
                 buttonClassName
               )}
             >
-              <Image
-                src="/composer-button.svg"
-                alt=""
-                width={36}
-                height={36}
-                className="h-9 w-9"
+              <ArrowDown 
+                className="h-5 w-5 transition-transform duration-200 ease-out group-hover:translate-y-[2px]" 
+                strokeWidth={2}
+                style={{ color: 'var(--bg-default)' }}
                 aria-hidden="true"
               />
             </button>
