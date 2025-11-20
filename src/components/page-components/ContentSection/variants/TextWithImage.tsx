@@ -21,6 +21,8 @@ export const TextWithImage: React.FC<TextWithImageProps> = ({
   imageSrc,
   imageAlt = "",
 }) => {
+  const topicLabel = headline || "This section";
+
   return (
     <Section>
       <Container>
@@ -35,7 +37,11 @@ export const TextWithImage: React.FC<TextWithImageProps> = ({
               />
             )}
             {body && (
-              <div className="w-full">
+              <div
+                className="w-full"
+                data-ai-interactive="content-section"
+                data-ai-topic-label={topicLabel}
+              >
                 <BodyText body={body} />
               </div>
             )}

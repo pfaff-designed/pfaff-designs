@@ -26,6 +26,8 @@ export const FullWidth: React.FC<FullWidthProps> = ({
   projectDetails,
   className,
 }) => {
+  const topicLabel = headline || "This section";
+
   return (
     <div className={cn("relative w-full overflow-hidden h-[calc(100vh-5rem)]", className)}>
       {/* Background Image - Full Hero Background */}
@@ -67,7 +69,11 @@ export const FullWidth: React.FC<FullWidthProps> = ({
           <div className="flex flex-col lg:flex-row items-start justify-between w-full gap-6">
             {/* Body - Bottom Left */}
             {body && (
-              <p className="font-medium text-[1.4375rem] leading-[2rem] tracking-[-0.014375rem] text-white w-[24.8125rem]">
+              <p
+                className="font-medium text-[1.4375rem] leading-[2rem] tracking-[-0.014375rem] text-white w-[24.8125rem]"
+                data-ai-interactive="content-section"
+                data-ai-topic-label={topicLabel}
+              >
                 {body}
               </p>
             )}

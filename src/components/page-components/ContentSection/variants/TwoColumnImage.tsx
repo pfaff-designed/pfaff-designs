@@ -19,6 +19,8 @@ export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
   imageAlt = "",
   imageOnRight = true,
 }) => {
+  const topicLabel = headline || "This section";
+
   // Convert headline/body to contentBlocks format for ContentBlock component
   const contentBlocks: Array<{
     headline: string;
@@ -43,7 +45,11 @@ export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
   );
 
   const contentComponent = (
-    <div className={`flex-1 ${imageOnRight ? "pb-[6.625rem] pt-[2.1875rem]" : ""}`}>
+    <div
+      className={`flex-1 ${imageOnRight ? "pb-[6.625rem] pt-[2.1875rem]" : ""}`}
+      data-ai-interactive="content-section"
+      data-ai-topic-label={topicLabel}
+    >
       {contentBlocks.map((block, index) => (
         <ContentBlock
           key={index}

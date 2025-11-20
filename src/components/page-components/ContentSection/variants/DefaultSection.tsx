@@ -47,11 +47,18 @@ export const DefaultSection: React.FC<DefaultSectionProps> = ({
       ]
     : [];
 
+  // Compute topic label for AI interaction
+  const topicLabel = headline || "This section";
+
   return (
     <div className="flex flex-col items-center justify-center w-full mb-20">
       {/* Content Blocks */}
       {contentBlockItems.length > 0 && (
-        <div className="w-full mt-[1.5rem] max-w-[33.625rem]">
+        <div
+          className="w-full mt-[1.5rem] max-w-[33.625rem]"
+          data-ai-interactive="content-section"
+          data-ai-topic-label={topicLabel}
+        >
           <ContentBlock
             headline={headline || ""}
             items={contentBlockItems}
