@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Header } from "@/components/page-components/Header";
 import { Footer } from "@/components/page-components/Footer";
-import { GlobalComposer } from "@/components/layout/GlobalComposer";
 import { AIAnswerProvider } from "@/components/ai/AIAnswerContext";
 import { SectionProvider } from "@/components/ai/SectionContext";
 import { AiModalProvider, AiModalHost, AiHoverPillHost } from "@/components/ai-modal";
@@ -32,7 +31,6 @@ export default function RootLayout({
               <Header />
               {children}
               <Footer />
-              <GlobalComposer />
             </SectionProvider>
           </AIAnswerProvider>
           {/* Global AI modal host - rendered once at root */}
