@@ -26,6 +26,8 @@ export const AnnotatedVisual: React.FC<AnnotatedVisualProps> = ({
   imageClassName,
   annotations,
 }) => {
+  const topicLabel = headline || "This section";
+
   return (
     <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-[19.125rem] w-full">
       <div className="flex flex-col lg:flex-row items-end justify-between gap-6 w-full">
@@ -40,7 +42,11 @@ export const AnnotatedVisual: React.FC<AnnotatedVisualProps> = ({
               </div>
             )}
             {body && (
-              <div className=" w-full">
+              <div
+                className="w-full"
+                data-ai-interactive="content-section"
+                data-ai-topic-label={topicLabel}
+              >
                 <BodyText body={body} />
               </div>
             )}
