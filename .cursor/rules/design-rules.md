@@ -2,319 +2,110 @@
 
 These rules define the **visual system** for the generative-UI portfolio. They apply to:
 
-* Human designers & developers
-* AI assistants (Cursor, orchestrator, copywriter)
+- Human designers & developers  
+- AI assistants (Cursor, orchestrator, copywriter)
 
-The goals:
+Goals:
 
-* Editorial, minimal, warm
-* Grid-driven and disciplined (Müller-Brockmann inspired)
-* Highly legible and recruiter-friendly
-* Responsive and mobile-first
+- Editorial, minimal, warm  
+- Grid-driven and disciplined (Müller-Brockmann inspired)
+- Highly legible and recruiter-friendly  
+- Responsive and mobile-first  
 
 ---
 
 ## 1. Design Philosophy
 
-The design system is grounded in Josef Müller-Brockmann’s approach to grid-based design:
+Grounded in Josef Müller-Brockmann’s grid approach:
 
 **Core principles**
 
-* **Objectivity:** Prefer neutral, functional solutions over stylistic effects; let content dictate form.
-* **Consistency:** Use recurring modules, alignments, and spacing to create coherence across pages and breakpoints.
-* **Hierarchy:** Establish visual order through scale, weight, contrast, and position within the grid.
-* **Proportion:** Base columns, rows, and margins on rational ratios; respect whitespace as an active structural element.
-* **Alignment:** Snap type and images to grid axes; maintain clear edges and baselines for rhythm.
-* **Reduction:** Remove non-essential elements; limit typefaces and sizes to reinforce clarity.
+- **Objectivity** – Neutral, functional solutions; let content dictate form.  
+- **Consistency** – Reuse modules, alignments, spacing across pages.  
+- **Hierarchy** – Use scale, weight, contrast, position.  
+- **Proportion** – Rational ratios; whitespace is an active element.  
+- **Alignment** – Snap type and images to grid axes.  
+- **Reduction** – Few typefaces, sizes, colors to reinforce clarity.
 
 **Intentional feel**
 
-* Editorial, not “app-y”
-* Calm, confident, and spacious
-* Primarily **left-aligned** text; center alignment is rare and deliberate
-* Images support the narrative; they rarely overpower text
+- Editorial, not “app-y”  
+- Calm, confident, spacious  
+- Primarily **left-aligned** text; centered text is rare and deliberate
+- Images support the narrative, not overpower it  
 
 ---
 
 ## 2. Grid & Layout System
 
-The system uses three responsive grids: **mobile-first**, then tablet, then desktop.
+The system uses three responsive grids: **desktop, tablet, mobile**.
 
 ### 2.1 Desktop Grid
 
-* Columns: **12**
-* Rows: modular (base 8+ as needed)
-* Margin: **32px** (left/right)
-* Gutter: **24px**
+- Columns: **12**  
+- Margin: **32px** left/right  
+- Gutter: **24px**  
 
 ### 2.2 Tablet Grid
 
-* Columns: **8**
-* Rows: modular
-* Margin: **24px**
-* Gutter: **20px**
+- Columns: **8**  
+- Margin: **24px**  
+- Gutter: **20px**
 
 ### 2.3 Mobile Grid
 
-* Columns: **4**
-* Rows: modular (base 8+)
-* Margin: **20px**
-* Gutter: **16px**
+- Columns: **4**  
+- Margin: **20px**  
+- Gutter: **16px**
 
-**Rules:**
+**Rules**
 
-* All sections and components must align to the grid columns.
-* Text blocks should snap to column boundaries (no arbitrary widths).
-* Images should occupy whole columns (no fractional widths).
-* Max line length for body text ≈ 60–75 characters.
+- Sections and components must align to grid columns.  
+- Text blocks snap to column boundaries (no arbitrary widths).  
+- Images occupy whole columns (no fractional widths).  
+- Max body line length ≈ 60–75 characters.  
 
----
+### 2.4 Container Widths
 
-## 3. Layout Patterns
+Align this section with `Container.tsx`:
 
-These are reusable layout templates the Orchestrator can choose from. Each pattern has a **name**, **use cases**, and **responsive behavior**.
+- **Default** container: `max-w-7xl` (~1280px ≈ 80rem)  
+- **Narrow** container: `max-w-4xl` (~896px ≈ 56rem)  
+- **Wide** container: `max-w-[1400px]` (explicit 1400px max)  
 
-### 3.1 Layout: `classic_editorial`
+Rules:
 
-**Desktop**
+- Use `Container` for all page sections; do **not** hand-roll max-width.  
+- Choose:
+  - Narrow for dense text  
+  - Default for most sections  
+  - Wide for media-heavy / hero layouts  
 
-* Columns: **7 / 5 split**
-* Text: columns 1–7 (left)
-* Image: columns 8–12 (right)
+### 2.5 Breakpoints (Tailwind Defaults)
 
-**Tablet**
+- `sm`: `640px`  
+- `md`: `768px`  
+- `lg`: `1024px`  
+- `xl`: `1280px`  
 
-* Approx. **5 / 3 split**
-* Text: columns 1–5
-* Image: columns 6–8
-
-**Mobile**
-
-* Stack vertically: text first, then image
-
-**Use for:**
-
-* Explanations
-* Project context
-* Design decisions
-
-**Rules:**
-
-* Top alignment between text and image
-* Text aligned to left grid edge
-* Image complements text; avoid overly dominant visuals
-
-**Visual feel:** Structured, professional, calm.
+All responsive behavior should use these breakpoints.
 
 ---
 
-### 3.2 Layout: `hero_statement`
-
-**Desktop**
-
-* Uses all 12 columns
-* Headline + subtext centered in width, constrained to ~6 columns
-* Optional image behind or below
-
-**Tablet & Mobile**
-
-* Text remains centered, constrained to comfortable width
-* Image may move below text on smaller screens
-
-**Use for:**
-
-* Section intros
-* High-level overviews
-* Hero modules
-
-**Rules:**
-
-* Generous vertical whitespace above and below
-* No dense body text here; keep it succinct
-
-**Visual feel:** Confident, intentional, minimal.
-
----
-
-### 3.3 Layout: `alternating_columns`
-
-**Desktop**
-
-* Columns: **6 / 6**
-* Alternate text-left/image-right and image-left/text-right per section
-
-**Tablet**
-
-* Use 4/4 splits when side-by-side
-
-**Mobile**
-
-* Stack vertically, text then image; alternate subtle visual cues (e.g. alignment, labels), not full mirror layouts
-
-**Use for:**
-
-* Process explanations
-* Step-by-step case studies
-
-**Rules:**
-
-* Maintain consistent image width (6 columns)
-* Use ~64px vertical spacing between alternating rows
-
-**Visual feel:** Rhythmic, engaging, editorial storytelling.
-
----
-
-### 3.4 Layout: `gallery_grid`
-
-**Desktop**
-
-* 3×4 or 4×3 equal image grid
-
-**Tablet**
-
-* 2×N grid
-
-**Mobile**
-
-* 2×N or 1×N depending on image density
-
-**Use for:**
-
-* Work samples
-* Visual comparisons
-* Component or art showcases
-
-**Rules:**
-
-* Equal image aspect ratio (1:1 or 3:2 preferred)
-* Optional captions below each image
-* Hover/interaction should be subtle (e.g. soft scale, border, or label reveal)
-
-**Visual feel:** Balanced, modular, quietly sophisticated.
-
----
-
-### 3.5 Layout: `text_with_pull_quote`
-
-**Desktop**
-
-* Columns: **8 text / 4 pull quote or visual**
-* Text: columns 1–8
-* Callout: columns 9–12
-
-**Tablet**
-
-* Text full-width (8 cols)
-* Pull quote below, aligned to grid (e.g. 2–7)
-
-**Mobile**
-
-* Stack: text, then pull quote
-
-**Use for:**
-
-* Case study storytelling
-* Insights or reflection sections
-
-**Rules:**
-
-* Pull quote should be typographically distinct (larger size, or color accent)
-* Maintain a strong link between quote and nearby text
-
-**Visual feel:** Thoughtful, reflective, editorial magazine.
-
----
-
-### 3.6 Layout: `annotated_visual`
-
-**Desktop**
-
-* Image spans ~10 columns, centered (columns 2–11)
-* Annotations as callouts or overlays tied to specific points
-
-**Tablet**
-
-* Image full-width within margins, annotations as overlay tags or below
-
-**Mobile**
-
-* Image full-width
-* Numbered callouts stacked below
-
-**Use for:**
-
-* Component breakdowns
-* Diagrams
-* Design explanations
-
-**Rules:**
-
-* Maintain minimum 48px padding around the visual
-* Use clear numbered or labeled callouts
-
-**Visual feel:** Analytical, clear, instructional.
-
----
-
-### 3.7 Layout: `comparative_split`
-
-**Desktop**
-
-* Columns: **6 / 6**
-* Two visuals or states side-by-side
-
-**Tablet**
-
-* 4/4 split across 8 columns
-
-**Mobile**
-
-* Stack vertically (before then after), with labels
-
-**Use for:**
-
-* Before/after
-* Dark/light theme examples
-* Design evolution comparisons
-
-**Rules:**
-
-* Align both sides vertically and horizontally
-* Clear labels (e.g. "Before" / "After")
-* Neutral background to maintain clarity
-
-**Visual feel:** Rational, balanced, precise.
-
----
-
-### 3.8 Layout: `timeline_vertical`
-
-**Desktop**
-
-* 12-column grid
-* Vertical spine in central columns (e.g. 6–7)
-* Events alternate left and right
-
-**Tablet**
-
-* Spine remains central, content slightly condensed
-
-**Mobile**
-
-* Single column timeline, events stacked top-to-bottom
-
-**Use for:**
-
-* Process or evolution timelines
-* Step-by-step flows
-
-**Rules:**
-
-* Equal spacing between events (≈120px+)
-* Clear visual markers (dots, icons, or lines)
-
-**Visual feel:** Narrative, directional, logical progression.
+## 3. Layout Patterns (Summary)
+
+These are the canonical layout patterns the orchestrator and humans should use.
+
+- `classic_editorial` – 7/5 text/image split; structured, professional.  
+- `hero_statement` – centered hero type; used for big intros.  
+- `alternating_columns` – 6/6 alternation of text/image rows.  
+- `gallery_grid` – 3×4 / 4×3 grids on desktop; 2×N or 1×N on smaller screens.  
+- `text_with_pull_quote` – 8/4 text/callout split.  
+- `annotated_visual` – large image + labeled callouts.  
+- `comparative_split` – 6/6 before/after or A/B.  
+- `timeline_vertical` – central spine, alternating events.
+
+The long-form descriptions in the existing `design-rules.md` remain valid for detailed behavior; this section is the high-level map.
 
 ---
 
@@ -322,158 +113,401 @@ These are reusable layout templates the Orchestrator can choose from. Each patte
 
 ### 4.1 Typefaces
 
-**Primary Typeface:**
+**Primary:**  
+- **PP Neue Montreal** – for headings and body.
 
-* **PP Neue Montreal** (for both headings and body text)
+**Secondary:**  
+- **PP Neue Montreal Mono** – for small text, labels, metadata, and code snippets.
 
-**Secondary Typeface:**
+Rules:
 
-* **PP Neue Montreal Mono**
+- Use mono for: meta labels, time stamps, AI indicators, code-like text.  
+- Use primary for everything else.
 
-  * Use for small text, labels, metadata, and code snippets
+### 4.2 Typographic Scale (Aligned to Tokens)
 
-### 4.2 Typographic Scale (Major 4th)
+The system uses a **Major 4th-like scale** with explicit tokens already defined:
 
-Base scale uses a **Major 4th ratio (~1.333)**.
+- `xs`: 12px – supporting/meta  
+- `sm`: 14px – labels, small UI text  
+- `base`: 16px – body  
+- `lg`: 21px – small headings, pull-quote support  
+- `xl`: 28px – section headings  
+- `2xl`: 37px – major headings  
+- `3xl`: 50px – hero headings  
+- `4xl`: 67px – primary site hero (rare, used sparingly)
 
-Approximate sizes:
-
-* `xs`: 12px (supporting/meta)
-* `sm`: 14px (labels, small UI text)
-* `base`: 16px (body)
-* `lg`: 21px (small headings, pull quote supporting text)
-* `xl`: 28px (section headings)
-* `2xl`: 37px (major headings)
-* `3xl`: 50px (hero headings)
-* `4xl`: 67px (primary site hero, rare)
+These are the **source of truth**. Tailwind font-size utilities should map to these values.
 
 ### 4.3 Usage
 
-* **Body text**: 16px, line-height 1.5–1.6, left-aligned.
-* **Small text / meta / code**: 12–14px, PP Neue Montreal Mono.
-* **Headings**:
-
-  * H4 ≈ 21px
-  * H3 ≈ 28px
-  * H2 ≈ 37px
-  * H1 ≈ 50–67px (used sparingly)
+- **Body text**: 16px, line-height 1.5–1.6, left-aligned.  
+- **Small text / meta / code**: 12–14px, often mono.  
+- **Headings**:
+  - H4 ≈ 21px  
+  - H3 ≈ 28px  
+  - H2 ≈ 37px  
+  - H1 ≈ 50–67px
 
 ### 4.4 Alignment & Rhythm
 
-* Most body and headings are **left-aligned**.
-* Center alignment is reserved for:
-
-  * Hero statements (`hero_statement` layout)
-  * Occasional timeline labels or key emphasis moments
-* Maintain consistent spacing:
-
-  * Use spacing tokens derived from the same modular thinking as type (e.g. 12, 24, 36, 48, 72, 96, 144px).
+- Most body and headings are **left-aligned**.  
+- Center alignment reserved for:
+  - Hero statements
+  - Occasional timelines or key emphasis moments  
+- Maintain spacing with spacing tokens (see Section 5).
 
 ---
 
-## 5. Color System
+## 5. Spacing & Sizing
 
-### 5.1 Base Palette
+The system uses **px-based CSS variables** for spacing, but components should be styled using Tailwind classes that ultimately map to these tokens.
 
-Raw colors:
+### 5.1 Conceptual Spacing Scale
 
-* `#26291D` – dark
-* `#FFF8A7` – primary (dark theme accent)
-* `#FDF9F4` – light
-* `#E76F51` – primary (light theme accent)
-* `#9EC8D2` – secondary
-* `#6D7F5C` – success
-* `#E75151` – error
-* `#C2C0B4` – hover
-* `#DAC1BD` – border / accent
+Design thinking uses increments: 12, 24, 36, 48, 72, 96, 144px.
 
-### 5.2 Semantic Tokens (Light Theme)
+These map to Tailwind spacing + your `--spacing-*` vars (e.g. `--spacing-1: 4px`, `--spacing-2: 8px`, etc.). Use these increments for:
+
+- Section padding  
+- Gaps between stacked blocks  
+- Card internal padding  
 
 Examples:
 
-* `color.bg.default = #FDF9F4`
-* `color.bg.surface = #FFFFFF` (or a near-tint)
-* `color.text.default = #26291D`
-* `color.text.muted = #C2C0B4`
-* `color.accent.primary = #E76F51`
-* `color.accent.secondary = #9EC8D2`
-* `color.border.subtle = #DAC1BD`
-* `color.state.success = #6D7F5C`
-* `color.state.error = #E75151`
-* `color.state.hover = #C2C0B4`
+- Section vertical padding:
+  - Mobile: 48px  
+  - Tablet: ~64px  
+  - Desktop: 72–96px  
+- Card internal padding:
+  - 24px (default), 32px for feature cards  
 
-### 5.3 Semantic Tokens (Dark Theme)
+### 5.2 `px` vs `rem`
+
+- CSS variables are defined in **px** (e.g. `--spacing-3: 12px`).  
+- Tailwind utilities are **rem-based** at runtime.  
+
+Rules:
+
+- Use Tailwind utilities whenever possible (they already map to the spacing scale).  
+- When writing raw CSS (rare), convert px to rem based on 16px = 1rem:
+  - 16px = 1rem  
+  - 24px = 1.5rem  
+  - 32px = 2rem  
+
+In short: **design tokens are px**, **implementation prefers rem-based utilities**.
+
+---
+
+## 6. Color System
+
+### 6.1 Base Palette
+
+Raw colors (unchanged):
+
+- `#26291D` – dark  
+- `#FFF8A7` – primary (dark theme accent)  
+- `#FDF9F4` – light  
+- `#E76F51` – primary (light theme accent)  
+- `#9EC8D2` – secondary  
+- `#6D7F5C` – success  
+- `#E75151` – error  
+- `#C2C0B4` – hover  
+- `#DAC1BD` – border / accent  
+
+### 6.2 CSS Variables (Light Theme)
+
+Codebase-level CSS vars (examples):
+
+- `--bg-default` = `#FDF9F4`  
+- `--bg-surface` = `#FFFFFF` or near-tint  
+- `--text-default` = `#26291D`  
+- `--text-muted` = `#C2C0B4`  
+
+- `--accent-primary` = `#E76F51`  
+- `--accent-secondary` = `#9EC8D2`  
+- `--accent-yellow` = `#FFF8A7`  
+
+- `--border-subtle` = `#DAC1BD`  
+- `--state-success` = `#6D7F5C`  
+- `--state-error` = `#E75151`  
+- `--state-hover` = `#C2C0B4`  
+
+Usage in Tailwind:
+
+- `bg-[color:var(--bg-default)]`  
+- `text-[color:var(--text-muted)]`  
+- or via configured Tailwind theme keys (preferred).
+
+### 6.3 Dark Theme (Conceptual)
+
+Dark theme should invert semantics:
+
+- Background = `#26291D`  
+- Text default = `#FDF9F4`  
+- Muted text, border, and accents reuse the same core hex values as light theme with adjusted contrast.
+
+Implementation: dark theme vars mirror light theme names under a `.dark` selector.
+
+### 6.4 Rules
+
+- Always use **semantic vars** (`--bg-*`, `--text-*`, `--accent-*`) rather than raw hex in components.  
+- Bright accents (primary, error, success) are reserved for key CTAs and states, not body text.  
+- AI-generated highlight states (e.g., “AI” labels) should use subtle accent or muted colors, not pure red/green.
+
+---
+
+## 7. Radii & Elevation
+
+Use the actual radius tokens:
+
+- `--radius-xs`: 2px  
+- `--radius-sm`: 4px  
+- `--radius-md`: 8px  
+- `--radius-lg`: 12px  
 
 Examples:
 
-* `color.bg.default = #26291D`
-* `color.bg.surface = #26291D` or darker variant
-* `color.text.default = #FDF9F4`
-* `color.text.muted = #C2C0B4`
-* `color.accent.primary = #FFF8A7`
-* `color.accent.secondary = #9EC8D2`
+- Inputs: `--radius-xs`  
+- Cards: `--radius-md`  
+- Tags/pills: `--radius-pill` (full pill)
 
-**Rules:**
+Rules:
 
-* Use **semantic tokens** in Tailwind via CSS variables (e.g. `bg-surface`, `text-muted`, `border-subtle`).
-* Do not hard-code hex values in components.
-* Reserve strong colors (primary, error, success) for emphasis, states, and key CTAs.
+- Do not invent ad-hoc radii.  
+- AI modal card should use `--radius-lg` for a slightly softer feel.
 
----
+Elevation:
 
-## 6. Components & Layout Behavior
-
-* All components must be **mobile-first**.
-* On mobile:
-
-  * Most complex layouts collapse into single-column stacks.
-  * Maintain generous spacing between sections.
-* On tablet/desktop:
-
-  * Use the defined layout patterns (classic_editorial, hero_statement, etc.)
-  * Avoid ad hoc layouts outside the defined patterns.
-
-**Images & media:**
-
-* Align images to grid columns.
-* Maintain consistent aspect ratios within the same section or gallery.
-* Use captions sparingly, left-aligned and small.
-
-**Pull quotes:**
-
-* Larger type (e.g. 21–28px), often in PP Neue Montreal
-* May use color accents (primary or secondary) for quote marks or rules
+- Base card:
+  - Subtle border: 1px solid `rgba(38,41,29,0.08)`  
+  - Very subtle or no shadow.  
+- Highlight / interactive cards:
+  - Slightly stronger shadow + optional color shifts.  
+- AI modal card:
+  - Stronger drop shadow for “window” feel:
+    - e.g., `0 24px 60px rgba(0, 0, 0, 0.18)`.
 
 ---
 
-## 7. AI-Specific Guidance (For Orchestrator & Copywriter)
+## 8. Card & Project Card Design
 
-* When choosing a layout, prefer:
+This is where we formalize cards, including `ProjectCard` and `ProjectCardGrid`.
 
-  * `classic_editorial` for context and explanatory sections
-  * `hero_statement` for top-of-page and major transitions
-  * `alternating_columns` or `timeline_vertical` for process stories
-  * `gallery_grid` or `comparative_split` for visual-heavy content
-  * `text_with_pull_quote` for reflections and lessons learned
+### 8.1 Base Card
 
-* Avoid combining more than **2–3 layout types** on a single page; consistency matters.
+From existing system:
 
-* Do not center-align long-form body copy.
+- Background: `--bg-surface` or `--bg-default`  
+- Border: `1px solid rgba(38,41,29,0.08)`  
+- Radius: `--radius-md`  
+- Padding: 24px (default), 32px for feature cards  
+- Layout:
+  - Optional Eyebrow  
+  - Heading  
+  - Body text  
+  - Optional tags  
 
-* Do not use more than **3 text sizes** within a single section.
+Spacing inside:
 
-* Use color accents sparingly; most text should be the default body color.
+- 8–12px between eyebrow, heading, body  
+- 16px between media and text when media is present
+
+### 8.2 Media Card
+
+Media-focused variant (used in case study teasers etc.):
+
+- Same base styling as Card.  
+- Image at top with `--radius-sm`.  
+- Eyebrow, heading, body, tags below image.  
+- Image aspect ratio: 4:3 or 16:9, `object-cover`.  
+- Spacing between image and text: 16px.
+
+### 8.3 ProjectCard
+
+`ProjectCard` should be treated as a **formal specialization** of Media Card for the Work/Home grid.
+
+Structure:
+
+- Optional tag row (e.g. “Case Study”, “RAG”, “Frontend”).  
+- Project name as Heading (h3).  
+- Client name as Eyebrow or supporting text.  
+- Project type (e.g., “RAG Portfolio”, “AI Prototype”) as short label.  
+- Optional one-line summary.
+
+Visual rules:
+
+- Use Card base:
+  - `--bg-surface` or `--bg-default`  
+  - `--radius-md`  
+  - Border subtle, or none in hover-elevated variants.  
+- Hover:
+  - Slight elevation:
+    - Small shadow + `-translate-y-[1px]` or `-translate-y-[2px]`  
+  - Optional border opacity increase.  
+  - Optional subtle 3D/floating motion on Work grid to emphasize “selectability”.  
+- Disabled state:
+  - Reduced opacity on text and media.  
+  - No elevation on hover; keep border subtle.  
+  - Cursor: `not-allowed` or default arrow.
+
+Text constraints:
+
+- Card content should be **tight**:
+  - Project name: 2–3 words if possible.  
+  - Client: 1–3 words.  
+  - Type: “RAG Portfolio”, “Case Study”, etc.  
+
+### 8.4 ProjectCardGrid
+
+`ProjectCardGrid` arranges `ProjectCard` items:
+
+- Desktop: 3 cards per row (matching your screenshot / intent).  
+- Tablet: 2 per row.  
+- Mobile: 1 per row.  
+- Consistent vertical spacing between rows (approx. 36–48px).  
+- Cards aligned to grid columns; equal column widths.
 
 ---
 
-## 8. Summary
+## 9. Motion & Interaction
+
+### 9.1 Motion Tokens (Conceptual)
+
+Even if not yet implemented as CSS vars, we standardize these values:
+
+- `motion.duration.fast` ≈ 120ms  
+- `motion.duration.medium` ≈ 180ms  
+- `motion.duration.slow` ≈ 280ms  
+
+- `motion.easing.in` → `cubic-bezier(0.32, 0, 0.67, 0)`  
+- `motion.easing.out` → `cubic-bezier(0.33, 1, 0.68, 1)`  
+- `motion.easing.standard` → `cubic-bezier(0.25, 0.1, 0.25, 1)`
+
+Implementation:
+
+- Use Tailwind `transition` utilities combined with these durations and easing functions where CSS-in-JS or custom CSS is needed.
+
+### 9.2 Hover & Focus
+
+- Hover: small scale, shadow, or tint changes; **never** big transforms.  
+- Focus: always show a visible focus ring (accessibility).  
+- Links and buttons should maintain contrast-compliant states.
+
+---
+
+## 10. AI Modal Visual Design
+
+The AI modal is now a **first-class pattern**, separate from orchestrated layouts.
+
+### 10.1 Backdrop
+
+- Blur: 12–16px.  
+- Dim overlay: `rgba(0, 0, 0, 0.08–0.12)`.  
+- Open animation:
+  - Opacity 0 → 1  
+  - Blur 0 → 12/16px  
+  - Duration: 180–280ms, easing: `motion.easing.out`.  
+- Close animation:
+  - Reverse with `motion.easing.in`.
+
+### 10.2 Modal Card
+
+- Background: `--bg-surface` or slightly elevated variant.  
+- Max width: 680–720px.  
+- Max height: 70vh (with internal scroll).  
+- Radius: `--radius-lg`.  
+- Shadow: e.g., `0 24px 60px rgba(0, 0, 0, 0.18)` for “floating window” feel.  
+- Internal padding:
+  - ~2rem (x) and ~1.75rem (y).  
+
+Scale animation:
+
+- On open: scale from 0.96 → 1 over 180–220ms, `motion.easing.out`.  
+- On close: 1 → 0.96 over ~150–180ms, `motion.easing.in`.
+
+### 10.3 Layout Inside Modal
+
+Structure:
+
+1. **Headline** – summarizing the topic or question.  
+2. **Conversation list** – stacked `AiConversationRow` elements:  
+   - Eyebrow (“User” / “AI”)  
+   - BodyText with the message  
+3. **Actions row** – max 4 buttons (navigate / scroll / deep_dive).  
+4. **Composer** – at the bottom, sticky inside the card.
+
+Spacing:
+
+- Headline → first row: ~1.5rem.  
+- Between rows: 0.75–1rem.  
+- Last row → actions: ~1.25rem.  
+- Actions → composer: ~1.25rem.
+
+### 10.4 Composer
+
+- Style: input + submit built from existing atoms/molecules (Input, Button, or a new `AiComposer` molecule).  
+- Rounded, with subtle border.  
+- Should feel integrated with the card, not separate UI chrome.  
+
+### 10.5 Typing & Thinking
+
+- THINKING state uses `TypingIndicator` (or updated implementation).  
+- Typing animation (target spec):
+  - Start delay: 120–160ms.  
+  - Char step: ~30–40ms/character, but cap total visible typing to ~2–3 seconds, then fade in remaining text if needed.
+
+---
+
+## 11. Selection → “Ask AI” Pill
+
+When user selects text inside `ContentSection`:
+
+- Show an “Ask AI about this” pill near the selection:
+  - Rounded pill (`--radius-pill`)  
+  - Accent or surface background, subtle shadow  
+  - Small type (12–14px)  
+
+Behavior:
+
+- Appears when:
+  - Selection length ≥ 3 characters  
+  - Selection inside a valid content area  
+- Hides when:
+  - Selection cleared  
+  - User clicks elsewhere  
+  - User scrolls > ~50px  
+  - Modal opens  
+
+On mobile:
+
+- Pill may anchor to bottom-center instead of near selection, due to OS text handles.
+
+---
+
+## 12. Accessibility & Contrast
+
+- Maintain WCAG-compliant contrast for:
+  - Text on backgrounds  
+  - Focus states  
+  - Disabled states (still readable, just de-emphasized).  
+- Always provide:
+  - Focusable elements with proper `:focus-visible` styling.  
+  - ARIA labels where semantics are not obvious (e.g. close button in AI modal).  
+- ESC should close the modal; focus should return to the element that opened it.
+
+---
+
+## 13. Summary
 
 This design system defines:
 
-* A grid- and ratio-driven visual architecture
-* Eight canonical layout patterns
-* A typographic scale built on the Major 4th
-* A semantic color system for light and dark modes
-* Clear guidance for media, alignment, and hierarchy
+- A grid- and ratio-driven visual architecture  
+- Canonical layout patterns for orchestrated pages  
+- A type scale mapped to real CSS tokens  
+- A semantic color system using `--bg-*`, `--text-*`, `--accent-*`, `--state-*` vars  
+- Formal card patterns (Card, MediaCard, ProjectCard, ProjectCardGrid)  
+- A cinematic AI modal as the single surface for conversational AI  
+- Clear rules for spacing, radii, motion, and accessibility  
 
-All generative layouts must respect these rules to maintain an editorial, warm, and intentional portfolio experience that still feels highly functional and recruiter-friendly.
+All generative and manual layouts must respect these rules to maintain an editorial, warm, and intentional portfolio experience that still feels highly functional and recruiter-friendly.

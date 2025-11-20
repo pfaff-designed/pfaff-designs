@@ -129,13 +129,6 @@ export function AIAnswerProvider({ children }: { children: React.ReactNode }) {
   const getSectionAnswer = React.useCallback(
     (sectionId: string): SectionAnswer | undefined => {
       const answer = state.sectionAnswers.get(sectionId);
-      console.log("[AIAnswerContext] getSectionAnswer", {
-        sectionId,
-        hasAnswer: !!answer,
-        answerStatus: answer?.status,
-        hasAnswerLayout: !!answer?.answerLayout,
-        allSectionIds: Array.from(state.sectionAnswers.keys()),
-      });
       return answer;
     },
     [state.sectionAnswers]

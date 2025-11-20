@@ -33,21 +33,20 @@ export default function About() {
 
       {/* Static About Content - Show when no AI answer or idle */}
       {(!answerLayout || status === "idle") && (
-        <Section className="pt-[6rem] md:pt-[8rem] pb-[4rem] md:pb-[6rem]">
-          <Container>
-            <div className="max-w-3xl mx-auto space-y-[4rem] md:space-y-[6rem]">
-              {aboutPageData.sections.map((section, index) => (
-                <ContentSection
-                  key={index}
-                  variant="default"
-                  eyebrow={section.eyebrow}
-                  headline={section.headline}
-                  body={section.body}
-                />
-              ))}
-            </div>
-          </Container>
-        </Section>
+        <>
+          {aboutPageData.sections.map((section, index) => (
+            <ContentSection
+              key={index}
+              variant={section.variant || "default"}
+              eyebrow={section.eyebrow}
+              headline={section.headline}
+              body={section.body}
+              imageSrc={section.imageSrc}
+              imageAlt={section.imageAlt}
+              containerSize={section.variant === "text-with-image" ? "wide" : "default"}
+            />
+          ))}
+        </>
       )}
     </main>
   );
