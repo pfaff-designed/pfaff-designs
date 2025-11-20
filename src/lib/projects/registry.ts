@@ -7,7 +7,7 @@ import type { MediaId } from "@/lib/media/registry";
 
 export type ProjectId =
   | "capital-one-travel"
-  | "pmi-agile-certification"
+  | "pmi"
   | "tanger-outlets"
   | "coca-cola-creative-technology"
   | "confidential-real-estate"
@@ -42,8 +42,8 @@ export const PROJECTS: ProjectMeta[] = [
 
   // PMI
   {
-    id: "pmi-agile-certification",
-    slug: "pmi-agile-certification",
+    id: "pmi",
+    slug: "pmi",
     clientLabel: "PMI (Project Management Institute)",
     projectTitle: "PMI Agile Certification Site",
     role: "Front-End Engineer / Technologist",

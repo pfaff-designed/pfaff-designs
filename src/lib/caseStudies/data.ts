@@ -15,7 +15,7 @@ export const caseStudies: CaseStudyPage[] = [
     heroSummary:
       "Capital One Travel is a large-scale booking platform built to help travelers get more value from their rewards. I worked as a front-end engineer through AKQA, building and refining modular React components that supported evolving user flows across search, booking, pricing, offers, and loyalty benefits.",
     roleSummary:
-      "Front-End Engineer / Technologist focused on translating detailed design specifications into flexible, maintainable components that strengthened consistency across the platform.",
+      "Engineer",
     sections: [
       {
         id: "overview",
@@ -50,15 +50,15 @@ export const caseStudies: CaseStudyPage[] = [
     ],
   },
   {
-    slug: "pmi-agile-certification",
+    slug: "pmi",
     client: "PMI (Project Management Institute)",
-    projectName: "PMI Agile Certification Site",
+    projectName: "PMI - Project Management Institute",
     url: "https://www.pmi.org/certifications/agile-acp",
     timeframe: "2023",
     heroSummary:
       "PMI is a globally recognized organization in the project management and agile certification space. They needed a refreshed site for their Agile Certified Practitioner (ACP) program that communicated the value of the certification in a clear and trustworthy way.",
     roleSummary:
-      "Front-End Engineer / Technologist focused on front-end engineering and design translation, turning Figma concepts into reliable components and layouts.",
+      "Engineer",
     sections: [
       {
         id: "overview",
@@ -89,13 +89,13 @@ export const caseStudies: CaseStudyPage[] = [
   {
     slug: "tanger-outlets",
     client: "Tanger Outlets",
-    projectName: "Tanger Outlets Digital Experience",
+    projectName: "Tanger Outlets",
     url: "https://www.tanger.com/",
     timeframe: "2023",
     heroSummary:
       "Tanger Outlets needed an updated digital experience that better reflected their modern retail brand. The redesign spanned marketing pages, promotional modules, retail listings, and content blocks that needed to be flexible enough to support ongoing updates.",
     roleSummary:
-      "Front-End Engineer / Technologist focused on turning Figma designs into reusable, responsive components that could adapt to many use cases across the Tanger site.",
+      "Engineer",
     sections: [
       {
         id: "overview",
@@ -126,13 +126,13 @@ export const caseStudies: CaseStudyPage[] = [
   {
     slug: "coca-cola-creative-technology",
     client: "Coca-Cola",
-    projectName: "Coca-Cola Creative Technology Prototyping",
+    projectName: "Coca-Cola",
     url: undefined,
     timeframe: "2023",
     heroSummary:
       "Coca-Cola was exploring ways to bring AI into their retail and experiential touchpoints. The goal was to imagine what the future of vending machines, product interactions, and brand experiences could look like if they were powered by intelligent, personalized technology.",
     roleSummary:
-      "Creative Technologist / Front-End Engineer supporting designers, art directors, and creative leadership to translate early creative concepts into functional prototypes.",
+      "Technologist",
     sections: [
       {
         id: "overview",
@@ -169,7 +169,7 @@ export const caseStudies: CaseStudyPage[] = [
     heroSummary:
       "Helped design and implement a modern real estate experience; details are anonymized due to client confidentiality. The work focused on creating flexible, user-friendly interfaces for property search, listings, and client interactions.",
     roleSummary:
-      "Front-End Engineer / Technologist focused on building responsive, component-driven interfaces while respecting strict confidentiality requirements.",
+      "Front-End Engineer / Technologist",
     sections: [
       {
         id: "overview",
@@ -200,13 +200,13 @@ export const caseStudies: CaseStudyPage[] = [
   {
     slug: "pfaff-designs",
     client: "Self-Initiated",
-    projectName: "Generative-UI RAG Portfolio",
+    projectName: "Pfaf Designs",
     url: undefined,
     timeframe: "2024",
     heroSummary:
       "Built a generative-UI portfolio using RAG, multi-agent orchestration, and deterministic layout rendering. The system allows visitors to ask questions about my work and receive AI-generated answers that are dynamically rendered inline within relevant sections.",
     roleSummary:
-      "Applied AI Engineer / Front-End Engineer building the full-stack AI portfolio system, including RAG retrieval, intent routing, copywriter and orchestrator agents, and the React rendering pipeline.",
+      "Applied AI Engineer / Full-Stack Engineer",
     sections: [
       {
         id: "overview",
