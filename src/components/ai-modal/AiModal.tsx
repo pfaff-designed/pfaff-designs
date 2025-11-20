@@ -10,7 +10,9 @@ export interface AiModalProps {
   isOpen: boolean;
   onClose: () => void;
   headline?: string;
-  children?: React.ReactNode;
+  renderBody?: () => React.ReactNode;
+  renderActions?: () => React.ReactNode;
+  renderComposer?: () => React.ReactNode;
 }
 
 /**
@@ -73,7 +75,9 @@ export const AiModal: React.FC<AiModalProps> = ({
   isOpen,
   onClose,
   headline = "Ask about this portfolio",
-  children,
+  renderBody,
+  renderActions,
+  renderComposer,
 }) => {
   const modalRef = React.useRef<HTMLDivElement>(null);
   const cardRef = React.useRef<HTMLDivElement>(null);
@@ -187,6 +191,10 @@ export const AiModal: React.FC<AiModalProps> = ({
         style={{
           scrollbarWidth: 'thin',
           scrollbarColor: 'var(--border-subtle) transparent',
+          maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%)',
+          maskComposite: 'intersect',
+          WebkitMaskComposite: 'source-in',
         }}
       >
         {/* Header with Close Button */}
@@ -217,18 +225,14 @@ export const AiModal: React.FC<AiModalProps> = ({
               />
             )}
             {/* Body Content */}
-            <div className="mt-[19px]">{children}</div>
+            {renderBody && <div className="mt-[19px]">{renderBody()}</div>}
+            {/* Actions */}
+            {renderActions && renderActions()}
           </div>
         </div>
 
-        {/* Composer Placeholder */}
-        <div className="pt-6 border-t border-[color:var(--border-subtle)]">
-          <div className="px-4 py-3 bg-[color:var(--bg-default)] rounded-[var(--radius-md)] border border-[color:var(--border-subtle)]">
-            <p className="text-sm text-[color:var(--text-muted)] font-mono">
-              Composer goes here
-            </p>
-          </div>
-        </div>
+        {/* Composer */}
+        {renderComposer && renderComposer()}
       </div>
     </div>
   );

@@ -253,7 +253,8 @@ Implementation: dark theme vars mirror light theme names under a `.dark` selecto
 
 - Always use **semantic vars** (`--bg-*`, `--text-*`, `--accent-*`) rather than raw hex in components.  
 - Bright accents (primary, error, success) are reserved for key CTAs and states, not body text.  
-- AI-generated highlight states (e.g., “AI” labels) should use subtle accent or muted colors, not pure red/green.
+- AI-generated highlight states (e.g., "AI" labels) should use subtle accent or muted colors, not pure red/green.
+- **Exception**: AI eyebrow labels in the AI modal use `--accent-primary` to differentiate AI responses from user messages.
 
 ---
 
