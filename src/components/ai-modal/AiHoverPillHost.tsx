@@ -113,9 +113,15 @@ export function AiHoverPillHost() {
       // Check if click is within an AI-interactive region
       const region = target.closest<HTMLElement>("[data-ai-interactive]");
       if (region && activeRegionRef.current === region) {
-        // Open modal with the current topic
+        // Extract text content from the region for context
+        const textContent = region.textContent?.trim() || "";
+        
+        // Open modal with the current topic and section content
         openGlobal({
           headline: state.topicLabel || "This section",
+          topicLabel: state.topicLabel || "This section",
+          source: "hover-pill",
+          selectedText: textContent,
         });
       }
     }
@@ -256,9 +262,15 @@ export function AiHoverPillHost() {
         isVisible={state.isVisible}
         isMobile={isMobileRef.current}
         onClick={() => {
+          // Extract text content from the active region for context
+          const textContent = activeRegionRef.current?.textContent?.trim() || "";
+          
           // Open the AI modal using the topic label as headline
           openGlobal({
             headline: state.topicLabel || "This section",
+            topicLabel: state.topicLabel || "This section",
+            source: "hover-pill",
+            selectedText: textContent,
           });
         }}
       />

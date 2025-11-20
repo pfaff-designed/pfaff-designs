@@ -182,11 +182,11 @@ export const AiModal: React.FC<AiModalProps> = ({
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "relative z-50 w-full max-w-[680px] max-h-[70vh]",
+          "relative z-50 w-full max-w-[920px] max-h-[80vh]",
           "bg-[color:var(--bg-default)]",
           "overflow-y-auto",
           "transition-all duration-[180ms] ease-[cubic-bezier(0.33,1,0.68,1)]",
-          "p-6 md:p-8",
+          "p-6 md:p-8 lg:p-12",
           "transform",
           isOpen ? "scale-100 opacity-100" : "scale-[0.96] opacity-0"
         )}
