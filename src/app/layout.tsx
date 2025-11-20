@@ -5,6 +5,7 @@ import { Footer } from "@/components/page-components/Footer";
 import { GlobalComposer } from "@/components/layout/GlobalComposer";
 import { AIAnswerProvider } from "@/components/ai/AIAnswerContext";
 import { SectionProvider } from "@/components/ai/SectionContext";
+import { AiModalProvider, AiModalHost, AiHoverPillHost } from "@/components/ai-modal";
 
 export const metadata: Metadata = {
   title: "pfaff-designs",
@@ -25,14 +26,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AIAnswerProvider>
-          <SectionProvider>
-            <Header />
-            {children}
-            <Footer />
-            <GlobalComposer />
-          </SectionProvider>
-        </AIAnswerProvider>
+        <AiModalProvider>
+          <AIAnswerProvider>
+            <SectionProvider>
+              <Header />
+              {children}
+              <Footer />
+              <GlobalComposer />
+            </SectionProvider>
+          </AIAnswerProvider>
+          {/* Global AI modal host - rendered once at root */}
+          <AiModalHost />
+          {/* Global AI hover pill host - tracks cursor/touch on AI-interactive regions */}
+          <AiHoverPillHost />
+        </AiModalProvider>
       </body>
     </html>
   );
