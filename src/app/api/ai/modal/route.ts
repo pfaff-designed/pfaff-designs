@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { retrieveProjectChunks, buildContextFromChunks } from "@/lib/rag/retrieveProjectChunks";
-import { runCopywriter } from "@/lib/ai/copywriter";
-import type { CopywriterInput } from "@/lib/ai/copywriterSchemas";
+import { runModalCopywriter } from "@/lib/ai/copywriter";
+import { getCaseStudyBySlug } from "@/lib/caseStudies/data";
 
 // ============================================================
 // TYPES
@@ -15,6 +15,10 @@ export interface ModalRequestBody {
   topicId?: string;
   source?: AiModalSource;
   pagePath?: string;
+  history?: Array<{
+    role: "user" | "ai";
+    text: string;
+  }>;
 }
 
 export interface ModalResponseBody {
@@ -28,7 +32,7 @@ export interface ModalResponseBody {
 }
 
 // ============================================================
-// HELPER: Derive project slug from page path
+// HELPERS
 // ============================================================
 
 function deriveProjectSlugFromPath(pagePath?: string): string | undefined {
@@ -37,6 +41,69 @@ function deriveProjectSlugFromPath(pagePath?: string): string | undefined {
   // Match paths like /work/capital-one or /work/coca-cola
   const match = pagePath.match(/^\/work\/([^/]+)/);
   return match ? match[1] : undefined;
+}
+
+/**
+ * Best-effort section context lookup from case study data.
+ * Attempts to match topicLabel or topicId to a section in the project.
+ */
+function deriveSectionContext({
+  projectSlug,
+  topicLabel,
+  topicId,
+}: {
+  projectSlug?: string | null;
+  topicLabel?: string | null;
+  topicId?: string | null;
+}): {
+  sectionHeadline: string | null;
+  sectionText: string | null;
+} {
+  // If no project slug, can't look up case study
+  if (!projectSlug) {
+    return {
+      sectionHeadline: topicLabel ?? null,
+      sectionText: null,
+    };
+  }
+
+  // Try to get case study data
+  const caseStudy = getCaseStudyBySlug(projectSlug);
+  if (!caseStudy || !caseStudy.sections || caseStudy.sections.length === 0) {
+    return {
+      sectionHeadline: topicLabel ?? null,
+      sectionText: null,
+    };
+  }
+
+  // Normalize topic label for matching
+  const normalizedTopic = topicLabel?.toLowerCase().trim();
+
+  // Best-effort matching: try to find section by heading, eyebrow, or id
+  const matched = caseStudy.sections.find((sec) => {
+    const heading = sec.heading?.toLowerCase().trim();
+    const eyebrow = sec.eyebrow?.toLowerCase().trim();
+
+    return (
+      (heading && normalizedTopic && heading.includes(normalizedTopic)) ||
+      (eyebrow && normalizedTopic && eyebrow.includes(normalizedTopic)) ||
+      (sec.id && topicId && sec.id === topicId)
+    );
+  });
+
+  if (!matched) {
+    // No match found, return fallback
+    return {
+      sectionHeadline: topicLabel ?? null,
+      sectionText: null,
+    };
+  }
+
+  // Return matched section data
+  return {
+    sectionHeadline: matched.heading ?? topicLabel ?? null,
+    sectionText: matched.body ?? null,
+  };
 }
 
 // ============================================================
@@ -53,7 +120,7 @@ function deriveProjectSlugFromPath(pagePath?: string): string | undefined {
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as ModalRequestBody;
-    const { question, topicLabel, topicId, source, pagePath } = body;
+    const { question, topicLabel, topicId, source, pagePath, history } = body;
 
     if (process.env.NODE_ENV !== "production") {
       console.log("[API /ai/modal] Request received", {
@@ -62,6 +129,7 @@ export async function POST(req: NextRequest) {
         topicId,
         source,
         pagePath,
+        historyLength: history?.length || 0,
       });
     }
 
@@ -83,10 +151,10 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2. Retrieve relevant chunks using RAG
+    // 2. Retrieve relevant chunks using RAG (increased from 6 to 8 for richer context)
     const retrievedChunks = await retrieveProjectChunks(question, {
       projectId: projectSlug,
-      matchCount: 6, // Lighter than page-level (which uses 15)
+      matchCount: 8,
     });
 
     const context = buildContextFromChunks(retrievedChunks);
@@ -103,33 +171,45 @@ export async function POST(req: NextRequest) {
       ? context
       : `User question: ${question}\n\nContext: Answering based on general portfolio knowledge.`;
 
-    // 4. Build copywriter input
-    const copywriterInput: CopywriterInput = {
-      question,
-      context: finalContext,
-      projectId: projectSlug || null,
-      sectionTitle: topicLabel || "General",
-      sectionBody: "", // Modal doesn't pass full section body
-      projectShortFacts: undefined, // Could be added later if needed
-    };
+    // 4. Best-effort section context lookup
+    const { sectionHeadline, sectionText } = deriveSectionContext({
+      projectSlug,
+      topicLabel,
+      topicId,
+    });
 
     if (process.env.NODE_ENV !== "production") {
-      console.log("[API /ai/modal] Calling copywriter");
-    }
-
-    // 5. Call copywriter
-    const copywriterOutput = await runCopywriter(copywriterInput);
-
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[API /ai/modal] Copywriter completed", {
-        hasAnswerBlocks: !!copywriterOutput.answer_blocks,
-        answerBlocksCount: copywriterOutput.answer_blocks?.length || 0,
+      console.log("[API /ai/modal] Section context derived", {
+        sectionHeadline,
+        hasSectionText: !!sectionText,
       });
     }
 
-    // 6. Extract answer from first block
+    // 5. Call modal-specific copywriter
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[API /ai/modal] Calling modal copywriter");
+    }
+
+    const modalOutput = await runModalCopywriter({
+      question,
+      context: finalContext,
+      projectSlug,
+      pagePath,
+      sectionHeadline,
+      sectionText,
+      topicLabel,
+      history: history ?? [],
+    });
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[API /ai/modal] Modal copywriter completed", {
+        answerLength: modalOutput.answer?.length || 0,
+      });
+    }
+
+    // 6. Extract answer
     const answer =
-      copywriterOutput.answer_blocks?.[0]?.body?.trim() ||
+      modalOutput.answer?.trim() ||
       "I couldn't generate an answer for that question. Could you try rephrasing it?";
 
     // 7. Build response (no actions for now)

@@ -75,7 +75,13 @@ export function AiModalHost() {
       // 2. Add a user message locally
       setMessages((prev) => [...prev, { role: "user", body: trimmed }]);
 
-      // 3. Call the real API
+      // 3. Build conversation history (last 2 turns = 4 messages)
+      const history = messages.slice(-4).map((m) => ({
+        role: m.role,
+        text: m.body,
+      }));
+
+      // 4. Call the real API
       try {
         const requestBody: ModalRequestBody = {
           question: trimmed,
@@ -83,6 +89,7 @@ export function AiModalHost() {
           topicId: state.topicId ?? undefined,
           source: state.source ?? "hover-pill",
           pagePath: pathname,
+          history,
         };
 
         if (process.env.NODE_ENV !== "production") {
@@ -112,7 +119,7 @@ export function AiModalHost() {
           data.answer?.trim() ||
           "I couldn't generate an answer for that question.";
 
-        // 4. Append AI message
+        // 5. Append AI message
         setMessages((prev) => [
           ...prev,
           {
@@ -121,12 +128,12 @@ export function AiModalHost() {
           },
         ]);
 
-        // 5. Update actions if any (for future use)
+        // 6. Update actions if any (for future use)
         if (data.actions && data.actions.length > 0) {
           setActions(data.actions);
         }
 
-        // 6. Notify the state machine that an answer has been received
+        // 7. Notify the state machine that an answer has been received
         markAnswerReceived();
       } catch (error) {
         if (process.env.NODE_ENV !== "production") {
