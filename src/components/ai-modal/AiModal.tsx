@@ -160,14 +160,16 @@ export const AiModal: React.FC<AiModalProps> = ({
   }
 
   return (
-    <div
-      ref={modalRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6"
-      onClick={handleOverlayClick}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={headlineId}
-    >
+    <>
+      {/* Modal Overlay and Card */}
+      <div
+        ref={modalRef}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6"
+        onClick={handleOverlayClick}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={headlineId}
+      >
       {/* Backdrop with blur and dim */}
       <div
         className="absolute inset-0 bg-[color:var(--bg-default)]/80 backdrop-blur-[6px] opacity-100 transition-opacity duration-[180ms] ease-[cubic-bezier(0.33,1,0.68,1)]"
@@ -231,10 +233,13 @@ export const AiModal: React.FC<AiModalProps> = ({
           </div>
         </div>
 
-        {/* Composer */}
-        {renderComposer && renderComposer()}
+        {/* Composer will render separately outside modal card */}
       </div>
     </div>
+
+      {/* Composer - rendered separately at bottom center */}
+      {renderComposer && renderComposer()}
+    </>
   );
 };
 
