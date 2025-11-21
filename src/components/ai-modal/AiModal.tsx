@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { X } from "lucide-react";
+import Image from "next/image";
+import { X, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Heading } from "@/components/atoms/Heading";
 import { Button } from "@/components/atoms/Button";
@@ -71,6 +72,25 @@ const useFocusTrap = (
   }, [isActive, containerRef]);
 };
 
+/**
+ * Hook to detect mobile viewport (< 768px)
+ */
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+};
+
 export const AiModal: React.FC<AiModalProps> = ({
   isOpen,
   onClose,
@@ -81,8 +101,19 @@ export const AiModal: React.FC<AiModalProps> = ({
 }) => {
   const modalRef = React.useRef<HTMLDivElement>(null);
   const cardRef = React.useRef<HTMLDivElement>(null);
+  const mobileHeaderRef = React.useRef<HTMLDivElement>(null);
+  const messagesContainerRef = React.useRef<HTMLDivElement>(null);
   const previousActiveElementRef = React.useRef<HTMLElement | null>(null);
   const headlineId = React.useId();
+  const isMobile = useIsMobile();
+
+  // Mobile swipe gesture state
+  const [swipeStartY, setSwipeStartY] = React.useState<number | null>(null);
+  const [swipeCurrentY, setSwipeCurrentY] = React.useState<number | null>(null);
+  const [isSwipingDown, setIsSwipingDown] = React.useState(false);
+
+  // Keyboard handling for mobile
+  const [keyboardHeight, setKeyboardHeight] = React.useState(0);
 
   // Body scroll lock
   React.useEffect(() => {
@@ -138,6 +169,100 @@ export const AiModal: React.FC<AiModalProps> = ({
     };
   }, [isOpen, onClose]);
 
+  // Mobile: Keyboard appearance handling (visualViewport API with resize fallback)
+  React.useEffect(() => {
+    if (!isMobile || !isOpen) return;
+
+    const handleViewportChange = () => {
+      if (window.visualViewport) {
+        const newKeyboardHeight = window.innerHeight - window.visualViewport.height;
+        setKeyboardHeight(newKeyboardHeight);
+        
+        // Auto-scroll to newest message when keyboard appears
+        if (newKeyboardHeight > 0 && messagesContainerRef.current) {
+          requestAnimationFrame(() => {
+            if (messagesContainerRef.current) {
+              messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+            }
+          });
+        }
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      window.visualViewport.addEventListener('scroll', handleViewportChange);
+      handleViewportChange(); // Initial check
+      
+      return () => {
+        window.visualViewport?.removeEventListener('resize', handleViewportChange);
+        window.visualViewport?.removeEventListener('scroll', handleViewportChange);
+      };
+    } else {
+      // Fallback: listen to window resize
+      const handleResize = () => {
+        const estimated = Math.max(0, 600 - window.innerHeight);
+        setKeyboardHeight(estimated);
+      };
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, [isMobile, isOpen]);
+
+  // Mobile: Swipe-down-to-close gesture handlers
+  const handleTouchStart = React.useCallback((e: React.TouchEvent) => {
+    if (!isMobile || !mobileHeaderRef.current) return;
+    
+    // Only allow swipe from header area
+    const target = e.target as HTMLElement;
+    if (!mobileHeaderRef.current.contains(target)) return;
+    
+    setSwipeStartY(e.touches[0].clientY);
+    setIsSwipingDown(true);
+  }, [isMobile]);
+
+  const handleTouchMove = React.useCallback((e: React.TouchEvent) => {
+    if (!isSwipingDown || swipeStartY === null) return;
+    
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - swipeStartY;
+    
+    // Only track downward swipes
+    if (deltaY > 0) {
+      setSwipeCurrentY(currentY);
+    }
+  }, [isSwipingDown, swipeStartY]);
+
+  const handleTouchEnd = React.useCallback(() => {
+    if (!isSwipingDown || swipeStartY === null) {
+      setIsSwipingDown(false);
+      setSwipeStartY(null);
+      setSwipeCurrentY(null);
+      return;
+    }
+
+    const swipeDistance = swipeCurrentY !== null ? swipeCurrentY - swipeStartY : 0;
+    
+    // 80px threshold to trigger close
+    if (swipeDistance > 80) {
+      onClose();
+    }
+
+    // Reset swipe state
+    setIsSwipingDown(false);
+    setSwipeStartY(null);
+    setSwipeCurrentY(null);
+  }, [isSwipingDown, swipeStartY, swipeCurrentY, onClose]);
+
+  // Calculate swipe transform for visual feedback
+  const swipeTransform = React.useMemo(() => {
+    if (!isSwipingDown || swipeStartY === null || swipeCurrentY === null) {
+      return 0;
+    }
+    const delta = swipeCurrentY - swipeStartY;
+    return Math.max(0, delta); // Only allow downward movement
+  }, [isSwipingDown, swipeStartY, swipeCurrentY]);
+
   // Click outside to close
   const handleOverlayClick = React.useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -159,6 +284,123 @@ export const AiModal: React.FC<AiModalProps> = ({
     return null;
   }
 
+  // Mobile layout (full-screen)
+  if (isMobile) {
+    return (
+      <>
+        {/* Mobile Overlay */}
+        <div
+          ref={modalRef}
+          className="fixed inset-0 z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={headlineId}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{
+            transform: `translateY(${swipeTransform}px)`,
+            transition: isSwipingDown ? 'none' : 'transform 180ms ease-out',
+          }}
+        >
+          {/* Backdrop with neutral dim (90% opacity) */}
+          <div
+            className="absolute inset-0 bg-[color:var(--bg-default)]/90 opacity-100 transition-opacity duration-[180ms] ease-[cubic-bezier(0.33,1,0.68,1)]"
+            aria-hidden="true"
+          />
+
+          {/* Mobile Full-Screen Container */}
+          <div
+            ref={cardRef}
+            className={cn(
+              "relative z-50 h-full w-full flex flex-col",
+              "bg-[color:var(--bg-default)]",
+              "transition-opacity duration-[180ms] ease-[cubic-bezier(0.33,1,0.68,1)]",
+              isOpen ? "opacity-100" : "opacity-0"
+            )}
+            style={{
+              paddingBottom: `max(env(safe-area-inset-bottom), ${keyboardHeight}px)`,
+            }}
+          >
+            {/* Mobile Header (Fixed) */}
+            <div
+              ref={mobileHeaderRef}
+              className="flex items-center justify-between px-6 py-3 border-b border-[color:var(--border-subtle)] border-opacity-20"
+            >
+              {/* Logo - Navigate home and close modal */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClose(); // Close modal first
+                  setTimeout(() => {
+                    window.location.href = '/'; // Then navigate home
+                  }, 200); // Small delay to let close animation finish
+                }}
+                className="flex items-center cursor-pointer hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-dark)] focus-visible:ring-offset-2"
+                aria-label="Go to homepage"
+              >
+                <Image
+                  src="/pfaff-design-logo.svg"
+                  alt="pfaff.design"
+                  width={90}
+                  height={20}
+                  priority
+                />
+              </button>
+
+              {/* AI Indicator */}
+              <Sparkles className="h-4 w-4 text-[color:var(--text-muted)] opacity-60" />
+
+              {/* Close Button */}
+              <button
+                onClick={onClose}
+                aria-label="Close AI assistant"
+                data-close-button
+                className="shrink-0 inline-flex items-center justify-center size-10 rounded-full p-0 text-[color:var(--text-default)] hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-dark)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-default)] transition-opacity cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Messages (Scrollable) */}
+            <div
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto px-6 py-6"
+              style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'var(--border-subtle) transparent',
+              }}
+            >
+              <div className="w-full max-w-[33.625rem] mx-auto">
+                {headline && (
+                  <Heading
+                    text={headline}
+                    variant="display"
+                    level={1}
+                    id={headlineId}
+                    className="mb-0 text-[2.5rem] leading-[3rem] tracking-[0.04em] uppercase text-left w-full"
+                  />
+                )}
+                {/* Body Content */}
+                {renderBody && <div className="mt-[19px]">{renderBody()}</div>}
+                {/* Actions */}
+                {renderActions && renderActions()}
+              </div>
+            </div>
+
+            {/* Composer - Fixed at bottom with safe area padding */}
+            {renderComposer && (
+              <div className="px-6 pb-6" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
+                {renderComposer()}
+              </div>
+            )}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Desktop layout (existing modal card)
   return (
     <>
       {/* Modal Overlay and Card */}

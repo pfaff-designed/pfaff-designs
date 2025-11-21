@@ -4,7 +4,7 @@ import { Header } from "@/components/page-components/Header";
 import { Footer } from "@/components/page-components/Footer";
 import { AIAnswerProvider } from "@/components/ai/AIAnswerContext";
 import { SectionProvider } from "@/components/ai/SectionContext";
-import { AiModalProvider, AiModalHost, AiHoverPillHost } from "@/components/ai-modal";
+import { AiModalProvider, AiModalHost, AiHoverPillHost, FloatingAiButton } from "@/components/ai-modal";
 
 export const metadata: Metadata = {
   title: "pfaff-designs",
@@ -37,6 +37,8 @@ export default function RootLayout({
           <AiModalHost />
           {/* Global AI hover pill host - tracks cursor/touch on AI-interactive regions */}
           <AiHoverPillHost />
+          {/* Global floating AI button - mobile-only FAB in bottom-right */}
+          <FloatingAiButton />
         </AiModalProvider>
       </body>
     </html>

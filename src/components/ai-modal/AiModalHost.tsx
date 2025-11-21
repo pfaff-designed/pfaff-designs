@@ -18,7 +18,6 @@ import type { ModalRequestBody, ModalResponseBody } from "@/app/api/ai/modal/rou
  * - Subscribes to useAiModal() for lifecycle + metadata
  * - Maintains local state for messages and actions
  * - Renders the AiModal with proper content
- * - Provides dev-only debug trigger
  * 
  * This is rendered once at the app root level.
  * 
@@ -56,6 +55,15 @@ export function AiModalHost() {
 
   const pathname = usePathname();
   const router = useRouter();
+
+  // Detect mobile for relative Composer positioning
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Local state for messages and actions (NOT in state machine)
   const [messages, setMessages] = React.useState<AiConversationRowProps[]>([]);
@@ -319,21 +327,6 @@ export function AiModalHost() {
 
   return (
     <>
-      {/* Dev-only debug button - can be loud/obvious */}
-      {process.env.NODE_ENV !== "production" && (
-        <div className="fixed bottom-4 right-4 z-[60]">
-          <button
-            type="button"
-            className="px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] bg-[color:var(--accent-primary)] text-white shadow-lg hover:opacity-90 rounded-md"
-            onClick={() =>
-              handleOpenGlobal({ headline: "Ask about this portfolio" })
-            }
-          >
-            Debug: Open AI Modal
-          </button>
-        </div>
-      )}
-
       {/* Always render AiModal - it handles visibility internally via isOpen */}
       <AiModal
         isOpen={isOpen}
@@ -423,6 +416,7 @@ export function AiModalHost() {
             value={composerValue}
             onValueChange={setComposerValue}
             inputRef={composerInputRef}
+            relative={isMobile}
           />
         )}
       />
