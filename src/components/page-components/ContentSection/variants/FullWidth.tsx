@@ -47,10 +47,10 @@ export const FullWidth: React.FC<FullWidthProps> = ({
       )}
 
       {/* Content Overlay */}
-      <div className="relative z-10 h-full px-6 md:px-8 lg:px-[9rem] flex items-center">
-        <div className="w-full flex flex-col gap-[20rem] items-start my-auto">
+      <div className="relative z-10 h-full px-4 md:px-6 lg:px-[9rem] flex items-center">
+        <div className="w-full flex flex-col gap-16 md:gap-32 lg:gap-[20rem] items-start my-auto">
           {/* Top Section: Headline and Eyebrow */}
-          <div className="flex flex-col gap-6 w-full max-w-[30rem]">
+          <div className="flex flex-col gap-4 md:gap-6 w-full max-w-[30rem]">
             {headline && (
               <Heading
                 text={headline}
@@ -59,18 +59,18 @@ export const FullWidth: React.FC<FullWidthProps> = ({
               />
             )}
             {eyebrow && (
-              <p className="font-medium text-[1.4375rem] leading-[2rem] tracking-[-0.014375rem] text-white">
+              <p className="font-medium text-base md:text-[1.4375rem] leading-6 md:leading-[2rem] tracking-[-0.014375rem] text-white">
                 {eyebrow}
               </p>
             )}
           </div>
 
           {/* Bottom Section: Body (left) and Project Details (right) */}
-          <div className="flex flex-col lg:flex-row items-start justify-between w-full gap-6">
+          <div className="flex flex-col lg:flex-row items-start justify-between w-full gap-4 md:gap-6">
             {/* Body - Bottom Left */}
             {body && (
               <p
-                className="font-medium text-[1.4375rem] leading-[2rem] tracking-[-0.014375rem] text-white w-[24.8125rem]"
+                className="font-medium text-base md:text-[1.4375rem] leading-6 md:leading-[2rem] tracking-[-0.014375rem] text-white max-w-full md:w-[24.8125rem]"
                 data-ai-interactive="content-section"
                 data-ai-topic-label={topicLabel}
               >
@@ -80,29 +80,29 @@ export const FullWidth: React.FC<FullWidthProps> = ({
 
             {/* Project Details - Bottom Right */}
             {projectDetails && (
-              <div className="flex flex-col gap-2 flex-shrink-0 w-[30rem]">
+              <div className="flex flex-col gap-2 flex-shrink-0 w-full md:w-[30rem]">
                 {/* Labels Row */}
-                <div className="flex gap-6 font-medium text-[1.4375rem] leading-[2rem] tracking-[-0.014375rem] text-white">
+                <div className="flex gap-4 md:gap-6 font-medium text-sm md:text-[1.4375rem] leading-5 md:leading-[2rem] tracking-[-0.014375rem] text-white">
                   {projectDetails.client !== undefined && (
-                    <p className="w-[10rem]">Client</p>
+                    <p className="w-20 md:w-[10rem]">Client</p>
                   )}
                   {projectDetails.role !== undefined && (
-                    <p className="w-[10rem]">Role</p>
+                    <p className="w-20 md:w-[10rem]">Role</p>
                   )}
                   {projectDetails.year !== undefined && (
-                    <p className="w-[10rem]">Year</p>
+                    <p className="w-20 md:w-[10rem]">Year</p>
                   )}
                 </div>
                 {/* Values Row */}
-                <div className="flex gap-6 font-medium text-[1.4375rem] leading-[2rem] tracking-[-0.014375rem] text-white">
+                <div className="flex gap-4 md:gap-6 font-medium text-sm md:text-[1.4375rem] leading-5 md:leading-[2rem] tracking-[-0.014375rem] text-white">
                   {projectDetails.client && (
-                    <p className="w-[10rem]">{projectDetails.client}</p>
+                    <p className="w-20 md:w-[10rem]">{projectDetails.client}</p>
                   )}
                   {projectDetails.role && (
-                    <p className="w-[10rem]">{projectDetails.role}</p>
+                    <p className="w-20 md:w-[10rem]">{projectDetails.role}</p>
                   )}
                   {projectDetails.year && (
-                    <p className="w-[10rem]">{projectDetails.year}</p>
+                    <p className="w-20 md:w-[10rem]">{projectDetails.year}</p>
                   )}
                 </div>
               </div>

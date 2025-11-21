@@ -17,6 +17,7 @@ export interface ComposerProps {
   value?: string; // Optional controlled value
   onValueChange?: (value: string) => void; // Optional controlled onChange
   inputRef?: React.RefObject<HTMLTextAreaElement>; // Changed to HTMLTextAreaElement for multi-line
+  relative?: boolean; // If true, use relative positioning instead of fixed (for modal usage)
 }
 
 
@@ -63,6 +64,7 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
       value,
       onValueChange,
       inputRef: externalInputRef,
+      relative = false,
     },
     ref
   ) => {
@@ -216,7 +218,9 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
       <div
         ref={ref}
         className={cn(
-          "fixed left-1/2 -translate-x-1/2 z-50 flex flex-col gap-[1rem] w-[24.875rem] pb-6",
+          relative
+            ? "relative w-full flex flex-col gap-[1rem]"
+            : "fixed left-1/2 -translate-x-1/2 z-50 flex flex-col gap-[1rem] w-[24.875rem]",
           "transition-[filter] duration-200",
           isFocused
             ? "drop-shadow-[0_-2px_8px_rgba(158,200,210,0.8),0_-1px_2px_rgba(255,255,255,0.5)]"
@@ -224,7 +228,7 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
           className
         )}
         style={{
-          bottom: footerHeight > 0 ? `${footerHeight}px` : "1.5rem",
+          bottom: relative ? undefined : (footerHeight > 0 ? `${footerHeight}px` : "3rem"),
         }}
       >
         {/* Status Display - Thinking or Last Updated */}
