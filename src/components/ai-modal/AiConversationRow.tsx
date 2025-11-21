@@ -8,7 +8,7 @@ export interface AiConversationRowProps {
   id?: string;
   role: AiConversationRole;
   eyebrowLabel?: string;
-  body: string;
+  body: string | React.ReactNode;
   className?: string;
 }
 
@@ -40,8 +40,14 @@ export const AiConversationRow: React.FC<AiConversationRowProps> = ({
         {computedLabel}
       </div>
       
-      {/* Body Text - matches ContentBlock layout */}
-      <BodyText body={body} className="flex-1 max-w-[24.25rem]" />
+      {/* Body Content - matches ContentBlock layout */}
+      <div className="flex-1 max-w-[24.25rem]">
+        {typeof body === "string" ? (
+          <BodyText body={body} />
+        ) : (
+          body
+        )}
+      </div>
     </div>
   );
 };

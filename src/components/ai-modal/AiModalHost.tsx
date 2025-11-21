@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AiModal } from "./AiModal";
 import { AiConversationRow, type AiConversationRowProps } from "./AiConversationRow";
-import { AiActionsRow, type AiAction } from "./AiActionsRow";
+import { AiActionsRow, type AiModalAction } from "./AiActionsRow";
 import { useAiModal } from "./AiModalContext";
 import { Composer } from "@/components/molecules/Composer";
+import { TypingIndicator } from "@/components/ui/TypingIndicator";
 import type { ModalRequestBody, ModalResponseBody } from "@/app/api/ai/modal/route";
 
 /**
@@ -35,13 +36,18 @@ export function AiModalHost() {
   } = useAiModal();
 
   const pathname = usePathname();
+  const router = useRouter();
 
   // Local state for messages and actions (NOT in state machine)
   const [messages, setMessages] = React.useState<AiConversationRowProps[]>([]);
-  const [actions, setActions] = React.useState<AiAction[]>([]);
+  const [actions, setActions] = React.useState<AiModalAction[]>([]);
   
-  // Ref for auto-scrolling to bottom of conversation
+  // Local state for composer value (used for pre-filling suggested questions)
+  const [composerValue, setComposerValue] = React.useState<string>("");
+  
+  // Refs for auto-scroll and autofocus
   const bottomRef = React.useRef<HTMLDivElement>(null);
+  const composerInputRef = React.useRef<HTMLInputElement>(null);
 
   // "Replace while open" helper for opening from selection
   const handleOpenFromSelection = React.useCallback(
@@ -49,6 +55,7 @@ export function AiModalHost() {
       openFromSelection(payload);
       setMessages([]);
       setActions([]);
+      setComposerValue("");
     },
     [openFromSelection]
   );
@@ -59,6 +66,7 @@ export function AiModalHost() {
       openGlobal(payload ?? {});
       setMessages([]);
       setActions([]);
+      setComposerValue("");
     },
     [openGlobal]
   );
@@ -69,19 +77,28 @@ export function AiModalHost() {
       const trimmed = query.trim();
       if (!trimmed) return;
 
-      // 1. Tell the state machine a question was submitted
+      // 1. Clear any existing error state
+      if (hasError) {
+        // Error will be cleared by state machine transition
+      }
+
+      // 2. Tell the state machine a question was submitted
       submitQuestion({ question: trimmed });
 
-      // 2. Add a user message locally
-      setMessages((prev) => [...prev, { role: "user", body: trimmed }]);
+      // 3. Add a user message locally with trimming
+      setMessages((prev) => {
+        const updated = [...prev, { role: "user", body: trimmed }];
+        // Trim to last 10 messages
+        return updated.length > 10 ? updated.slice(-10) : updated;
+      });
 
-      // 3. Build conversation history (last 2 turns = 4 messages)
+      // 4. Build conversation history (last 2 turns = 4 messages)
       const history = messages.slice(-4).map((m) => ({
         role: m.role,
-        text: m.body,
+        text: typeof m.body === "string" ? m.body : "",
       }));
 
-      // 4. Call the real API
+      // 5. Call the real API
       try {
         const requestBody: ModalRequestBody = {
           question: trimmed,
@@ -119,21 +136,25 @@ export function AiModalHost() {
           data.answer?.trim() ||
           "I couldn't generate an answer for that question.";
 
-        // 5. Append AI message
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "ai",
-            body: answerText,
-          },
-        ]);
+        // 6. Append AI message with trimming
+        setMessages((prev) => {
+          const updated = [
+            ...prev,
+            {
+              role: "ai",
+              body: answerText,
+            },
+          ];
+          // Trim to last 10 messages
+          return updated.length > 10 ? updated.slice(-10) : updated;
+        });
 
-        // 6. Update actions if any (for future use)
+        // 7. Update actions if any
         if (data.actions && data.actions.length > 0) {
           setActions(data.actions);
         }
 
-        // 7. Notify the state machine that an answer has been received
+        // 8. Notify the state machine that an answer has been received
         markAnswerReceived();
       } catch (error) {
         if (process.env.NODE_ENV !== "production") {
@@ -152,12 +173,42 @@ export function AiModalHost() {
   );
 
   // Handle action button clicks
-  const handleActionClick = React.useCallback((action: AiAction) => {
-    // For now, just log. Real behavior comes in a later phase.
-    if (process.env.NODE_ENV !== "production") {
-      console.log("AI action clicked", action);
-    }
-  }, []);
+  const handleActionClick = React.useCallback(
+    (action: AiModalAction) => {
+      switch (action.type) {
+        case "scroll": {
+          // Close the modal first
+          close();
+          // Scroll after a small delay to let the modal close animation finish
+          setTimeout(() => {
+            const selector = `[data-section-id="${action.targetSectionId}"]`;
+            const el = document.querySelector(selector);
+            if (el) {
+              el.scrollIntoView({ behavior: "smooth", block: "start" });
+            } else if (process.env.NODE_ENV !== "production") {
+              console.warn(
+                `[AiModalHost] Scroll target not found: ${selector}`
+              );
+            }
+          }, 200);
+          break;
+        }
+        case "navigate": {
+          // Close modal and navigate
+          close();
+          router.push(action.targetPath);
+          break;
+        }
+        case "suggest_question": {
+          // Pre-fill the composer with the suggested question
+          // Does NOT auto-submit - user must press Enter/Submit
+          setComposerValue(action.suggestedQuestion);
+          break;
+        }
+      }
+    },
+    [close, router]
+  );
 
   // Auto-scroll to bottom when messages change or thinking state changes
   React.useEffect(() => {
@@ -168,6 +219,37 @@ export function AiModalHost() {
       });
     }
   }, [messages, isThinking, hasError, isOpen]);
+
+  // Autofocus composer when modal opens or after successful answer
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    // Only autofocus in these cases:
+    // 1. Modal just opened (transitioning from idle/opening)
+    // 2. Just received an answer (transitioning to waiting_for_input)
+    const shouldAutofocus =
+      state.status === "waiting_for_input" || state.status === "answer_showing";
+
+    if (shouldAutofocus) {
+      // Small delay to ensure modal is fully rendered
+      const timeoutId = setTimeout(() => {
+        // Only focus if no other element in the modal currently has focus
+        const modalElement = document.querySelector('[role="dialog"]');
+        const activeElement = document.activeElement;
+
+        if (
+          modalElement &&
+          (!activeElement ||
+            !modalElement.contains(activeElement) ||
+            activeElement === document.body)
+        ) {
+          composerInputRef.current?.focus();
+        }
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isOpen, state.status]);
 
   return (
     <>
@@ -212,19 +294,25 @@ export function AiModalHost() {
               />
             ))}
 
-            {/* Show thinking state as AI conversation row */}
-            {isThinking && (
+            {/* Show thinking state with TypingIndicator */}
+            {isThinking && messages.length > 0 && messages[messages.length - 1].role === "user" && (
               <AiConversationRow
                 role="ai"
-                body="Thinking…"
+                eyebrowLabel="AI"
+                body={<TypingIndicator label="" />}
               />
             )}
 
-            {/* Show error state as AI conversation row */}
+            {/* Show error state as clean AI conversation row */}
             {hasError && state.errorMessage && (
               <AiConversationRow
                 role="ai"
-                body={`Error: ${state.errorMessage}`}
+                eyebrowLabel="AI"
+                body={
+                  state.errorMessage.length > 100
+                    ? "Sorry, something went wrong answering that. You can try again or ask a different question."
+                    : state.errorMessage
+                }
               />
             )}
 
@@ -244,6 +332,9 @@ export function AiModalHost() {
             onSubmit={handleComposerSubmit}
             status={isThinking ? "loading" : "idle"}
             hideStatus={true}
+            value={composerValue}
+            onValueChange={setComposerValue}
+            inputRef={composerInputRef}
           />
         )}
       />

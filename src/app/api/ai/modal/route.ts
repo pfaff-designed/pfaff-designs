@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { retrieveProjectChunks, buildContextFromChunks } from "@/lib/rag/retrieveProjectChunks";
 import { runModalCopywriter } from "@/lib/ai/copywriter";
 import { getCaseStudyBySlug } from "@/lib/caseStudies/data";
+import type { AiModalAction } from "@/components/ai-modal/AiActionsRow";
+import type { CaseStudyPage } from "@/lib/caseStudies/types";
 
 // ============================================================
 // TYPES
@@ -23,12 +25,7 @@ export interface ModalRequestBody {
 
 export interface ModalResponseBody {
   answer: string;
-  actions?: Array<{
-    type: "navigate" | "scroll" | "deep_dive";
-    label: string;
-    target?: string;
-    topic?: string;
-  }>;
+  actions: AiModalAction[];
 }
 
 // ============================================================
@@ -106,6 +103,167 @@ function deriveSectionContext({
   };
 }
 
+/**
+ * Generate smart action suggestions based on question and context.
+ * Returns up to 3 actions: scroll, navigate, or suggest_question.
+ */
+function generateModalActions(params: {
+  question: string;
+  projectSlug?: string | null;
+  pagePath?: string | null;
+  topicLabel?: string | null;
+  caseStudy?: CaseStudyPage | null;
+}): AiModalAction[] {
+  const { question, projectSlug, pagePath, topicLabel, caseStudy } = params;
+  const q = question.toLowerCase();
+  const actions: AiModalAction[] = [];
+
+  // ---- 1. Scroll actions (case-study pages only) ----
+  if (caseStudy && Array.isArray(caseStudy.sections)) {
+    const sectionIds = new Set(
+      caseStudy.sections.map((sec) => sec.id).filter(Boolean)
+    );
+
+    const pushScroll = (sectionId: string, label: string) => {
+      // Avoid duplicates
+      if (
+        !actions.some(
+          (a) => a.type === "scroll" && a.targetSectionId === sectionId
+        )
+      ) {
+        actions.push({
+          type: "scroll",
+          label,
+          targetSectionId: sectionId,
+        });
+      }
+    };
+
+    // tools / stack / tech → typically in "tools" or "process"
+    if (/(tool|stack|tech|technology)/.test(q)) {
+      if (sectionIds.has("tools")) {
+        pushScroll("tools", "Scroll to Tools & Stack");
+      } else if (sectionIds.has("process")) {
+        pushScroll("process", "Scroll to Process & Tools");
+      }
+    }
+
+    // team / collaboration → "role" or "team"
+    if (/(team|people|collaborat|pm|product manager)/.test(q)) {
+      if (sectionIds.has("role")) {
+        pushScroll("role", "Scroll to Role & Team");
+      } else if (sectionIds.has("team")) {
+        pushScroll("team", "Scroll to Team");
+      }
+    }
+
+    // problem / challenge
+    if (/(problem|challenge|pain point)/.test(q)) {
+      if (sectionIds.has("overview")) {
+        pushScroll("overview", "Scroll to Overview");
+      }
+    }
+
+    // outcome / impact / results
+    if (/(outcome|result|impact|success)/.test(q)) {
+      if (sectionIds.has("impact")) {
+        pushScroll("impact", "Scroll to Impact");
+      }
+    }
+
+    // process / approach / how
+    if (/(process|approach|how did you)/.test(q)) {
+      if (sectionIds.has("process")) {
+        pushScroll("process", "Scroll to Process");
+      }
+    }
+
+    // scope / role
+    if (/(scope|role|responsibility)/.test(q)) {
+      if (sectionIds.has("scope")) {
+        pushScroll("scope", "Scroll to Scope");
+      } else if (sectionIds.has("role")) {
+        pushScroll("role", "Scroll to Role");
+      }
+    }
+  }
+
+  // ---- 2. Navigation actions (other projects) ----
+  const navMap: { patterns: RegExp[]; path: string; label: string }[] = [
+    {
+      patterns: [/\bcoke\b/, /coca-cola/],
+      path: "/work/coca-cola-creative-technology",
+      label: "Go to Coke case study",
+    },
+    {
+      patterns: [/\bpmi\b/, /project management institute/],
+      path: "/work/pmi-agile-certification",
+      label: "Go to PMI case study",
+    },
+    {
+      patterns: [/\btanger\b/, /tanger outlet/],
+      path: "/work/tanger-outlets",
+      label: "Go to Tanger case study",
+    },
+    {
+      patterns: [/capital one/, /capitalone/],
+      path: "/work/capital-one-travel",
+      label: "Go to Capital One case study",
+    },
+    {
+      patterns: [/real estate/],
+      path: "/work/real-estate-platform",
+      label: "Go to Real Estate case study",
+    },
+    {
+      patterns: [/portfolio/, /rag portfolio/, /generative ui/],
+      path: "/work/rag-portfolio",
+      label: "Go to Generative-UI portfolio case study",
+    },
+  ];
+
+  for (const entry of navMap) {
+    // Don't navigate to the same page we're already on
+    if (entry.path === pagePath) {
+      continue;
+    }
+
+    if (entry.patterns.some((re) => re.test(q))) {
+      if (
+        !actions.some(
+          (a) => a.type === "navigate" && a.targetPath === entry.path
+        )
+      ) {
+        actions.push({
+          type: "navigate",
+          label: entry.label,
+          targetPath: entry.path,
+        });
+      }
+    }
+  }
+
+  // ---- 3. Suggestion action (stay here, go deeper) ----
+  // This pre-fills the composer with a follow-up question.
+  // Does NOT auto-submit.
+  const normalizedTopic = topicLabel?.trim() || "";
+  const baseLabel = normalizedTopic
+    ? `Ask more about ${normalizedTopic}`
+    : "Ask a follow-up";
+  const suggestedQuestion = normalizedTopic
+    ? `Can you go deeper on ${normalizedTopic} in this project?`
+    : `Can you explain this in more detail?`;
+
+  actions.push({
+    type: "suggest_question",
+    label: baseLabel,
+    suggestedQuestion,
+  });
+
+  // Limit total actions to 3
+  return actions.slice(0, 3);
+}
+
 // ============================================================
 // POST /api/ai/modal
 // ============================================================
@@ -171,7 +329,10 @@ export async function POST(req: NextRequest) {
       ? context
       : `User question: ${question}\n\nContext: Answering based on general portfolio knowledge.`;
 
-    // 4. Best-effort section context lookup
+    // 4. Get case study data (used for section context and action generation)
+    const caseStudy = projectSlug ? getCaseStudyBySlug(projectSlug) : null;
+
+    // 5. Best-effort section context lookup
     const { sectionHeadline, sectionText } = deriveSectionContext({
       projectSlug,
       topicLabel,
@@ -185,7 +346,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 5. Call modal-specific copywriter
+    // 6. Call modal-specific copywriter
     if (process.env.NODE_ENV !== "production") {
       console.log("[API /ai/modal] Calling modal copywriter");
     }
@@ -207,21 +368,37 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 6. Extract answer
+    // 7. Extract answer
     const answer =
       modalOutput.answer?.trim() ||
       "I couldn't generate an answer for that question. Could you try rephrasing it?";
 
-    // 7. Build response (no actions for now)
+    // 8. Generate smart actions
+    const actions = generateModalActions({
+      question,
+      projectSlug,
+      pagePath,
+      topicLabel,
+      caseStudy,
+    });
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[API /ai/modal] Actions generated", {
+        actionsCount: actions.length,
+        actionTypes: actions.map((a) => a.type),
+      });
+    }
+
+    // 9. Build response
     const responseBody: ModalResponseBody = {
       answer,
-      actions: [], // Future: generate actions based on intent
+      actions,
     };
 
     if (process.env.NODE_ENV !== "production") {
       console.log("[API /ai/modal] Response ready", {
         answerLength: answer.length,
-        actionsCount: responseBody.actions?.length || 0,
+        actionsCount: actions.length,
       });
     }
 
