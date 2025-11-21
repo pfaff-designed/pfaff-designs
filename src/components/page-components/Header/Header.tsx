@@ -141,32 +141,32 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
 
     return (
       <>
-        <header
-          ref={ref}
-          className={cn(
-            "sticky top-0 z-50 w-full bg-[var(--bg-default)]",
-            "flex items-center justify-between",
-            "px-[1.5rem] md:px-[2rem] lg:px-[3rem]",
-            "h-[4.5rem] md:h-[5rem]",
-            className
-          )}
-        >
+      <header
+        ref={ref}
+        className={cn(
+          "sticky top-0 z-50 w-full bg-[var(--bg-default)]",
+          "flex items-center justify-between",
+          "px-[1.5rem] md:px-[2rem] lg:px-[3rem]",
+          "h-[4.5rem] md:h-[5rem]",
+          className
+        )}
+      >
           {/* Desktop: Navigation Links (hidden on mobile) */}
-          <nav
+        <nav
             className="hidden md:flex items-center gap-[1.5rem] md:gap-[2rem]"
-            aria-label="Main navigation"
-          >
-            {links.map((link) => (
-              <NavItem
-                key={link.href}
-                href={link.href}
-                active={link.active}
-                className="text-[0.875rem] md:text-[1rem]"
-              >
-                {link.label}
-              </NavItem>
-            ))}
-          </nav>
+          aria-label="Main navigation"
+        >
+          {links.map((link) => (
+            <NavItem
+              key={link.href}
+              href={link.href}
+              active={link.active}
+              className="text-[0.875rem] md:text-[1rem]"
+            >
+              {link.label}
+            </NavItem>
+          ))}
+        </nav>
 
           {/* Mobile: Left side (logo only, not centered) */}
           <div className="md:hidden flex items-center">
@@ -189,44 +189,44 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
 
           {/* Desktop: Center Logo (hidden on mobile) */}
           <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <Link
-              href="/"
-              onClick={handleLogoClick}
-              className="flex items-center justify-center"
-              aria-label="Home - pfaff.design"
-            >
-              <Image
-                src="/pfaff-design-logo.svg"
-                alt="pfaff.design"
-                width={120}
-                height={26}
-                priority
-                className="h-[1.625rem] md:h-[1.75rem] w-auto"
-              />
-            </Link>
-          </div>
+          <Link
+            href="/"
+            onClick={handleLogoClick}
+            className="flex items-center justify-center"
+            aria-label="Home - pfaff.design"
+          >
+            <Image
+              src="/pfaff-design-logo.svg"
+              alt="pfaff.design"
+              width={120}
+              height={26}
+              priority
+              className="h-[1.625rem] md:h-[1.75rem] w-auto"
+            />
+          </Link>
+        </div>
 
           {/* Desktop: Contact CTA (hidden on mobile) */}
           <div className="hidden md:flex items-center">
-            {onContactClick ? (
+          {onContactClick ? (
+            <Button
+              variant="primary"
+              onClick={handleContactClick}
+              className="text-[0.875rem] md:text-[1rem] px-[1.5rem] py-[0.75rem]"
+            >
+              {contactLabel}
+            </Button>
+          ) : (
+            <Link href={contactHref}>
               <Button
                 variant="primary"
-                onClick={handleContactClick}
                 className="text-[0.875rem] md:text-[1rem] px-[1.5rem] py-[0.75rem]"
               >
                 {contactLabel}
               </Button>
-            ) : (
-              <Link href={contactHref}>
-                <Button
-                  variant="primary"
-                  className="text-[0.875rem] md:text-[1rem] px-[1.5rem] py-[0.75rem]"
-                >
-                  {contactLabel}
-                </Button>
-              </Link>
-            )}
-          </div>
+            </Link>
+          )}
+        </div>
 
           {/* Mobile: Hamburger/Close Menu Button */}
           <button
@@ -253,7 +253,7 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
               />
             </div>
           </button>
-        </header>
+      </header>
 
         {/* Mobile Drawer */}
         {isDrawerMounted && (
