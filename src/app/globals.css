@@ -72,7 +72,7 @@
     --color-light: #FDF9F4;
     --color-primary-light: #E76F51;
     --color-primary-dark: #FFF8A7;
-    --color-secondary: #9EC8D2;
+    --color-secondary: #83BDCA;
     --color-success: #6D7F5C;
     --color-error: #E75151;
     --color-hover: #C2C0B4;
@@ -85,7 +85,7 @@
     --text-default: #26291D;
     --text-muted: #C2C0B4;
     --accent-primary: #E76F51;
-    --accent-secondary: #9EC8D2;
+    --accent-secondary: #83BDCA;
     --accent-yellow: #FFF8A7;
     --border-subtle: #DAC1BD;
     --state-success: #6D7F5C;
@@ -167,7 +167,7 @@
     --text-default: #FDF9F4;
     --text-muted: #C2C0B4;
     --accent-primary: #FFF8A7;
-    --accent-secondary: #9EC8D2;
+    --accent-secondary: #83BDCA;
   }
 }
 
@@ -248,8 +248,38 @@
   }
 }
 
+/* Message entrance animation - fade + slide in (180ms ease-out) */
+@keyframes message-enter-animation {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Message exit animation - fade out for trimming (180ms ease-in) */
+@keyframes message-exit-animation {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 @layer utilities {
   .animate-typing-bounce {
     animation: typing-bounce 1.4s ease-in-out infinite;
+  }
+  
+  .message-enter {
+    animation: message-enter-animation 180ms ease-out;
+  }
+  
+  .message-exit {
+    animation: message-exit-animation 180ms ease-in forwards;
   }
 }

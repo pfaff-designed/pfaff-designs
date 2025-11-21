@@ -9,10 +9,10 @@ export interface TagProps extends Omit<BaseBadgeProps, "variant"> {
 }
 
 const variantClassMap: Record<TagVariant, string> = {
-  primary: "bg-[#fff8a7] text-[#26291d]",
-  secondary: "bg-[#9ec8d2] text-[#26291d]",
-  success: "bg-[#6d7f5c] text-[#fdf9f4]",
-  error: "bg-[#e75151] text-[#fdf9f4]",
+  primary: "bg-[color:var(--accent-yellow)] text-[color:var(--text-default)]",
+  secondary: "bg-[color:var(--accent-secondary)] text-[color:var(--text-default)]",
+  success: "bg-[color:var(--state-success)] text-[color:var(--bg-default)]",
+  error: "bg-[color:var(--state-error)] text-[color:var(--bg-default)]",
 };
 
 const Tag = React.forwardRef<HTMLDivElement, TagProps>(

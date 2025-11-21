@@ -24,19 +24,19 @@ const baseClasses =
 
 const variantClassMap: Record<ButtonVariant, string> = {
   primary:
-    "bg-[#e76f51] text-[#fdf9f4] hover:-translate-y-[1px] active:translate-y-0",
+    "bg-[color:var(--accent-primary)] text-[color:var(--bg-default)] hover:-translate-y-[1px] active:translate-y-0",
   secondary:
-    "bg-[#9ec8d2] text-[#26291d] hover:-translate-y-[1px] active:translate-y-0",
+    "bg-[color:var(--accent-secondary)] text-[color:var(--text-default)] hover:-translate-y-[1px] active:translate-y-0",
   destructive:
-    "bg-[#ef4444] text-[#fdf9f4] hover:-translate-y-[1px] active:translate-y-0",
+    "bg-[color:var(--state-error)] text-[color:var(--bg-default)] hover:-translate-y-[1px] active:translate-y-0",
   continue:
-    "bg-[#6d7f5c] text-[#fdf9f4] hover:-translate-y-[1px] active:translate-y-0",
+    "bg-[color:var(--state-success)] text-[color:var(--bg-default)] hover:-translate-y-[1px] active:translate-y-0",
   outline:
-    "bg-transparent text-[#26291d] border border-[#26291d] hover:-translate-y-[1px] active:translate-y-0",
+    "bg-transparent text-[color:var(--text-default)] border border-[color:var(--text-default)] hover:-translate-y-[1px] active:translate-y-0",
   icon:
-    "size-10 gap-0 rounded-full bg-[#fff8a7] p-0 text-[#26291d] hover:-translate-y-[1px] active:translate-y-0",
+    "size-10 gap-0 rounded-full bg-[color:var(--accent-yellow)] p-0 text-[color:var(--text-default)] hover:-translate-y-[1px] active:translate-y-0",
   inline:
-    "border-none bg-transparent px-0 py-0 text-[#e76f51] underline-offset-4 hover:underline focus-visible:underline",
+    "border-none bg-transparent px-0 py-0 text-[color:var(--accent-primary)] underline-offset-4 hover:underline focus-visible:underline",
 };
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
