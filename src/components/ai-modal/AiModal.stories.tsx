@@ -1,10 +1,12 @@
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
+import { AlertCircle } from "lucide-react";
 import { AiModal } from "./AiModal";
 import { AiConversationRow, type AiConversationRowProps } from "./AiConversationRow";
-import { AiActionsRow, type AiAction } from "./AiActionsRow";
+import { AiActionsRow, type AiModalAction } from "./AiActionsRow";
 import { AiModalProvider, useAiModal } from "./AiModalContext";
 import { Composer } from "@/components/molecules/Composer";
+import { TypingIndicator } from "@/components/ui/TypingIndicator";
 import { BodyText } from "@/components/atoms/BodyText";
 import { Button } from "@/components/atoms/Button";
 
@@ -86,15 +88,15 @@ export const ConversationWithActions: Story = {
   render: (args) => {
     const [isOpen, setIsOpen] = React.useState(true);
     
-    const handleActionClick = (action: AiAction) => {
+    const handleActionClick = (action: AiModalAction) => {
       console.log("Action clicked:", action);
       alert(`Action clicked: ${action.label}`);
     };
 
-    const sampleActions: AiAction[] = [
-      { type: "navigate", label: "View Capital One case study", target: "/work/capital-one" },
-      { type: "scroll", label: "See my design process", target: "design-process" },
-      { type: "deep_dive", label: "Tell me about your role", topic: "role-description" },
+    const sampleActions: AiModalAction[] = [
+      { type: "navigate", label: "View Capital One case study", targetPath: "/work/capital-one" },
+      { type: "scroll", label: "See my design process", targetSectionId: "design-process" },
+      { type: "suggest_question", label: "Tell me about your role", suggestedQuestion: "What was your role in this project?" },
     ];
 
     return (
@@ -139,16 +141,16 @@ export const LongConversationWithActions: Story = {
   render: (args) => {
     const [isOpen, setIsOpen] = React.useState(true);
     
-    const handleActionClick = (action: AiAction) => {
+    const handleActionClick = (action: AiModalAction) => {
       console.log("Action clicked:", action);
       alert(`Action clicked: ${action.label}`);
     };
 
-    const sampleActions: AiAction[] = [
-      { type: "navigate", label: "View full portfolio", target: "/work" },
-      { type: "scroll", label: "Jump to contact", target: "contact" },
-      { type: "deep_dive", label: "Learn about my process", topic: "design-process" },
-      { type: "navigate", label: "See case studies", target: "/work" },
+    const sampleActions: AiModalAction[] = [
+      { type: "navigate", label: "View full portfolio", targetPath: "/work" },
+      { type: "scroll", label: "Jump to contact", targetSectionId: "contact" },
+      { type: "suggest_question", label: "Learn about my process", suggestedQuestion: "Can you tell me more about your design process?" },
+      { type: "navigate", label: "See case studies", targetPath: "/work" },
     ];
 
     return (
@@ -399,9 +401,9 @@ const StateMachineDemoInner = () => {
     { role: "ai", body: "Here's a high-level overview of the RAG pipeline..." },
   ]);
   
-  const [actions, setActions] = React.useState<AiAction[]>([
-    { type: "navigate", label: "View case studies", target: "/work" },
-    { type: "scroll", label: "See process", target: "process" },
+  const [actions, setActions] = React.useState<AiModalAction[]>([
+    { type: "navigate", label: "View case studies", targetPath: "/work" },
+    { type: "scroll", label: "See process", targetSectionId: "process" },
   ]);
 
   // Get state machine hooks
@@ -458,7 +460,7 @@ const StateMachineDemoInner = () => {
       },
     ]);
     setActions([
-      { type: "deep_dive", label: "Explore this section", topic: "selection" },
+      { type: "suggest_question", label: "Explore this section", suggestedQuestion: "Can you tell me more about this section?" },
     ]);
 
     // Tell state machine to open from selection
@@ -478,8 +480,8 @@ const StateMachineDemoInner = () => {
       },
     ]);
     setActions([
-      { type: "navigate", label: "View all projects", target: "/work" },
-      { type: "scroll", label: "Jump to about", target: "about" },
+      { type: "navigate", label: "View all projects", targetPath: "/work" },
+      { type: "scroll", label: "Jump to about", targetSectionId: "about" },
     ]);
 
     // Tell state machine to open global with section context
@@ -496,7 +498,7 @@ const StateMachineDemoInner = () => {
   }, [setError]);
 
   // Handle action clicks
-  const handleActionClick = React.useCallback((action: AiAction) => {
+  const handleActionClick = React.useCallback((action: AiModalAction) => {
     console.log("Action clicked:", action);
     alert(`Action clicked: ${action.label}`);
   }, []);
@@ -572,17 +574,26 @@ const StateMachineDemoInner = () => {
             ))}
 
             {/* Show thinking state */}
-            {isThinking && (
-              <div className="mt-[19px]">
-                <BodyText body="Thinking…" variant="muted" />
-              </div>
+            {isThinking && messages.length > 0 && messages[messages.length - 1].role === "user" && (
+              <AiConversationRow
+                role="ai"
+                eyebrowLabel="AI"
+                body={<TypingIndicator label="" />}
+              />
             )}
 
             {/* Show error state */}
             {hasError && state.errorMessage && (
-              <div className="mt-[19px]">
-                <BodyText body={`Error: ${state.errorMessage}`} variant="muted" />
-              </div>
+              <AiConversationRow
+                role="ai"
+                eyebrowLabel="AI"
+                body={
+                  <span className="inline-flex items-baseline gap-2">
+                    <AlertCircle className="w-4 h-4 opacity-60" />
+                    {state.errorMessage}
+                  </span>
+                }
+              />
             )}
           </>
         )}
@@ -595,12 +606,63 @@ const StateMachineDemoInner = () => {
           <Composer
             placeholder="Ask a question…"
             onSubmit={handleComposerSubmit}
-            status={isThinking ? "loading" : "idle"}
+            hideStatus={true}
           />
         )}
       />
     </div>
   );
+};
+
+export const WithSystemMessage: Story = {
+  render: (args) => {
+    const [isOpen, setIsOpen] = React.useState(true);
+
+    return (
+      <AiModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        headline="ASK ABOUT THE TANGER CASE STUDY"
+        renderBody={() => (
+          <>
+            <AiConversationRow
+              role="system"
+              eyebrowLabel="System"
+              body="You're now asking about the Tanger case study. I can help you understand the problem, solution, tech stack, or outcomes."
+            />
+            <AiConversationRow
+              role="user"
+              eyebrowLabel="You"
+              body="What technologies did you use in this project?"
+            />
+            <AiConversationRow
+              role="ai"
+              eyebrowLabel="AI"
+              body="For the Tanger project, I worked with React, TypeScript, Next.js, and Tailwind CSS. The backend used Node.js with Express, and we integrated with the Tanger Outlets API for real-time data."
+            />
+          </>
+        )}
+        renderActions={() => (
+          <AiActionsRow
+            actions={[
+              { type: "scroll", label: "Scroll to Tech Stack", targetSectionId: "tech-stack" },
+              { type: "suggest_question", label: "Ask about outcomes", suggestedQuestion: "What were the key outcomes of this project?" },
+            ]}
+            onActionClick={(action) => {
+              console.log("Action clicked:", action);
+            }}
+          />
+        )}
+        renderComposer={() => (
+          <Composer
+            placeholder="Ask about this project…"
+            onSubmit={(query) => console.log("Submitted:", query)}
+          />
+        )}
+      />
+    );
+  },
+  args: {},
 };
 
 export const StateMachineDemo: Story = {
