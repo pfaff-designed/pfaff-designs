@@ -124,15 +124,16 @@ export function AiModalHost() {
       // 4. Tell the state machine a question was submitted
       submitQuestion({ question: trimmed });
 
-      // 5. Add a user message locally with trimming
-      setMessages((prev) => {
-        const updated = [...prev, { role: "user", body: trimmed }];
-        // Trim to last 10 messages
-        return updated.length > 10 ? updated.slice(-10) : updated;
+      // 5. Add a user message locally
+      let historyMessages: AiConversationRowProps[] = [];
+      setMessages((currentMessages) => {
+        const updatedMessages = [...currentMessages, { role: "user" as const, body: trimmed }];
+        historyMessages = updatedMessages; // Store for history building
+        return updatedMessages;
       });
 
-      // 4. Build conversation history (last 2 turns = 4 messages)
-      const history = messages.slice(-4).map((m) => ({
+      // 4. Build conversation history from the updated messages (last 2 turns = 4 messages)
+      const history = historyMessages.slice(-4).map((m) => ({
         role: m.role,
         text: typeof m.body === "string" ? m.body : "",
       }));
@@ -175,18 +176,14 @@ export function AiModalHost() {
           data.answer?.trim() ||
           "I couldn't generate an answer for that question.";
 
-        // 6. Append AI message with trimming
-        setMessages((prev) => {
-          const updated = [
-            ...prev,
-            {
-              role: "ai",
-              body: answerText,
-            },
-          ];
-          // Trim to last 10 messages
-          return updated.length > 10 ? updated.slice(-10) : updated;
-        });
+        // 6. Append AI message
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          {
+            role: "ai" as const,
+            body: answerText,
+          },
+        ]);
 
         // 7. Update actions if any
         if (data.actions && data.actions.length > 0) {
