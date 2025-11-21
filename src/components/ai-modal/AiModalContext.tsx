@@ -14,6 +14,8 @@ export type AiModalStatus =
   | "waiting_for_input"
   | "error"
   | "closing";
+  // TODO (V2 - Streaming): Add "streaming" status for real-time token rendering
+  // Flow would be: thinking → streaming (tokens arriving) → answer_showing (complete)
 
 export type AiModalSource = "hover-pill" | "keyboard" | "button";
 
@@ -158,6 +160,8 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
         return state;
       }
       
+      // TODO (V2 streaming): Transition to "streaming" status instead of "thinking"
+      // when streaming is enabled. Keep "thinking" for non-streaming fallback.
       return {
         ...state,
         status: "thinking",
@@ -176,6 +180,9 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
     case "MARK_ANSWER_RECEIVED": {
       const { headline } = event.payload || {};
       
+      // TODO (V2 streaming): When streaming is complete, this event will mark
+      // the transition from "streaming" → "answer_showing". For now, it handles
+      // "thinking" → "answer_showing".
       return {
         ...state,
         status: "answer_showing",
