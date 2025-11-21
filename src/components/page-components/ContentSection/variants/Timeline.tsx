@@ -17,28 +17,28 @@ export const Timeline: React.FC<TimelineProps> = ({ timelineItems }) => {
         const topicLabel = item.title || `Timeline item ${index + 1}`;
         
         return (
-          <div key={index} className="flex gap-6">
-            <div className="flex shrink-0 flex-col items-center">
-              {index > 0 && <div className="h-4 w-0.5 bg-[var(--border-subtle)]" />}
-              <div className="relative h-3 w-3 rounded-full border-2 border-[var(--text-default)] bg-[var(--bg-default)]" />
-              {index < (timelineItems?.length || 0) - 1 && (
-                <div className="h-full w-0.5 bg-[var(--border-subtle)]" />
-              )}
-            </div>
-            <div className="flex-1 pb-8">
-              {item.year && (
-                <div className="mb-2 font-mono text-sm font-medium text-[var(--text-muted)]">
-                  {item.year}
-                </div>
-              )}
-              <Heading text={item.title} variant="headline" className="mb-2" />
+        <div key={index} className="flex gap-6">
+          <div className="flex shrink-0 flex-col items-center">
+            {index > 0 && <div className="h-4 w-0.5 bg-[var(--border-subtle)]" />}
+            <div className="relative h-3 w-3 rounded-full border-2 border-[var(--text-default)] bg-[var(--bg-default)]" />
+            {index < (timelineItems?.length || 0) - 1 && (
+              <div className="h-full w-0.5 bg-[var(--border-subtle)]" />
+            )}
+          </div>
+          <div className="flex-1 pb-8">
+            {item.year && (
+              <div className="mb-2 font-mono text-sm font-medium text-[var(--text-muted)]">
+                {item.year}
+              </div>
+            )}
+            <Heading text={item.title} variant="headline" className="mb-2" />
               <div
                 data-ai-interactive="content-section"
                 data-ai-topic-label={topicLabel}
               >
-                <BodyText body={item.description} />
-              </div>
-            </div>
+            <BodyText body={item.description} />
+          </div>
+        </div>
           </div>
         );
       })}

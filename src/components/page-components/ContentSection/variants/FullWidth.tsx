@@ -29,7 +29,7 @@ export const FullWidth: React.FC<FullWidthProps> = ({
   const topicLabel = headline || "This section";
 
   return (
-    <div className={cn("relative w-full overflow-hidden h-[calc(100vh-5rem)]", className)}>
+    <div className={cn("relative w-full overflow-hidden h-screen md:h-[calc(100vh-5rem)]", className)}>
       {/* Background Image - Full Hero Background */}
       {imageSrc && (
         <div className="absolute inset-0 z-0">
@@ -50,16 +50,16 @@ export const FullWidth: React.FC<FullWidthProps> = ({
       <div className="relative z-10 h-full px-4 md:px-6 lg:px-[9rem] flex items-center">
         <div className="w-full flex flex-col gap-16 md:gap-32 lg:gap-[20rem] items-start my-auto">
           {/* Top Section: Headline and Eyebrow */}
-          <div className="flex flex-col gap-4 md:gap-6 w-full max-w-[30rem]">
+          <div className="flex flex-col gap-4 md:gap-6 w-full max-w-[30rem] md:max-w-[33.625rem]">
             {headline && (
               <Heading
                 text={headline}
                 variant="display"
-                className="text-white"
+                className="text-[color:var(--neutral-50)]"
               />
             )}
             {eyebrow && (
-              <p className="font-medium text-base md:text-[1.4375rem] leading-6 md:leading-[2rem] tracking-[-0.014375rem] text-white">
+              <p className="font-medium text-base md:text-[1.4375rem] leading-6 md:leading-[2rem] tracking-[-0.014375rem] text-[color:var(--neutral-50)]">
                 {eyebrow}
               </p>
             )}
@@ -70,7 +70,7 @@ export const FullWidth: React.FC<FullWidthProps> = ({
             {/* Body - Bottom Left */}
             {body && (
               <p
-                className="font-medium text-base md:text-[1.4375rem] leading-6 md:leading-[2rem] tracking-[-0.014375rem] text-white max-w-full md:w-[24.8125rem]"
+                className="font-medium text-base md:text-[1.4375rem] leading-6 md:leading-[2rem] tracking-[-0.014375rem] text-[color:var(--neutral-50)] max-w-full md:max-w-[33.625rem]"
                 data-ai-interactive="content-section"
                 data-ai-topic-label={topicLabel}
               >
@@ -80,9 +80,9 @@ export const FullWidth: React.FC<FullWidthProps> = ({
 
             {/* Project Details - Bottom Right */}
             {projectDetails && (
-              <div className="flex flex-col gap-2 flex-shrink-0 w-full md:w-[30rem]">
+              <div className="flex flex-col gap-2 flex-shrink-0 w-full md:max-w-[33.625rem]">
                 {/* Labels Row */}
-                <div className="flex gap-4 md:gap-6 font-medium text-sm md:text-[1.4375rem] leading-5 md:leading-[2rem] tracking-[-0.014375rem] text-white">
+                <div className="flex gap-4 md:gap-6 font-medium text-sm md:text-[1.4375rem] leading-5 md:leading-[2rem] tracking-[-0.014375rem] text-[color:var(--neutral-50)]">
                   {projectDetails.client !== undefined && (
                     <p className="w-20 md:w-[10rem]">Client</p>
                   )}
@@ -94,7 +94,7 @@ export const FullWidth: React.FC<FullWidthProps> = ({
                   )}
                 </div>
                 {/* Values Row */}
-                <div className="flex gap-4 md:gap-6 font-medium text-sm md:text-[1.4375rem] leading-5 md:leading-[2rem] tracking-[-0.014375rem] text-white">
+                <div className="flex gap-4 md:gap-6 font-medium text-sm md:text-[1.4375rem] leading-5 md:leading-[2rem] tracking-[-0.014375rem] text-[color:var(--neutral-50)]">
                   {projectDetails.client && (
                     <p className="w-20 md:w-[10rem]">{projectDetails.client}</p>
                   )}

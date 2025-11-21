@@ -234,19 +234,19 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
         {/* Status Display - Thinking or Last Updated */}
         {!hideStatus && (
           <>
-            {status === "loading" && lastPrompt ? (
-              <p className="text-base leading-5 text-[var(--text-default)] w-[24.875rem] text-left pl-[2rem] opacity-75">
-                Thinking about: "{lastPrompt}"
-              </p>
-            ) : status === "success" && lastPrompt && lastUpdatedAt ? (
-              <p className="text-base leading-5 text-[var(--text-default)] w-[24.875rem] text-left pl-[2rem] opacity-50">
-                Last updated {formatRelativeTime(lastUpdatedAt)} based on: "{lastPrompt}"
-              </p>
-            ) : displayQuery ? (
-              <p className="text-base leading-5 text-[var(--text-default)] w-[24.875rem] text-left pl-[2rem] opacity-50">
-                {displayQuery}
-              </p>
-            ) : null}
+        {status === "loading" && lastPrompt ? (
+          <p className="text-base leading-5 text-[var(--text-default)] w-[24.875rem] text-left pl-[2rem] opacity-75">
+            Thinking about: "{lastPrompt}"
+          </p>
+        ) : status === "success" && lastPrompt && lastUpdatedAt ? (
+          <p className="text-base leading-5 text-[var(--text-default)] w-[24.875rem] text-left pl-[2rem] opacity-50">
+            Last updated {formatRelativeTime(lastUpdatedAt)} based on: "{lastPrompt}"
+          </p>
+        ) : displayQuery ? (
+          <p className="text-base leading-5 text-[var(--text-default)] w-[24.875rem] text-left pl-[2rem] opacity-50">
+            {displayQuery}
+          </p>
+        ) : null}
           </>
         )}
 
