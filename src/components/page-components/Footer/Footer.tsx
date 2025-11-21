@@ -60,28 +60,29 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
         ref={ref}
         className={cn(
           "w-full bg-[var(--color-dark)] text-[var(--color-light)]",
-          "flex flex-col",
-          "px-[1.5rem] md:px-[2rem] lg:px-[3rem]",
-          "py-[3rem] md:py-[4rem]",
+          "flex flex-col min-h-[40vh]",
+          "px-4 md:px-[1.5rem] lg:px-[3rem]",
+          "py-8 md:py-[3rem] lg:py-[4rem]",
           className
         )}
       >
         <div
           className={cn(
-            "w-full max-w-7xl mx-auto",
+            "w-full max-w-7xl mx-auto flex-1",
             "flex flex-col lg:flex-row items-start lg:items-center justify-between",
-            "gap-[6.875rem] lg:gap-0"
+            "gap-12 md:gap-[6.875rem] lg:gap-0"
           )}
         >
           {/* Left Column */}
-          <div className="flex flex-col gap-[1.5rem] w-full lg:w-auto items-start lg:items-start">
+          <div className="flex flex-col gap-4 md:gap-[1.5rem] w-full lg:w-auto items-start">
             {/* Large Email */}
-            <div className="flex flex-col justify-end h-[6.875rem]">
+            <div className="flex flex-col justify-end min-h-[4rem] md:min-h-[6.875rem]">
               <p
                 className={cn(
-                  "font-medium text-[2.8125rem] leading-[3.5rem]",
+                  "font-medium text-xl md:text-[2.8125rem] leading-7 md:leading-[3.5rem]",
                   "text-[var(--color-light)]",
-                  "tracking-[-0.028125rem]"
+                  "tracking-[-0.028125rem]",
+                  "break-words max-w-full"
                 )}
               >
                 {email}
@@ -89,50 +90,51 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
             </div>
 
             {/* Bottom Row: Location and Availability */}
-            <div className="flex items-start justify-between w-full">
+            <div className="flex flex-col lg:flex-row items-start lg:justify-between w-full gap-2 lg:gap-0">
               {/* Location */}
               <div className="flex flex-col">
                 <BodyText
                   body={location}
                   variant="default"
-                  className="text-[var(--color-light)] text-[1rem] leading-[1.25rem] h-[1rem]"
+                  className="text-[var(--color-light)] text-sm md:text-base leading-5 md:leading-[1.25rem]"
                 />
               </div>
 
-              {/* Availability - Stacked */}
-              <div className="flex flex-col text-right">
+              {/* Availability - Stacked beneath location on mobile/tablet, right-aligned on desktop */}
+              <div className="flex flex-col text-left lg:text-right">
                 <BodyText
                   body={links[0]?.label || "reachable"}
                   variant="default"
-                  className="text-[var(--color-light)] text-[1rem] leading-[1.25rem] h-[1rem]"
+                  className="text-[var(--color-light)] text-sm md:text-base leading-5 md:leading-[1.25rem]"
                 />
                 <BodyText
                   body={links[1]?.label || "m-f / 10-4"}
                   variant="default"
-                  className="text-[var(--color-light)] text-[1rem] leading-[1.25rem] h-[1rem]"
+                  className="text-[var(--color-light)] text-sm md:text-base leading-5 md:leading-[1.25rem]"
                 />
               </div>
             </div>
           </div>
 
           {/* Right Column */}
-          <div className="flex flex-col gap-[1.5rem] items-end lg:items-end w-full lg:w-auto">
-            {/* Large Phone - Right Aligned */}
-            <div className="flex flex-col justify-end h-[6.875rem] w-full lg:w-auto">
+          <div className="flex flex-col gap-4 md:gap-[1.5rem] items-start lg:items-end w-full lg:w-auto">
+            {/* Large Phone - Left on mobile/tablet, right on desktop */}
+            <div className="flex flex-col justify-end min-h-[4rem] md:min-h-[6.875rem] w-full lg:w-auto">
               <p
                 className={cn(
-                  "font-medium text-[2.8125rem] leading-[3.5rem]",
+                  "font-medium text-xl md:text-[2.8125rem] leading-7 md:leading-[3.5rem]",
                   "text-[var(--color-light)]",
                   "tracking-[-0.028125rem]",
-                  "text-right"
+                  "text-left lg:text-right",
+                  "break-words max-w-full"
                 )}
               >
                 {phone}
               </p>
             </div>
 
-            {/* Bottom Row: Social Links and CTA */}
-            <div className="flex gap-[1.5rem] items-center">
+            {/* Bottom Row: Social Links and CTA - Aligned to match phone number on all breakpoints */}
+            <div className="flex flex-wrap gap-3 md:gap-[1.5rem] items-center justify-start lg:justify-end">
               {/* Social Links */}
               {links.slice(2).map((link) => (
                 <Link
@@ -140,9 +142,9 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
                   href={link.href}
                   className={cn(
                     "flex items-center justify-center",
-                    "h-[2rem] px-[1rem] py-[0.5rem]",
+                    "h-8 md:h-[2rem] pr-3 md:px-[1rem] py-2 md:py-[0.5rem]",
                     "rounded-[0.375rem]",
-                    "text-[var(--color-light)] text-[1rem] leading-[1.25rem]",
+                    "text-[var(--color-light)] text-sm md:text-base leading-5 md:leading-[1.25rem]",
                     "hover:opacity-80 transition-opacity"
                   )}
                 >
@@ -155,7 +157,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
                 <Button
                   variant="icon"
                   onClick={handleCtaClick}
-                  className="h-[2rem] px-[1rem] py-[0.5rem] rounded-full text-[1rem] leading-[1.25rem]"
+                  className="h-8 md:h-[2rem] px-3 md:px-[1rem] py-2 md:py-[0.5rem] rounded-full text-sm md:text-base leading-5 md:leading-[1.25rem]"
                 >
                   {ctaLabel}
                 </Button>
@@ -163,7 +165,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
                 <Link href={ctaHref}>
                   <Button
                     variant="icon"
-                    className="h-[2rem] px-[1rem] py-[0.5rem] rounded-full text-[1rem] leading-[1.25rem]"
+                    className="h-8 md:h-[2rem] px-3 md:px-[1rem] py-2 md:py-[0.5rem] rounded-full text-sm md:text-base leading-5 md:leading-[1.25rem]"
                   >
                     {ctaLabel}
                   </Button>
@@ -177,8 +179,8 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
         <div
           className={cn(
             "w-full max-w-7xl mx-auto",
-            "flex items-center justify-center",
-            "pt-[3rem] md:pt-[4rem]"
+            "flex items-end justify-center",
+            "pt-8 md:pt-[3rem] lg:pt-[4rem] mt-auto"
           )}
         >
             <Image
@@ -187,7 +189,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
               width={1726}
               height={293}
               priority
-              className="w-full translate-y-[4rem]"
+              className="w-full translate-y-8 md:translate-y-16 lg:translate-y-[4rem]"
             />
        
         </div>
