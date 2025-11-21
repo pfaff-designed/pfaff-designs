@@ -16,7 +16,7 @@ const config: Config = {
         "text-muted": "var(--text-muted)",
         "accent-primary": "var(--accent-primary)",
         "accent-secondary": "var(--accent-secondary)",
-        "accent-yellow": "var(--accent-yellow)",
+        "accent-tertiary": "var(--accent-tertiary)",
         "border-subtle": "var(--border-subtle)",
         "state-success": "var(--state-success)",
         "state-error": "var(--state-error)",

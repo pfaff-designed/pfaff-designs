@@ -62,7 +62,9 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
           "w-full bg-[var(--neutral-900)] text-[var(--neutral-50)]",
           "flex flex-col min-h-[40vh]",
           "px-4 md:px-[1.5rem] lg:px-[3rem]",
-          "py-8 md:py-[3rem] lg:py-[4rem]",
+          "pt-8 md:pt-[3rem] lg:pt-[4rem]",
+          "pb-40 md:pb-48 lg:pb-56",
+          "overflow-hidden",
           className
         )}
       >
@@ -142,7 +144,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
                   href={link.href}
                   className={cn(
                     "flex items-center justify-center",
-                    "h-8 md:h-[2rem] pr-3 md:px-[1rem] py-2 md:py-[0.5rem]",
+                    "h-8 md:h-[2rem] pr-3 md:pr-[1rem] py-2 md:py-[0.5rem]",
                     "rounded-[0.375rem]",
                     "text-[var(--neutral-50)] text-sm md:text-base leading-5 md:leading-[1.25rem]",
                     "hover:opacity-80 transition-opacity"
@@ -157,7 +159,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
                 <Button
                   variant="icon"
                   onClick={handleCtaClick}
-                  className="h-8 md:h-[2rem] px-3 md:px-[1rem] py-2 md:py-[0.5rem] rounded-full text-sm md:text-base leading-5 md:leading-[1.25rem]"
+                  className="h-8 md:h-[2rem] px-3 md:px-[1rem] py-2 md:py-[0.5rem] rounded-full text-sm md:text-base leading-5 md:leading-[1.25rem] bg-[color:var(--accent-tertiary)] text-[color:var(--text-default)] hover:opacity-90"
                 >
                   {ctaLabel}
                 </Button>
@@ -165,7 +167,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
                 <Link href={ctaHref}>
                   <Button
                     variant="icon"
-                    className="h-8 md:h-[2rem] px-3 md:px-[1rem] py-2 md:py-[0.5rem] rounded-full text-sm md:text-base leading-5 md:leading-[1.25rem]"
+                    className="h-8 md:h-[2rem] px-3 md:px-[1rem] py-2 md:py-[0.5rem] rounded-full text-sm md:text-base leading-5 md:leading-[1.25rem] bg-[color:var(--accent-tertiary)] text-[color:var(--text-default)] hover:opacity-90"
                   >
                     {ctaLabel}
                   </Button>
@@ -184,12 +186,12 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
           )}
         >
             <Image
-              src="/pfaff-design-footer.png"
+              src="/pfaff-footer-accent.svg"
               alt="Pfaff.design"
-              width={1726}
-              height={293}
+              width={1421}
+              height={345}
               priority
-              className="w-full translate-y-8 md:translate-y-16 lg:translate-y-[4rem]"
+              className="w-full translate-y-32 md:translate-y-48"
             />
        
         </div>
