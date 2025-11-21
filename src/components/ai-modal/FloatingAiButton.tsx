@@ -38,7 +38,7 @@ export const FloatingAiButton: React.FC<FloatingAiButtonProps> = ({ className })
         // Styling
         "rounded-full",
         "bg-[color:var(--accent-primary)]",
-        "text-white",
+        "text-[color:var(--bg-default)]", // White text uses bg-default token
         // Shadow for depth
         "shadow-lg",
         // Flex centering
@@ -47,7 +47,7 @@ export const FloatingAiButton: React.FC<FloatingAiButtonProps> = ({ className })
         "hover:opacity-90 active:scale-95",
         "transition-all duration-200 ease-out",
         // Focus states
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-default)]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg-default)]",
         className
       )}
       style={{

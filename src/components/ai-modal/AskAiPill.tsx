@@ -36,7 +36,7 @@ export function AskAiPill({ x, y, onClick, isVisible = true, isMobile = false }:
       className={cn(
         "fixed z-[70] px-3 py-1.5",
         "text-[10px] leading-tight tracking-[0.16em] uppercase",
-        "bg-[color:var(--accent-primary)] text-white",
+        "bg-[color:var(--accent-primary)] text-[color:var(--bg-default)]",
         "rounded-full whitespace-nowrap pointer-events-auto",
         // Desktop: fade + scale (quick and subtle)
         !isMobile && "transition-all duration-100 ease-out",

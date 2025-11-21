@@ -90,9 +90,9 @@ export const ProjectCard = React.forwardRef<HTMLDivElement, ProjectCardProps>(
           "transition-all duration-300 ease-out",
           "cursor-pointer",
           // Background variants - only apply default if fillColor is "default"
-          fillColor === "default" && isDark && "bg-neutral-900 text-white",
+          fillColor === "default" && isDark && "bg-neutral-900 text-[color:var(--neutral-50)]",
           fillColor === "default" && isLight && "bg-neutral-100 text-neutral-900",
-          fillColor === "dark" && "bg-neutral-900 text-white",
+          fillColor === "dark" && "bg-neutral-900 text-[color:var(--neutral-50)]",
           fillColor === "light" && "bg-neutral-100 text-neutral-900",
           // Add border based on accent style
           "border",
@@ -197,7 +197,7 @@ export const ProjectCard = React.forwardRef<HTMLDivElement, ProjectCardProps>(
               className={cn(
                 "text-2xl md:text-3xl lg:text-4xl font-bold leading-tight mb-2",
                 // Text color handled by inline style when fillColor is set
-                fillColor === "default" && isDark && "text-white",
+                fillColor === "default" && isDark && "text-[color:var(--neutral-50)]",
                 fillColor === "default" && isLight && "text-neutral-900"
               )}
               style={

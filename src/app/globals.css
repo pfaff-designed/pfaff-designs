@@ -70,16 +70,17 @@
     /* === Raw-ish functional tokens (traditional names) === */
 
     /* Neutrals */
-    --neutral-50:  #FFFBF3;  /* light neutral surface */
-    --neutral-100: #FFFBF3;  /* main background */
-    --neutral-200: #FFFBF3;  /* subtle neutral */
-    --neutral-300: #FFFBF3;  /* muted neutral */
-    --neutral-800: #221913;  /* deep neutral */
-    --neutral-900: #221913;  /* main dark text */
+    --neutral-50:  #FDF9F4;  /* light neutral surface */
+    --neutral-100: #FDF9F4;  /* main background */
+    --neutral-200: #FDF9F4;  /* subtle neutral */
+    --neutral-300: #FDF9F4;  /* muted neutral */
+    --neutral-800: #26291D;  /* deep neutral */
+    --neutral-900: #26291D;  /* main dark text */
 
     /* Brand / Accent */
     --primary-500:   #C26044; /* warm primary accent */
     --secondary-500: #4F7E85; /* cool secondary accent */
+    --tertiary-500:  #FFF8A7; /* bright accent highlight */
 
     /* States */
     --success-500: #4C482E;   /* success */
@@ -88,7 +89,7 @@
     /* === Semantic tokens (light theme) === */
 
     --bg-default:        var(--neutral-100);
-    --bg-surface:        #FFFFFF;
+    --bg-surface:        var(--neutral-50);
     --bg-subtle-warm:    var(--neutral-50);
 
     --text-default:      var(--neutral-900);
@@ -96,6 +97,7 @@
 
     --accent-primary:    var(--primary-500);
     --accent-secondary:  var(--secondary-500);
+    --accent-tertiary:   var(--tertiary-500);
 
     --border-subtle:     var(--neutral-200);
     --border-strong:     var(--neutral-800);
@@ -105,13 +107,13 @@
     --state-hover:       var(--neutral-300);
 
     /* Overlays & subtle text tints */
-    --overlay-90: rgba(34, 25, 19, 0.90); /* neutral-900 at 90% (#221913) */
-    --overlay-70: rgba(34, 25, 19, 0.70);
-    --overlay-50: rgba(34, 25, 19, 0.50);
+    --overlay-90: rgba(38, 41, 29, 0.90); /* neutral-900 at 90% (#26291D) */
+    --overlay-70: rgba(38, 41, 29, 0.70);
+    --overlay-50: rgba(38, 41, 29, 0.50);
 
-    --muted-foreground-60: rgba(34, 25, 19, 0.60); /* extra-subtle text */
+    --muted-foreground-60: rgba(38, 41, 29, 0.60); /* extra-subtle text */
 
-    --border-soft: rgba(34, 25, 19, 0.25); /* soft border from dark neutral */
+    --border-soft: rgba(38, 41, 29, 0.25); /* soft border from dark neutral */
 
     /* Shadcn-compatible variables */
     --background: var(--bg-default);

@@ -336,7 +336,7 @@ export const AiModal: React.FC<AiModalProps> = ({
                     window.location.href = '/'; // Then navigate home
                   }, 200); // Small delay to let close animation finish
                 }}
-                className="flex items-center cursor-pointer hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--text-default)] focus-visible:ring-offset-2"
+                className="flex items-center cursor-pointer hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--text-default)] focus-visible:ring-offset-2"
                 aria-label="Go to homepage"
               >
                 <Image
@@ -356,7 +356,7 @@ export const AiModal: React.FC<AiModalProps> = ({
                 onClick={onClose}
                 aria-label="Close AI assistant"
                 data-close-button
-                className="shrink-0 inline-flex items-center justify-center size-10 rounded-full p-0 text-[color:var(--text-default)] hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--text-default)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-default)] transition-opacity cursor-pointer"
+                className="shrink-0 inline-flex items-center justify-center size-10 rounded-full p-0 text-[color:var(--text-default)] hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--text-default)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg-default)] transition-opacity cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -369,7 +369,10 @@ export const AiModal: React.FC<AiModalProps> = ({
               style={{
                 scrollbarWidth: 'thin',
                 scrollbarColor: 'var(--border-subtle) transparent',
-              }}
+                WebkitScrollbar: {
+                  width: '6px',
+                },
+              } as React.CSSProperties}
             >
               <div className="w-full max-w-[33.625rem] mx-auto">
                 {headline && (
@@ -412,9 +415,9 @@ export const AiModal: React.FC<AiModalProps> = ({
         aria-modal="true"
         aria-labelledby={headlineId}
       >
-      {/* Backdrop with blur and dim */}
+          {/* Backdrop with blur and dim */}
       <div
-        className="absolute inset-0 bg-[color:var(--bg-default)]/80 backdrop-blur-[6px] opacity-100 transition-opacity duration-[180ms] ease-[cubic-bezier(0.33,1,0.68,1)]"
+        className="absolute inset-0 bg-[color:var(--bg-default)]/90 backdrop-blur-xl opacity-100 transition-opacity duration-[180ms] ease-[cubic-bezier(0.33,1,0.68,1)]"
         aria-hidden="true"
       />
 
@@ -433,28 +436,26 @@ export const AiModal: React.FC<AiModalProps> = ({
           isOpen ? "scale-100 opacity-100" : "scale-[0.96] opacity-0"
         )}
         style={{
-          scrollbarWidth: 'thin',
+          scrollbarWidth: 'thin' as const,
           scrollbarColor: 'var(--border-subtle) transparent',
-          maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%)',
-          maskComposite: 'intersect',
+          maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+          maskComposite: 'intersect' as const,
           WebkitMaskComposite: 'source-in',
         }}
       >
-        {/* Header with Close Button */}
-        <div className="flex items-start justify-end mb-6">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            aria-label="Close AI assistant"
-            data-close-button
-            className="shrink-0 inline-flex items-center justify-center size-10 rounded-full p-0 text-[color:var(--text-default)] hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--text-default)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-default)] transition-opacity cursor-pointer z-10 relative"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+        {/* Close Button - Absolutely positioned */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          aria-label="Close AI assistant"
+          data-close-button
+          className="absolute top-12 right-20 shrink-0 inline-flex items-center justify-center size-12 rounded-full p-0 text-[color:var(--text-default)] opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--text-default)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg-default)] transition-opacity cursor-pointer z-10"
+        >
+          <X className="h-5 w-5" strokeWidth={2.5} />
+        </button>
 
         {/* Content - styled like DefaultSection */}
         <div className="flex flex-col items-center justify-center w-full">
