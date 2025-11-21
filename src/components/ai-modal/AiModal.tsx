@@ -336,7 +336,7 @@ export const AiModal: React.FC<AiModalProps> = ({
                     window.location.href = '/'; // Then navigate home
                   }, 200); // Small delay to let close animation finish
                 }}
-                className="flex items-center cursor-pointer hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-dark)] focus-visible:ring-offset-2"
+                className="flex items-center cursor-pointer hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--text-default)] focus-visible:ring-offset-2"
                 aria-label="Go to homepage"
               >
                 <Image
@@ -356,7 +356,7 @@ export const AiModal: React.FC<AiModalProps> = ({
                 onClick={onClose}
                 aria-label="Close AI assistant"
                 data-close-button
-                className="shrink-0 inline-flex items-center justify-center size-10 rounded-full p-0 text-[color:var(--text-default)] hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-dark)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-default)] transition-opacity cursor-pointer"
+                className="shrink-0 inline-flex items-center justify-center size-10 rounded-full p-0 text-[color:var(--text-default)] hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--text-default)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-default)] transition-opacity cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -450,7 +450,7 @@ export const AiModal: React.FC<AiModalProps> = ({
             }}
             aria-label="Close AI assistant"
             data-close-button
-            className="shrink-0 inline-flex items-center justify-center size-10 rounded-full p-0 text-[color:var(--text-default)] hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-dark)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-default)] transition-opacity cursor-pointer z-10 relative"
+            className="shrink-0 inline-flex items-center justify-center size-10 rounded-full p-0 text-[color:var(--text-default)] hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--text-default)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-default)] transition-opacity cursor-pointer z-10 relative"
           >
             <X className="h-4 w-4" />
           </button>

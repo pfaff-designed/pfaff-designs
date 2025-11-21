@@ -59,7 +59,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
       <footer
         ref={ref}
         className={cn(
-          "w-full bg-[var(--color-dark)] text-[var(--color-light)]",
+          "w-full bg-[var(--neutral-900)] text-[var(--neutral-50)]",
           "flex flex-col min-h-[40vh]",
           "px-4 md:px-[1.5rem] lg:px-[3rem]",
           "py-8 md:py-[3rem] lg:py-[4rem]",
@@ -80,7 +80,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
               <p
                 className={cn(
                   "font-medium text-xl md:text-[2.8125rem] leading-7 md:leading-[3.5rem]",
-                  "text-[var(--color-light)]",
+                  "text-[var(--neutral-50)]",
                   "tracking-[-0.028125rem]",
                   "break-words max-w-full"
                 )}
@@ -96,7 +96,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
                 <BodyText
                   body={location}
                   variant="default"
-                  className="text-[var(--color-light)] text-sm md:text-base leading-5 md:leading-[1.25rem]"
+                  className="text-[var(--neutral-50)] text-sm md:text-base leading-5 md:leading-[1.25rem]"
                 />
               </div>
 
@@ -105,12 +105,12 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
                 <BodyText
                   body={links[0]?.label || "reachable"}
                   variant="default"
-                  className="text-[var(--color-light)] text-sm md:text-base leading-5 md:leading-[1.25rem]"
+                  className="text-[var(--neutral-50)] text-sm md:text-base leading-5 md:leading-[1.25rem]"
                 />
                 <BodyText
                   body={links[1]?.label || "m-f / 10-4"}
                   variant="default"
-                  className="text-[var(--color-light)] text-sm md:text-base leading-5 md:leading-[1.25rem]"
+                  className="text-[var(--neutral-50)] text-sm md:text-base leading-5 md:leading-[1.25rem]"
                 />
               </div>
             </div>
@@ -123,7 +123,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
               <p
                 className={cn(
                   "font-medium text-xl md:text-[2.8125rem] leading-7 md:leading-[3.5rem]",
-                  "text-[var(--color-light)]",
+                  "text-[var(--neutral-50)]",
                   "tracking-[-0.028125rem]",
                   "text-left lg:text-right",
                   "break-words max-w-full"
@@ -144,7 +144,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
                     "flex items-center justify-center",
                     "h-8 md:h-[2rem] pr-3 md:px-[1rem] py-2 md:py-[0.5rem]",
                     "rounded-[0.375rem]",
-                    "text-[var(--color-light)] text-sm md:text-base leading-5 md:leading-[1.25rem]",
+                    "text-[var(--neutral-50)] text-sm md:text-base leading-5 md:leading-[1.25rem]",
                     "hover:opacity-80 transition-opacity"
                   )}
                 >

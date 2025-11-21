@@ -26,13 +26,13 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AiModalProvider>
-          <AIAnswerProvider>
-            <SectionProvider>
-              <Header />
-              {children}
-              <Footer />
-            </SectionProvider>
-          </AIAnswerProvider>
+        <AIAnswerProvider>
+          <SectionProvider>
+            <Header />
+            {children}
+            <Footer />
+          </SectionProvider>
+        </AIAnswerProvider>
           {/* Global AI modal host - rendered once at root */}
           <AiModalHost />
           {/* Global AI hover pill host - tracks cursor/touch on AI-interactive regions */}

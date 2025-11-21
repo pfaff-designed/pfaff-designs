@@ -1,54 +1,174 @@
+You must update the AI modal, conversation UI, and related components according to the Phase 7.6 Visual Tuning instructions below.
+
+Before doing anything:
+1. Re-read the entire current-prompt.md file (path: /Users/charlespfaff/Documents/Code/pfaff-designs/current-prompt.md).
+2. Review all AI-related components:
+   - AiModalHost
+   - AiModalHeader
+   - AiConversationRow (AI, user, system, error)
+   - Composer
+3. Review shared layout/typography primitives (e.g., ContentBlock).
+4. Ask any clarifying questions before beginning implementation.
+5. Do NOT start coding until you confirm you understand all requirements.
 
 ---
 
-## Phase 7.5 — Mobile Navigation (Hamburger Menu Pattern)
+# PHASE 7.6 — VISUAL TUNING
 
-Before doing anything, Cursor must:
-1. Re-read all Phase 7.5 mobile requirements.
-2. Inspect the current Header/Nav components.
-3. Ask any clarifying questions before implementation.
+Your goal is to refine the AI modal + conversation UI so that:
+- It feels consistent with the site's editorial style.
+- It uses the new semantic token system.
+- It is visually balanced on both desktop and mobile.
+- All AI/user/system/error messages have clear hierarchy and readable spacing.
+- No hardcoded hex colors remain.
 
-### Requirements
+---
 
-**1. Mobile-Only Navigation**
-- A dedicated mobile navigation experience must be implemented.
-- This navigation must only appear on `< md` breakpoints.
-- Desktop navigation must remain completely unchanged.
+# 1. DESIGN TOKEN UPDATE (MUST BE DONE FIRST)
 
-**2. Mobile Header Layout**
-- Left side: the existing site logo SVG (same behavior as desktop).
-- Right side: a hamburger menu icon (use an existing lucide-react icon if available, e.g. `Menu`).
-- Header must be compact, fixed at the top, and visually consistent with the AI modal header.
+Update all styling in the AI modal and conversation components to use the **new semantic color system** defined in current-prompt.md.
 
-**3. Mobile Menu Behavior**
-- Tapping the hamburger opens a mobile menu panel.
-- This panel can slide down or fade in (use existing motion tokens).
-- When open, it must show three links:
-  - **About**
-  - **Work**
-  - **Contact Me**
-- Each item should be full-width, tappable, and use the mobile typography scale.
+### Use these semantic tokens instead of legacy tokens:
+- Backgrounds → `--bg-default`, `--bg-surface`, `--bg-subtle-warm`
+- Text → `--text-default`, `--text-muted`
+- Accents → `--accent-primary`, `--accent-secondary`
+- Borders → `--border-subtle`, `--border-strong`
+- States → `--state-success`, `--state-error`, `--state-hover`
+- Overlays → `--overlay-90`, `--overlay-70`, `--overlay-50`
 
-**4. Interaction Rules**
-- Tapping outside the menu or pressing the close/hamburger button again closes it.
-- Logo always navigates home (`/`) even when menu is open.
-- Menu must not interfere with the AI modal or the mobile AI button.
-- Menu must not overlap with safe areas (top/bottom padding on mobile).
+### Remove/Replace all hex values:
+If no semantic token exists:
+- Use the closest suitable token
+- Leave a `// TODO: consider adding semantic token for [context]` comment
 
-**5. Visual Style**
-- The menu panel should:
-  - Use the standard mobile background token (`var(--bg-default)`).
-  - Use appropriate spacing and vertical stacking.
-  - Use consistent typography from the mobile header/footer.
-- Do NOT introduce new colors; use existing tokens only.
+### Legacy token migration:
+The following must be replaced everywhere:
+```
+--color-dark      → --text-default / --neutral-900
+--color-light     → --bg-default / --neutral-100
+--color-primary-light → --accent-primary
+--color-secondary → --accent-secondary
+--color-success   → --state-success
+--color-error     → --state-error
+--color-hover     → --state-hover
+--color-border    → --border-subtle
+```
 
-### Checklist for Cursor
+### Remove redundant tokens from :root:
+- `--color-primary-dark`
+- `--color-yellow`
 
-- [ ] A mobile-only header exists with logo (left) and hamburger icon (right).
-- [ ] Hamburger menu opens a mobile navigation panel containing About, Work, and Contact Me.
-- [ ] Mobile nav is hidden on desktop; desktop nav remains unchanged.
-- [ ] Navigation panel uses correct spacing, typography, and background tokens.
-- [ ] Logo always navigates home and is clickable even when menu is open.
-- [ ] Menu closes when tapping outside or re-tapping hamburger.
-- [ ] Behavior does not conflict with AI modal or mobile AI button.
-- [ ] Fully responsive on `< md` with no desktop regressions.
+All Phase 7.6 styling must use the updated token system.
+
+---
+
+# 2. TYPOGRAPHY & HIERARCHY
+
+### AI messages:
+- Headings → use the site’s section-subheading / `h4` scale
+- Eyebrows → match case study eyebrow styling (size, weight, tracking)
+- Body text → match site body text size
+
+### User messages:
+- Same type scale as AI body
+- Slight visual distinction via weight or subtle token-based tint
+
+### System messages:
+- Blue-tinted styling using semantic tokens
+- Slightly reduced opacity and/or lighter weight
+
+### Error messages:
+- Use `--state-error` for icon or left-accent
+- Background must remain neutral and readable (no red blocks)
+
+Do NOT invent new type sizes.
+
+---
+
+# 3. ALIGNMENT & WIDTH
+
+### Desktop:
+- AI + user messages must align to the same max-width as primary content (ContentBlock).
+- Messages must never stretch to full viewport width.
+
+### Mobile:
+- Ensure comfortable left/right padding.
+- Text must not hug screen edges.
+
+---
+
+# 4. VERTICAL SPACING & RHYTHM
+
+Apply consistent spacing tokens:
+
+- Follow the site’s spacing rhythm (e.g., 16 / 24 / 32 / 40 or 1.5× increments).
+- Slightly tighter spacing for back-and-forth messages.
+- More spacing around system/error messages and major breaks.
+- AI modal needs correct top and bottom internal padding.
+
+Use existing spacing tokens only — no arbitrary magic numbers.
+
+---
+
+# 5. VISUAL DIFFERENTIATION BETWEEN MESSAGE TYPES
+
+### AI messages:
+- Neutral background using semantic tokens
+- Optional subtle border or left rule
+
+### User messages:
+- Same typography
+- Slight tint or border for distinction
+
+### System messages:
+- Blue-tinted background or accent using semantic tokens
+- Must feel auxiliary
+
+### Error messages:
+- Use error tokens for icon/border
+- Keep background neutral for readability
+
+---
+
+# 6. ANIMATION & MICRO-INTERACTIONS
+
+### AI messages:
+- Subtle fade + slide-from-bottom animation
+- Duration ~150–200ms
+
+### User messages:
+- Appear instantly (no animation)
+
+### General:
+- Use consistent easing
+- No layout shift or jitter
+- System and error messages should not be over-animated
+
+---
+
+# 7. REMOVE ALL HARDCODED COLORS
+
+Search all AI modal + conversation components for:
+- Inline hex codes
+- Tailwind arbitrary hex classes
+- CSS files with raw hex
+
+Replace all of them with semantic tokens.
+
+Add TODO notes where new tokens will be needed.
+
+---
+
+# FINAL CHECKLIST (Cursor must complete ALL items)
+
+- [ ] All design tokens updated to semantic system
+- [ ] No remaining hardcoded hex values
+- [ ] AI/user/system/error messages follow correct typography hierarchy
+- [ ] Width alignment matches ContentBlock on desktop
+- [ ] Mobile spacing is consistent and readable
+- [ ] Vertical spacing rhythm applied uniformly
+- [ ] Role-based message styles implemented (AI/user/system/error)
+- [ ] AI messages animate subtly; user messages do not
+- [ ] No layout jitter introduced
+- [ ] TODO comments added for missing future semantic tokens
+- [ ] No regressions to desktop or mobile layouts
