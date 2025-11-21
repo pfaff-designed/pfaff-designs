@@ -20,7 +20,7 @@ export interface ButtonProps extends Omit<BaseButtonProps, "variant"> {
 }
 
 const baseClasses =
-  "inline-flex items-center min-w-[5.25rem] justify-center gap-2 rounded-full border border-transparent px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base font-medium leading-5 tracking-tight transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-dark)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-default)] disabled:pointer-events-none disabled:opacity-60 [&_svg]:size-4 hover:opacity-80";
+  "inline-flex items-center min-w-[5.25rem] justify-center gap-2 rounded-full border border-transparent px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base font-medium leading-5 tracking-tight transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--text-default)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-default)] disabled:pointer-events-none disabled:opacity-60 [&_svg]:size-4 hover:opacity-80";
 
 const variantClassMap: Record<ButtonVariant, string> = {
   primary:

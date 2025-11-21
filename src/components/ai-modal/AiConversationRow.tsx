@@ -41,8 +41,9 @@ export const AiConversationRow: React.FC<AiConversationRowProps> = ({
     <div 
       className={cn(
         "flex flex-col gap-6 md:flex-row md:gap-6 mt-[19px] first:mt-0",
-        // Entrance animation: fade + slide in (180ms ease-out)
-        !isExiting && "message-enter",
+        // User messages: appear instantly (no animation)
+        // AI messages: subtle fade + slide-from-bottom animation (180ms ease-out)
+        role === "ai" && !isExiting && "message-enter",
         // Exit animation: fade out when trimming (180ms ease-in)
         isExiting && "message-exit",
         className
@@ -58,8 +59,7 @@ export const AiConversationRow: React.FC<AiConversationRowProps> = ({
       {/* Body Content - matches ContentBlock layout */}
       <div 
         className={cn(
-          "flex-1 max-w-[24.25rem]",
-          role === "system" && "text-[color:var(--accent-secondary)]"
+          "flex-1 max-w-[24.25rem]"
         )}
       >
         {/* TODO (V2 streaming): When isStreaming is true, render partial content
