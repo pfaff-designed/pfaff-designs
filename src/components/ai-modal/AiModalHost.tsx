@@ -72,7 +72,7 @@ export function AiModalHost() {
   
   // Refs for auto-scroll and autofocus
   const bottomRef = React.useRef<HTMLDivElement>(null);
-  const composerInputRef = React.useRef<HTMLInputElement>(null);
+  const composerInputRef = React.useRef<HTMLTextAreaElement>(null);
 
   // "Replace while open" helper for opening from selection
   const handleOpenFromSelection = React.useCallback(

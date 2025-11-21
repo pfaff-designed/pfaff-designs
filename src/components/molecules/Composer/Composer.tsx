@@ -1,6 +1,5 @@
 import * as React from "react";
 import { ArrowDown } from "lucide-react";
-import { Input as BaseInput } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export interface ComposerProps {
@@ -17,7 +16,7 @@ export interface ComposerProps {
   hideStatus?: boolean;
   value?: string; // Optional controlled value
   onValueChange?: (value: string) => void; // Optional controlled onChange
-  inputRef?: React.RefObject<HTMLInputElement>; // Optional ref to input element
+  inputRef?: React.RefObject<HTMLTextAreaElement>; // Changed to HTMLTextAreaElement for multi-line
 }
 
 
@@ -71,7 +70,11 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
     const [localRecentQuery, setLocalRecentQuery] = React.useState<string | undefined>(recentQuery);
     const [isFocused, setIsFocused] = React.useState(false);
     const [footerHeight, setFooterHeight] = React.useState(0);
-    const internalInputRef = React.useRef<HTMLInputElement>(null);
+    const [isComposing, setIsComposing] = React.useState(false); // IME composition tracking
+    const [userUnfocused, setUserUnfocused] = React.useState(false); // Track if user manually unfocused
+    const [isMultiline, setIsMultiline] = React.useState(false); // Track if textarea has multiple lines
+    // TODO (V2 streaming): Track partial message composition here for streaming responses
+    const internalInputRef = React.useRef<HTMLTextAreaElement>(null);
     const inputRef = externalInputRef || internalInputRef;
     const containerRef = React.useRef<HTMLDivElement>(null);
 
@@ -91,19 +94,48 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
       if (inputValue.trim()) {
         setLocalRecentQuery(inputValue.trim());
         onSubmit?.(inputValue.trim());
+        // Clear the input after successful submit
         setInputValue("");
+        // Reset user unfocus flag when they submit
+        setUserUnfocused(false);
       }
-    }, [inputValue, onSubmit]);
+    }, [inputValue, onSubmit, setInputValue]);
 
     const handleKeyDown = React.useCallback(
-      (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter" && !e.shiftKey) {
+      (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        // Enter without Shift = submit (unless composing via IME)
+        if (e.key === "Enter" && !e.shiftKey && !isComposing) {
           e.preventDefault();
           handleSubmit();
         }
+        // Shift+Enter = newline (default behavior, no action needed)
       },
-      [handleSubmit]
+      [handleSubmit, isComposing]
     );
+
+    // Auto-resize textarea as content grows
+    // TODO (V2 streaming): When we implement streaming, ensure auto-resize runs on every chunk append
+    const autoResize = React.useCallback(() => {
+      const textarea = inputRef.current;
+      if (!textarea) return;
+
+      // Reset height to auto to get accurate scrollHeight
+      textarea.style.height = "auto";
+      
+      // Calculate new height (capped at 144px from modular scale)
+      const newHeight = Math.min(textarea.scrollHeight, 144);
+      textarea.style.height = `${newHeight}px`;
+      
+      // Check if multiline (scrollHeight > single line height ~36px)
+      setIsMultiline(textarea.scrollHeight > 36);
+      
+      // TODO (V2 streaming): May need to debounce auto-resize if chunks arrive very quickly
+    }, [inputRef]);
+
+    // Trigger auto-resize when value changes
+    React.useEffect(() => {
+      autoResize();
+    }, [inputValue, autoResize]);
 
     // Update local state when prop changes
     React.useEffect(() => {
@@ -219,28 +251,49 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
           <div
             ref={containerRef}
             className={cn(
-              "relative flex items-center w-full rounded-full",
+              "relative flex items-center w-full",
               "bg-[#FDF9F4]",
-              "pr-2 pl-6 py-[0.5rem] transition-all",
+              "pr-2 pl-6 py-[0.5rem]",
               isFocused
                 ? "border-2 border-[#9ec8d2]"
                 : "border border-[rgba(38,41,29,0.1)]"
             )}
+            style={{
+              borderRadius: isMultiline ? "8px" : "9999px",
+            }}
           >
-            <div className="relative z-[1] flex-1" style={{ isolation: 'isolate' }}>
-              <BaseInput
+            <div className="relative z-[1] flex-1 pr-12 px-[2px] min-h-[2.25rem] flex items-center" style={{ isolation: 'isolate' }}>
+              <textarea
                 ref={inputRef}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
+                onFocus={() => {
+                  setIsFocused(true);
+                  // Don't reset userUnfocused here - only reset on submit or when modal reopens
+                }}
+                onBlur={() => {
+                  setIsFocused(false);
+                  // User manually unfocused the textarea
+                  setUserUnfocused(true);
+                }}
+                onCompositionStart={() => setIsComposing(true)}
+                onCompositionEnd={() => setIsComposing(false)}
                 placeholder={placeholder}
+                rows={1}
                 className={cn(
-                  "relative w-full border-0 bg-transparent px-0 py-0 text-base leading-5 text-[#26291d] placeholder:text-[#26291d] placeholder:opacity-50",
-                  "focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none focus-visible:outline-none",
+                  "w-full border-0 bg-transparent px-0 py-0 text-base leading-5 text-[#26291d] placeholder:text-[#26291d] placeholder:opacity-50",
+                  "focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none",
+                  "resize-none overflow-y-auto overflow-wrap-break-word",
+                  "min-h-[1.25rem] max-h-36", // min-h matches line-height, max-h is 144px
                   inputClassName
                 )}
+                style={{
+                  width: "100%",
+                  wordWrap: "break-word",
+                  whiteSpace: "pre-wrap",
+                  overflowWrap: "break-word",
+                }}
               />
             </div>
             <button
@@ -248,7 +301,8 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
               onClick={handleSubmit}
               aria-label="Submit query"
               className={cn(
-                "relative z-[1] flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e76f51] p-0 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e76f51] focus-visible:ring-offset-2 group",
+                "absolute right-2 top-1/2 -translate-y-1/2",
+                "z-[1] flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e76f51] p-0 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e76f51] focus-visible:ring-offset-2 group",
                 buttonClassName
               )}
             >
