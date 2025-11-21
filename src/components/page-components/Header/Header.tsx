@@ -41,6 +41,8 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
   ) => {
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+    const [isDrawerMounted, setIsDrawerMounted] = React.useState(false);
+    const [isDrawerVisible, setIsDrawerVisible] = React.useState(false);
 
     // Swipe gesture state
     const [swipeStartX, setSwipeStartX] = React.useState<number | null>(null);
@@ -69,14 +71,24 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
 
     const openMobileMenu = React.useCallback(() => {
       setIsMobileMenuOpen(true);
+      setIsDrawerMounted(true);
+      // Trigger slide-in animation after mount
+      requestAnimationFrame(() => {
+        setIsDrawerVisible(true);
+      });
     }, []);
 
     const closeMobileMenu = React.useCallback(() => {
       setIsMobileMenuOpen(false);
+      setIsDrawerVisible(false);
       // Reset swipe state
       setSwipeStartX(null);
       setSwipeCurrentX(null);
       setIsSwipingRight(false);
+      // Unmount after animation completes (300ms)
+      setTimeout(() => {
+        setIsDrawerMounted(false);
+      }, 300);
     }, []);
 
     // Swipe-right-to-close gesture handlers
@@ -216,18 +228,35 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
             )}
           </div>
 
-          {/* Mobile: Hamburger Menu Button */}
+          {/* Mobile: Hamburger/Close Menu Button */}
           <button
-            onClick={openMobileMenu}
-            aria-label="Open menu"
+            onClick={isMobileMenuOpen ? closeMobileMenu : openMobileMenu}
+            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
             className="md:hidden flex items-center justify-center w-10 h-10 text-[color:var(--text-default)] hover:opacity-80 transition-opacity"
           >
-            <Menu className="h-6 w-6" strokeWidth={1.5} />
+            <div className="relative w-6 h-6">
+              {/* Hamburger Icon */}
+              <Menu 
+                className={cn(
+                  "absolute inset-0 h-6 w-6 transition-all duration-300 ease-in-out",
+                  isMobileMenuOpen ? "opacity-0 rotate-90 scale-75" : "opacity-100 rotate-0 scale-100"
+                )}
+                strokeWidth={1.5}
+              />
+              {/* X Icon */}
+              <X 
+                className={cn(
+                  "absolute inset-0 h-6 w-6 transition-all duration-300 ease-in-out",
+                  isMobileMenuOpen ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-75"
+                )}
+                strokeWidth={1.5}
+              />
+            </div>
           </button>
         </header>
 
         {/* Mobile Drawer */}
-        {isMobileMenuOpen && (
+        {isDrawerMounted && (
           <div
             className="fixed inset-0 z-45 md:hidden"
             onTouchStart={handleTouchStart}
@@ -244,24 +273,17 @@ const Header = React.forwardRef<HTMLElement, HeaderProps>(
                 "flex flex-col"
               )}
               style={{
-                transform: `translateX(${isSwipingRight ? swipeTransform : 0}px)`,
-                paddingTop: 'max(1rem, env(safe-area-inset-top))',
+                transform: isSwipingRight 
+                  ? `translateX(${swipeTransform}px)`
+                  : isDrawerVisible 
+                    ? 'translateX(0)' 
+                    : 'translateX(100%)',
+                paddingTop: 'max(3rem, env(safe-area-inset-top))',
                 paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
               }}
             >
-              {/* Close Button */}
-              <div className="flex items-center justify-end px-6 pb-8">
-                <button
-                  onClick={closeMobileMenu}
-                  aria-label="Close menu"
-                  className="flex items-center justify-center w-10 h-10 text-[color:var(--text-default)] hover:opacity-80 transition-opacity"
-                >
-                  <X className="h-6 w-6" strokeWidth={1.5} />
-                </button>
-              </div>
-
               {/* Navigation Items */}
-              <nav className="flex flex-col flex-1">
+              <nav className="flex flex-col flex-1 pt-12">
                 {/* About & Work Links */}
                 {links.map((link) => {
                   const isActive = pathname === link.href;
