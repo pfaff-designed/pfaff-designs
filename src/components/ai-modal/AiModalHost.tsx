@@ -20,6 +20,17 @@ import type { ModalRequestBody, ModalResponseBody } from "@/app/api/ai/modal/rou
  * - Provides dev-only debug trigger
  * 
  * This is rendered once at the app root level.
+ * 
+ * TODO (Phase 7.1 Testing): Add tests for:
+ * - Message queuing when AI is thinking
+ * - Composer stays enabled during thinking state
+ * - Queued message auto-sends when AI finishes
+ * - Queue clears when modal closes
+ * - TypingIndicator displays correctly
+ * - Auto-send queued message when thinking completes
+ * - Queue clearing when modal closes
+ * - Composer remains enabled during thinking state
+ * Requires Jest configuration (jest.config.ts, setupTests.ts, test scripts in package.json)
  */
 export function AiModalHost() {
   const {
@@ -45,6 +56,9 @@ export function AiModalHost() {
   // Local state for composer value (used for pre-filling suggested questions)
   const [composerValue, setComposerValue] = React.useState<string>("");
   
+  // Message queue state for queuing user messages while AI is thinking
+  const [queuedUserMessage, setQueuedUserMessage] = React.useState<string | null>(null);
+  
   // Refs for auto-scroll and autofocus
   const bottomRef = React.useRef<HTMLDivElement>(null);
   const composerInputRef = React.useRef<HTMLInputElement>(null);
@@ -56,6 +70,7 @@ export function AiModalHost() {
       setMessages([]);
       setActions([]);
       setComposerValue("");
+      setQueuedUserMessage(null);
     },
     [openFromSelection]
   );
@@ -67,6 +82,7 @@ export function AiModalHost() {
       setMessages([]);
       setActions([]);
       setComposerValue("");
+      setQueuedUserMessage(null);
     },
     [openGlobal]
   );
@@ -77,15 +93,22 @@ export function AiModalHost() {
       const trimmed = query.trim();
       if (!trimmed) return;
 
-      // 1. Clear any existing error state
+      // 1. If AI is currently thinking, queue the message instead of sending
+      if (isThinking) {
+        setQueuedUserMessage(trimmed);
+        // Input field clears automatically in Composer after onSubmit
+        return;
+      }
+
+      // 2. Clear any existing error state
       if (hasError) {
         // Error will be cleared by state machine transition
       }
 
-      // 2. Tell the state machine a question was submitted
+      // 3. Tell the state machine a question was submitted
       submitQuestion({ question: trimmed });
 
-      // 3. Add a user message locally with trimming
+      // 4. Add a user message locally with trimming
       setMessages((prev) => {
         const updated = [...prev, { role: "user", body: trimmed }];
         // Trim to last 10 messages
@@ -250,6 +273,28 @@ export function AiModalHost() {
       return () => clearTimeout(timeoutId);
     }
   }, [isOpen, state.status]);
+
+  // Auto-send queued message when AI finishes thinking
+  React.useEffect(() => {
+    if (!isThinking && queuedUserMessage) {
+      // AI just finished thinking and we have a queued message
+      // Send it automatically
+      const messageToSend = queuedUserMessage;
+      setQueuedUserMessage(null);
+      
+      // Small delay to let the previous answer settle
+      setTimeout(() => {
+        handleComposerSubmit(messageToSend);
+      }, 100);
+    }
+  }, [isThinking, queuedUserMessage, handleComposerSubmit]);
+
+  // Clear queue when modal closes
+  React.useEffect(() => {
+    if (!isOpen && queuedUserMessage) {
+      setQueuedUserMessage(null);
+    }
+  }, [isOpen, queuedUserMessage]);
 
   return (
     <>

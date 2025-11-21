@@ -233,3 +233,23 @@
     box-sizing: border-box;
   }
 }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+
+/* Typing indicator bounce animation - subtle vertical wave */
+@keyframes typing-bounce {
+  0%, 60%, 100% {
+    opacity: 0.3;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+@layer utilities {
+  .animate-typing-bounce {
+    animation: typing-bounce 1.4s ease-in-out infinite;
+  }
+}

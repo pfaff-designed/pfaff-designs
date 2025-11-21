@@ -10,6 +10,9 @@ export interface AiConversationRowProps {
   eyebrowLabel?: string;
   body: string | React.ReactNode;
   className?: string;
+  // TODO (V2 streaming): Add optional props:
+  // - isStreaming?: boolean - to show streaming indicator
+  // - partialContent?: string - to display partial/incomplete text
 }
 
 export const AiConversationRow: React.FC<AiConversationRowProps> = ({
@@ -42,6 +45,8 @@ export const AiConversationRow: React.FC<AiConversationRowProps> = ({
       
       {/* Body Content - matches ContentBlock layout */}
       <div className="flex-1 max-w-[24.25rem]">
+        {/* TODO (V2 streaming): When isStreaming is true, render partial content
+            with a cursor/indicator. Display partialContent instead of body. */}
         {typeof body === "string" ? (
           <BodyText body={body} />
         ) : (

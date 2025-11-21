@@ -6,30 +6,49 @@ export interface TypingIndicatorProps {
   className?: string;
 }
 
+/**
+ * TypingIndicator - Shows a subtle text-like ellipsis while AI is thinking
+ * 
+ * Features:
+ * - Three dots styled like text periods with subtle opacity fade
+ * - Uses design tokens for colors
+ * - Editorial minimalism - looks like natural text ellipsis
+ * - Optional label text (defaults to empty for inline use)
+ */
 const TypingIndicator = React.forwardRef<HTMLDivElement, TypingIndicatorProps>(
-  ({ label = "Thinking…", className }, ref) => {
+  ({ label = "", className }, ref) => {
     return (
       <div
         ref={ref}
-        className={cn("flex items-center gap-2", className)}
+        className={cn("inline-flex items-baseline gap-0", className)}
         role="status"
-        aria-label={label}
+        aria-label={label || "AI is thinking"}
       >
-        <span className="text-base leading-5 text-[#26291d]">{label}</span>
-        <div className="flex items-center gap-1">
-          <div
-            className="w-1.5 h-1.5 bg-[#26291d] rounded-full animate-typing-dot"
+        {label && (
+          <span className="text-base leading-5 text-[color:var(--text-default)] mr-1">
+            {label}
+          </span>
+        )}
+        <span className="text-4xl leading-5 tracking-tight opacity-60">
+          <span 
+            className="text-[color:var(--text-default)] animate-typing-bounce"
             style={{ animationDelay: "0ms" }}
-          />
-          <div
-            className="w-1.5 h-1.5 bg-[#26291d] rounded-full animate-typing-dot"
-            style={{ animationDelay: "200ms" }}
-          />
-          <div
-            className="w-1.5 h-1.5 bg-[#26291d] rounded-full animate-typing-dot"
-            style={{ animationDelay: "400ms" }}
-          />
-        </div>
+          >
+            .
+          </span>
+          <span 
+            className="text-[color:var(--text-default)] animate-typing-bounce"
+            style={{ animationDelay: "150ms" }}
+          >
+            .
+          </span>
+          <span 
+            className="text-[color:var(--text-default)] animate-typing-bounce"
+            style={{ animationDelay: "300ms" }}
+          >
+            .
+          </span>
+        </span>
       </div>
     );
   }
