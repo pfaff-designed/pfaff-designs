@@ -252,14 +252,15 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
             ref={containerRef}
             className={cn(
               "relative flex items-center w-full",
-              "bg-[#FDF9F4]",
+              "bg-[color:var(--bg-default)]",
               "pr-2 pl-6 py-[0.5rem]",
               isFocused
-                ? "border-2 border-[#9ec8d2]"
-                : "border border-[rgba(38,41,29,0.1)]"
+                ? "border-2 border-[color:var(--accent-secondary)]"
+                : "border border-[color:var(--border-subtle)] border-opacity-40"
             )}
             style={{
               borderRadius: isMultiline ? "8px" : "9999px",
+              transition: "border-radius 300ms ease-in-out, border 150ms ease-out",
             }}
           >
             <div className="relative z-[1] flex-1 pr-12 px-[2px] min-h-[2.25rem] flex items-center" style={{ isolation: 'isolate' }}>
@@ -282,7 +283,7 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
                 placeholder={placeholder}
                 rows={1}
                 className={cn(
-                  "w-full border-0 bg-transparent px-0 py-0 text-base leading-5 text-[#26291d] placeholder:text-[#26291d] placeholder:opacity-50",
+                  "w-full border-0 bg-transparent px-0 py-0 text-base leading-5 text-[color:var(--text-default)] placeholder:text-[color:var(--text-default)] placeholder:opacity-50",
                   "focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none",
                   "resize-none overflow-y-auto overflow-wrap-break-word",
                   "min-h-[1.25rem] max-h-36", // min-h matches line-height, max-h is 144px
@@ -302,7 +303,7 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
               aria-label="Submit query"
               className={cn(
                 "absolute right-2 top-1/2 -translate-y-1/2",
-                "z-[1] flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e76f51] p-0 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e76f51] focus-visible:ring-offset-2 group",
+                "z-[1] flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--accent-primary)] p-0 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent-primary)] focus-visible:ring-offset-2 group",
                 buttonClassName
               )}
             >
