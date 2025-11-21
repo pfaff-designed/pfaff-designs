@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { AlertCircle } from "lucide-react";
 import { AiModal } from "./AiModal";
 import { AiConversationRow, type AiConversationRowProps } from "./AiConversationRow";
 import { AiActionsRow, type AiModalAction } from "./AiActionsRow";
@@ -27,6 +28,13 @@ import type { ModalRequestBody, ModalResponseBody } from "@/app/api/ai/modal/rou
  * - Queued message auto-sends when AI finishes
  * - Queue clears when modal closes
  * - TypingIndicator displays correctly
+ * 
+ * TODO (Phase 7.2 Testing): Add tests for:
+ * - Error message displays with icon and correct text
+ * - Retry button appears when there's an error
+ * - Retry button resubmits the last question
+ * - Error clears when retry is successful
+ * - lastQuestion is tracked correctly
  * - Auto-send queued message when thinking completes
  * - Queue clearing when modal closes
  * - Composer remains enabled during thinking state
@@ -59,6 +67,9 @@ export function AiModalHost() {
   // Message queue state for queuing user messages while AI is thinking
   const [queuedUserMessage, setQueuedUserMessage] = React.useState<string | null>(null);
   
+  // Track last question for retry functionality
+  const [lastQuestion, setLastQuestion] = React.useState<string>("");
+  
   // Refs for auto-scroll and autofocus
   const bottomRef = React.useRef<HTMLDivElement>(null);
   const composerInputRef = React.useRef<HTMLInputElement>(null);
@@ -71,6 +82,7 @@ export function AiModalHost() {
       setActions([]);
       setComposerValue("");
       setQueuedUserMessage(null);
+      setLastQuestion("");
     },
     [openFromSelection]
   );
@@ -83,6 +95,7 @@ export function AiModalHost() {
       setActions([]);
       setComposerValue("");
       setQueuedUserMessage(null);
+      setLastQuestion("");
     },
     [openGlobal]
   );
@@ -105,10 +118,13 @@ export function AiModalHost() {
         // Error will be cleared by state machine transition
       }
 
-      // 3. Tell the state machine a question was submitted
+      // 3. Store the question for retry functionality
+      setLastQuestion(trimmed);
+
+      // 4. Tell the state machine a question was submitted
       submitQuestion({ question: trimmed });
 
-      // 4. Add a user message locally with trimming
+      // 5. Add a user message locally with trimming
       setMessages((prev) => {
         const updated = [...prev, { role: "user", body: trimmed }];
         // Trim to last 10 messages
@@ -233,6 +249,14 @@ export function AiModalHost() {
     [close, router]
   );
 
+  // Handle retry button click
+  const handleRetry = React.useCallback(() => {
+    if (!lastQuestion) return;
+    
+    // Resubmit the last question
+    handleComposerSubmit(lastQuestion);
+  }, [lastQuestion, handleComposerSubmit]);
+
   // Auto-scroll to bottom when messages change or thinking state changes
   React.useEffect(() => {
     if (isOpen && bottomRef.current) {
@@ -348,15 +372,18 @@ export function AiModalHost() {
               />
             )}
 
-            {/* Show error state as clean AI conversation row */}
+            {/* Show error state with icon and message */}
             {hasError && state.errorMessage && (
               <AiConversationRow
                 role="ai"
                 eyebrowLabel="AI"
                 body={
-                  state.errorMessage.length > 100
-                    ? "Sorry, something went wrong answering that. You can try again or ask a different question."
-                    : state.errorMessage
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-[color:var(--text-default)] opacity-60" />
+                    <span className="text-base leading-5 text-[color:var(--text-default)]">
+                      Something went wrong — try asking that again.
+                    </span>
+                  </div>
                 }
               />
             )}
@@ -365,12 +392,31 @@ export function AiModalHost() {
             <div ref={bottomRef} className="h-14" />
           </>
         )}
-        renderActions={() => (
-          <AiActionsRow
-            actions={actions}
-            onActionClick={handleActionClick}
-          />
-        )}
+        renderActions={() => {
+          // Show retry button if there's an error and we have a last question
+          if (hasError && lastQuestion) {
+            return (
+              <AiActionsRow
+                actions={[
+                  {
+                    type: "suggest_question",
+                    label: "Try again",
+                    suggestedQuestion: lastQuestion,
+                  },
+                ]}
+                onActionClick={() => handleRetry()}
+              />
+            );
+          }
+          
+          // Otherwise show regular actions
+          return (
+            <AiActionsRow
+              actions={actions}
+              onActionClick={handleActionClick}
+            />
+          );
+        }}
         renderComposer={() => (
           <Composer
             placeholder="Ask a question…"
