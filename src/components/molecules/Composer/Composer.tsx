@@ -15,6 +15,9 @@ export interface ComposerProps {
   inputClassName?: string;
   buttonClassName?: string;
   hideStatus?: boolean;
+  value?: string; // Optional controlled value
+  onValueChange?: (value: string) => void; // Optional controlled onChange
+  inputRef?: React.RefObject<HTMLInputElement>; // Optional ref to input element
 }
 
 
@@ -58,15 +61,31 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
       inputClassName,
       buttonClassName,
       hideStatus = false,
+      value,
+      onValueChange,
+      inputRef: externalInputRef,
     },
     ref
   ) => {
-    const [inputValue, setInputValue] = React.useState("");
+    const [internalValue, setInternalValue] = React.useState("");
     const [localRecentQuery, setLocalRecentQuery] = React.useState<string | undefined>(recentQuery);
     const [isFocused, setIsFocused] = React.useState(false);
     const [footerHeight, setFooterHeight] = React.useState(0);
-    const inputRef = React.useRef<HTMLInputElement>(null);
+    const internalInputRef = React.useRef<HTMLInputElement>(null);
+    const inputRef = externalInputRef || internalInputRef;
     const containerRef = React.useRef<HTMLDivElement>(null);
+
+    // Use controlled value if provided, otherwise use internal state
+    const inputValue = value !== undefined ? value : internalValue;
+    const setInputValue = (newValue: string) => {
+      if (value !== undefined) {
+        // Controlled mode: notify parent
+        onValueChange?.(newValue);
+      } else {
+        // Uncontrolled mode: update internal state
+        setInternalValue(newValue);
+      }
+    };
 
     const handleSubmit = React.useCallback(() => {
       if (inputValue.trim() && status !== "loading") {

@@ -2,18 +2,30 @@ import * as React from "react";
 import { Button } from "@/components/atoms/Button";
 import { cn } from "@/lib/utils";
 
-export type AiActionType = "navigate" | "scroll" | "deep_dive";
+// ============================================================
+// AI MODAL ACTION TYPES (Phase 6.2)
+// ============================================================
 
-export interface AiAction {
-  type: AiActionType;
-  label: string;
-  target?: string;
-  topic?: string;
-}
+export type AiModalAction =
+  | {
+      type: "scroll";
+      label: string;
+      targetSectionId: string; // e.g. "overview" | "process" | "impact"
+    }
+  | {
+      type: "navigate";
+      label: string;
+      targetPath: string; // e.g. "/work/coke"
+    }
+  | {
+      type: "suggest_question";
+      label: string;
+      suggestedQuestion: string;
+    };
 
 export interface AiActionsRowProps {
-  actions: AiAction[];
-  onActionClick: (action: AiAction) => void;
+  actions: AiModalAction[];
+  onActionClick: (action: AiModalAction) => void;
   className?: string;
 }
 
