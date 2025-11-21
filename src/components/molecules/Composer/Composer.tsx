@@ -88,21 +88,21 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
     };
 
     const handleSubmit = React.useCallback(() => {
-      if (inputValue.trim() && status !== "loading") {
+      if (inputValue.trim()) {
         setLocalRecentQuery(inputValue.trim());
         onSubmit?.(inputValue.trim());
         setInputValue("");
       }
-    }, [inputValue, onSubmit, status]);
+    }, [inputValue, onSubmit]);
 
     const handleKeyDown = React.useCallback(
       (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter" && !e.shiftKey && status !== "loading") {
+        if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
           handleSubmit();
         }
       },
-      [handleSubmit, status]
+      [handleSubmit]
     );
 
     // Update local state when prop changes
@@ -236,24 +236,19 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 placeholder={placeholder}
-                disabled={status === "loading"}
                 className={cn(
                   "relative w-full border-0 bg-transparent px-0 py-0 text-base leading-5 text-[#26291d] placeholder:text-[#26291d] placeholder:opacity-50",
                   "focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none focus-visible:outline-none",
-                  status === "loading" && "opacity-50 cursor-not-allowed",
                   inputClassName
                 )}
-                style={{ caretColor: status === "loading" ? "transparent" : "#26291d" }}
               />
             </div>
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={status === "loading"}
               aria-label="Submit query"
               className={cn(
                 "relative z-[1] flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e76f51] p-0 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e76f51] focus-visible:ring-offset-2 group",
-                status === "loading" && "opacity-50 cursor-not-allowed",
                 buttonClassName
               )}
             >
