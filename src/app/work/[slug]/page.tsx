@@ -117,6 +117,7 @@ export default function CaseStudyPage() {
                         eyebrow={section.eyebrow}
                         headline={section.heading}
                         body={section.body}
+                        sectionId={section.id}
                         projectSlug={slug}
                         sectionIndex={index + 1}
                       />

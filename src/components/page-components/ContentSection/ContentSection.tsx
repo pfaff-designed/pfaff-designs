@@ -36,6 +36,7 @@ export interface ContentSectionProps {
   imageSrc?: string;
   imageAlt?: string;
   isAI?: boolean;
+  sectionId?: string; // For scroll-to behavior (e.g., "overview", "process", "impact")
   // Special props for specific variants
   contentBlocks?: Array<{
     eyebrow?: string;
@@ -91,6 +92,7 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
       imageSrc,
       imageAlt = "",
       isAI = false,
+      sectionId,
       contentBlocks,
       galleryImages,
       annotations,
@@ -273,7 +275,11 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
     // For full-width, card-gallery, annotated-visual, text-with-image, and default variants, don't wrap in Container/Section as they handle their own layout
     if (variant === "full-width" || variant === "card-gallery" || variant === "annotated-visual" || variant === "text-with-image" || variant === "default") {
       return (
-        <div ref={ref as any} className={className}>
+        <div 
+          ref={ref as any} 
+          className={className}
+          data-section-id={sectionId}
+        >
           {renderVariant()}
           {children}
           {renderSectionImage()}
@@ -282,7 +288,12 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
     }
 
     return (
-      <Section ref={ref} variant={sectionVariant} className={cn(className, '')}>
+      <Section 
+        ref={ref} 
+        variant={sectionVariant} 
+        className={cn(className, '')}
+        data-section-id={sectionId}
+      >
         <Container size={containerSize}>
           {renderVariant()}
           {children}
