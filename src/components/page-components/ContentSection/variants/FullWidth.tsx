@@ -70,7 +70,7 @@ export const FullWidth: React.FC<FullWidthProps> = ({
             {/* Body - Bottom Left */}
             {body && (
               <p
-                className="font-medium text-base md:text-[1.4375rem] leading-6 md:leading-[2rem] tracking-[-0.014375rem] text-[color:var(--neutral-50)] max-w-full md:max-w-[33.625rem]"
+                className="font-medium text-base md:text-[1.4375rem] leading-6 md:leading-[2rem] tracking-[-0.014375rem] text-[color:var(--neutral-50)] max-w-[25rem]"
                 data-ai-interactive="content-section"
                 data-ai-topic-label={topicLabel}
               >
