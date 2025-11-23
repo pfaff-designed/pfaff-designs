@@ -62,9 +62,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
           "w-full bg-[var(--neutral-900)] text-[var(--neutral-50)]",
           "flex flex-col min-h-[40vh]",
           "px-4 md:px-[1.5rem] lg:px-[3rem]",
-          "pt-8 md:pt-[3rem] lg:pt-[4rem]",
-          "pb-40 md:pb-48 lg:pb-56",
-          "overflow-hidden",
+          "py-8 md:py-[3rem] lg:py-[4rem]",
           className
         )}
       >
@@ -191,7 +189,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
               width={1421}
               height={345}
               priority
-              className="w-full translate-y-32 md:translate-y-48"
+              className="w-full translate-y-8 md:translate-y-16 lg:translate-y-[4rem]"
             />
        
         </div>

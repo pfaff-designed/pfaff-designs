@@ -120,7 +120,7 @@ States:
 
 
 # Phase 7 — UX Polish
-**Status: In Progress**
+**Status: Done**
 **Estimated Hours: 12–16 hrs**
 
 Refine the modal into a polished, delightful interaction.
