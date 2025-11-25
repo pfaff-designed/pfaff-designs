@@ -1,0 +1,38 @@
+
+
+{
+  "one_liner": "Built a modern, responsive front-end for PMI's Agile certification site to clarify the value and make the path to certification easier to follow.",
+  "projectSummary": "Redesigned and rebuilt the PMI Agile Certified Practitioner (ACP) page with a clearer structure, modern UI, and accessible, responsive components.",
+  "problem": {
+    "summary": "The existing ACP page was text-heavy, difficult to skim, and visually outdated. Key certification details and benefits were hard for users to quickly understand, especially on mobile."
+  },
+  "goals": [
+    "Improve clarity and readability of ACP certification information",
+    "Create a modern, responsive UI aligned with PMI’s evolving brand",
+    "Translate detailed Figma designs into stable, accessible components",
+    "Enhance structure and hierarchy for easier content understanding"
+  ],
+  "responsibilities": [
+    "Built modular React components based on detailed design specifications",
+    "Developed responsive layouts with strong typographic hierarchy",
+    "Collaborated with designers to refine spacing, readability, and interaction details",
+    "Ensured accessibility compliance across all UI elements",
+    "Worked with back-end engineers to integrate structured content cleanly",
+    "Conducted device testing to confirm consistency across breakpoints"
+  ],
+  "skillsUsed": [
+    "React",
+    "TypeScript",
+    "Tailwind CSS",
+    "Responsive layout",
+    "Accessibility implementation",
+    "Design-engineer collaboration",
+    "Component-driven development"
+  ],
+  "outcomes": [
+    "Delivered a modern, responsive ACP page aligned with PMI’s updated brand",
+    "Improved clarity and communication of key certification details",
+    "Created reusable components for future PMI site updates",
+    "Enhanced accessibility and readability for content-heavy pages"
+  ]
+}

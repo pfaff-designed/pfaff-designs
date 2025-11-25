@@ -1,6 +1,17 @@
-import * as fs from "fs";
-import * as path from "path";
+// Note: This file is server-only (uses Node.js fs)
+// We don't import "server-only" here because it throws when imported in standalone scripts (tsx)
+// The file is inherently server-only due to Node.js dependencies, so the protection is implicit
+
+import fs from "node:fs";
+import path from "node:path";
 import yaml from "js-yaml";
+import type {
+  GlobalKB,
+  GlobalSection,
+  ProjectKBEntry,
+  ProjectSection,
+  ProjectSectionType,
+} from "./types";
 
 export interface ProjectFacts {
   version: number;
@@ -126,6 +137,222 @@ export interface IdentityData {
   };
 }
 
+// ---------- Helper Functions ----------
+
+const KB_ROOT = path.join(process.cwd(), "knowledge-base");
+
+function loadYAML<T = any>(relativePath: string): T {
+  const fullPath = path.join(KB_ROOT, relativePath);
+
+  try {
+    const raw = fs.readFileSync(fullPath, "utf8");
+    const parsed = yaml.load(raw);
+    if (!parsed) {
+      throw new Error(`YAML file is empty or invalid: ${fullPath}`);
+    }
+    return parsed as T;
+  } catch (err) {
+    console.error(`[KB] Failed to load YAML: ${fullPath}`, err);
+    throw err;
+  }
+}
+
+function loadJSON<T = any>(relativePath: string): T {
+  const fullPath = path.join(KB_ROOT, relativePath);
+
+  try {
+    const raw = fs.readFileSync(fullPath, "utf8");
+    const parsed = JSON.parse(raw) as T;
+    return parsed;
+  } catch (err) {
+    console.error(`[KB] Failed to load JSON: ${fullPath}`, err);
+    throw err;
+  }
+}
+
+// ---------- Global / About ----------
+
+/**
+ * Load global About KB content
+ * Normalizes about-global.yaml into a consistent GlobalKB shape
+ */
+export function loadGlobalKB(): GlobalKB {
+  const data = loadYAML<any>("identity/about-global.yaml");
+
+  if (!data || !Array.isArray(data.sections)) {
+    throw new Error("[KB] about-global.yaml is missing a sections array");
+  }
+
+  const sections: GlobalSection[] = data.sections.map((s: any) => ({
+    id: s.id,
+    type: s.type,
+    title: s.title,
+    body: s.body,
+    tags: Array.isArray(s.tags) ? s.tags : [],
+    content: s.content,
+    values: s.values,
+    items: s.items,
+    tools: s.tools,
+  }));
+
+  return {
+    id: "about-global",
+    slug: data.meta?.slug ?? "/about",
+    sections,
+  };
+}
+
+// ---------- Projects ----------
+
+interface ProjectFiles {
+  id: string;
+  slug: string;
+  client: string;
+  title: string;
+  longformPath: string;
+  factsPath: string;
+}
+
+const PROJECTS: ProjectFiles[] = [
+  {
+    id: "tanger",
+    slug: "/work/tanger",
+    client: "Tanger",
+    title: "Tanger – Retail Experience",
+    longformPath: "projects/tanger/tanger-longform.yaml",
+    factsPath: "projects/tanger/tanger-facts.json",
+  },
+  {
+    id: "coke",
+    slug: "/work/coke",
+    client: "Coca-Cola",
+    title: "Coke – AI Vending Prototype",
+    longformPath: "projects/coke/coke-long-form.yaml",
+    factsPath: "projects/coke/coke-facts.json",
+  },
+  {
+    id: "capital-one",
+    slug: "/work/capital-one",
+    client: "Capital One Travel",
+    title: "Capital One Travel – Airport Lounges",
+    longformPath: "projects/capital-one/capital-one-long-form.YAML",
+    factsPath: "projects/capital-one/capital-one-short-form.JSON",
+  },
+  {
+    id: "pmi",
+    slug: "/work/pmi",
+    client: "PMI",
+    title: "PMI – Agile Certification Page",
+    longformPath: "projects/pmi/pmi-longform.YAML",
+    factsPath: "projects/pmi/pmi-shortform.JSON",
+  },
+  {
+    id: "pfaff-designs",
+    slug: "/work/pfaff-designs",
+    client: "Self-initiated",
+    title: "Generative-UI Portfolio",
+    longformPath: "projects/pfaff-designs/pfaff-designs.yaml",
+    factsPath: "projects/pfaff-designs/pfaff-designs.json",
+  },
+];
+
+/**
+ * Load all project KB entries
+ * Normalizes all project case studies into a consistent ProjectKBEntry shape
+ */
+export function loadProjectsKB(): ProjectKBEntry[] {
+  return PROJECTS.map((proj) => {
+    try {
+      const longform = loadYAML<any>(proj.longformPath);
+      const facts = loadJSON<any>(proj.factsPath);
+
+      const sections: ProjectSection[] = [];
+
+      const push = (
+        id: string,
+        type: ProjectSectionType,
+        title: string,
+        body?: string,
+        tags?: string[]
+      ) => {
+        if (!body || typeof body !== "string") return;
+        sections.push({ id, type, title, body, tags });
+      };
+
+      // Longform narrative sections
+      push("context", "context", "Context", longform.context, ["context", "overview"]);
+      push("problem", "problem", "Problem", longform.problem, ["problem", "challenge"]);
+      push("solution", "solution", "Solution", longform.solution, ["solution"]);
+      push("process", "process", "Process", longform.process, ["process"]);
+      push("outcomes", "outcomes", "Outcomes", longform.outcomes, ["outcomes", "impact", "results"]);
+      push("reflections", "outcomes", "Reflections", longform.reflections, ["reflections"]);
+
+      // Facts → structured sections
+      if (facts && Array.isArray(facts.responsibilities)) {
+        sections.push({
+          id: "role",
+          type: "role",
+          title: "Role & Responsibilities",
+          facts: {
+            role: proj.title,
+            responsibilities: facts.responsibilities,
+          },
+          tags: ["role", "responsibilities", "what I did"],
+        });
+      }
+
+      if (facts && Array.isArray(facts.skillsUsed)) {
+        sections.push({
+          id: "tools",
+          type: "tools",
+          title: "Tools & Skills",
+          facts: {
+            skillsUsed: facts.skillsUsed,
+          },
+          tags: ["tools", "stack", "libraries", "tech", "skills"],
+        });
+      }
+
+      if (facts && Array.isArray(facts.outcomes)) {
+        sections.push({
+          id: "outcomes_structured",
+          type: "outcomes",
+          title: "Outcomes (Structured)",
+          facts: {
+            outcomes: facts.outcomes,
+          },
+          tags: ["outcomes", "impact", "results"],
+        });
+      }
+
+      // Extract one_liner from facts JSON or longform YAML
+      const one_liner = facts?.one_liner ?? longform?.project?.one_liner ?? null;
+
+      return {
+        id: proj.id,
+        slug: proj.slug,
+        client: proj.client,
+        title: proj.title,
+        summary: facts?.projectSummary,
+        one_liner,
+        sections,
+      };
+    } catch (error) {
+      console.error(`[KB] Failed to load project ${proj.id}:`, error);
+      // Return empty project entry to allow other projects to load
+      return {
+        id: proj.id,
+        slug: proj.slug,
+        client: proj.client,
+        title: proj.title,
+        summary: undefined,
+        one_liner: undefined,
+        sections: [],
+      };
+    }
+  });
+}
+
 export interface KBData {
   projects: Array<{
     facts: ProjectFacts;
@@ -147,13 +374,12 @@ export interface KBData {
  * This reads from the local filesystem (for now, can be replaced with Supabase later)
  */
 export const loadKnowledgeBase = async (): Promise<KBData> => {
-  const kbPath = path.join(process.cwd(), "knowledge-base");
   const projects: Array<{ facts: ProjectFacts; longform?: ProjectLongform }> = [];
   let identity: IdentityData | undefined;
 
   try {
     // Load identity data
-    const identityPath = path.join(kbPath, "identity", "identity-short-form.JSON");
+    const identityPath = path.join(KB_ROOT, "identity", "identity-short-form.JSON");
     if (fs.existsSync(identityPath)) {
       const identityContent = fs.readFileSync(identityPath, "utf-8");
       if (identityContent.trim()) {
@@ -162,7 +388,7 @@ export const loadKnowledgeBase = async (): Promise<KBData> => {
     }
 
     // Load projects
-    const projectsPath = path.join(kbPath, "projects");
+    const projectsPath = path.join(KB_ROOT, "projects");
     if (fs.existsSync(projectsPath)) {
       const projectDirs = fs.readdirSync(projectsPath, { withFileTypes: true })
         .filter((dirent) => dirent.isDirectory())
