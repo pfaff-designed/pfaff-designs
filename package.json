@@ -10,7 +10,10 @@
     "lint": "next lint",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "embed-projects": "tsx scripts/embedProjects.ts"
+    "embed-projects": "tsx scripts/embedProjects.ts",
+    "embed:kb": "tsx scripts/embed-kb.ts",
+    "sync:projects": "tsx scripts/sync-projects-from-kb.ts",
+    "sync-and-embed": "npm run sync:projects && npm run embed:kb"
   },
   "repository": {
     "type": "git",
@@ -44,8 +47,10 @@
     "langsmith": "^0.3.79",
     "lucide-react": "^0.553.0",
     "next": "^14.2.33",
+    "openai": "^6.9.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.1.12"
   },

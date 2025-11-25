@@ -1,174 +1,230 @@
-You must update the AI modal, conversation UI, and related components according to the Phase 7.6 Visual Tuning instructions below.
+You are working in the `pfaff-designs` repo.
 
-Before doing anything:
-1. Re-read the entire current-prompt.md file (path: /Users/charlespfaff/Documents/Code/pfaff-designs/current-prompt.md).
-2. Review all AI-related components:
-   - AiModalHost
-   - AiModalHeader
-   - AiConversationRow (AI, user, system, error)
-   - Composer
-3. Review shared layout/typography primitives (e.g., ContentBlock).
-4. Ask any clarifying questions before beginning implementation.
-5. Do NOT start coding until you confirm you understand all requirements.
+Before making any edits:
+
+1. **Read this entire prompt carefully.**
+2. **Locate the KB files** under the `knowledge-base/` directory.
+3. **Locate all project files** (YAML + JSON) for:
+   - Tanger
+   - Coca-Cola
+   - Capital One Travel
+   - PMI
+   - Pfaff-Designs
+4. **Do not begin editing** until you understand where each file lives and how it is structured.
+5. **Do not begin** until you've asked clarifying questions, or if you have no answers confirmed you understand
+
+We are implementing **Option A**:
+
+> **The KB one_liner becomes the canonical short description.**
+> **The database column `summary_short` must mirror this value.**
+
+This fixes:
+- Foreign key errors in `project_sections`  
+- `NOT NULL` constraint violations on `projects.summary_short`  
+- Missing project rows that block embedding
 
 ---
 
-# PHASE 7.6 — VISUAL TUNING
+# GOAL
 
-Your goal is to refine the AI modal + conversation UI so that:
-- It feels consistent with the site's editorial style.
-- It uses the new semantic token system.
-- It is visually balanced on both desktop and mobile.
-- All AI/user/system/error messages have clear hierarchy and readable spacing.
-- No hardcoded hex colors remain.
+Implement a complete **project sync pipeline** that ensures:
+
+### 1. Every project in the KB exists in the Supabase `projects` table  
+### 2. `summary_short` always equals the KB `one_liner`  
+### 3. Sync happens **before** embeddings are generated  
+### 4. No KB files are modified  
+### 5. Nothing breaks existing loaders
+
+This requires:
+
+- Adding `one_liner` support to the KB loader  
+- Creating a new script to sync project metadata to Supabase  
+- Updating npm scripts  
+- Ensuring the embedding script (`scripts/embed-kb.ts`) can safely run afterward  
 
 ---
 
-# 1. DESIGN TOKEN UPDATE (MUST BE DONE FIRST)
+# PART 1 — Update KB Loader Types
 
-Update all styling in the AI modal and conversation components to use the **new semantic color system** defined in current-prompt.md.
+File: `src/lib/kb/types.ts`
 
-### Use these semantic tokens instead of legacy tokens:
-- Backgrounds → `--bg-default`, `--bg-surface`, `--bg-subtle-warm`
-- Text → `--text-default`, `--text-muted`
-- Accents → `--accent-primary`, `--accent-secondary`
-- Borders → `--border-subtle`, `--border-strong`
-- States → `--state-success`, `--state-error`, `--state-hover`
-- Overlays → `--overlay-90`, `--overlay-70`, `--overlay-50`
+Add:
 
-### Remove/Replace all hex values:
-If no semantic token exists:
-- Use the closest suitable token
-- Leave a `// TODO: consider adding semantic token for [context]` comment
-
-### Legacy token migration:
-The following must be replaced everywhere:
+```ts
+one_liner?: string;
 ```
---color-dark      → --text-default / --neutral-900
---color-light     → --bg-default / --neutral-100
---color-primary-light → --accent-primary
---color-secondary → --accent-secondary
---color-success   → --state-success
---color-error     → --state-error
---color-hover     → --state-hover
---color-border    → --border-subtle
+
+to `ProjectKBEntry`.
+
+Do not remove or rename any existing fields.
+
+---
+
+# PART 2 — Update `loadProjectsKB()` to expose `one_liner`
+
+File: `src/lib/kb/loader.ts`
+
+Inside `loadProjectsKB()`:
+
+1. Load `one_liner` from **facts JSON** and/or longform YAML (`project.one_liner`)
+2. Inject it into the returned `ProjectKBEntry`
+
+Example shape:
+
+```ts
+return {
+  id: proj.id,
+  slug: proj.slug,
+  client: proj.client,
+  title: proj.title,
+  summary: facts?.projectSummary,
+  one_liner: facts?.one_liner ?? longform?.project?.one_liner ?? null,
+  sections,
+};
 ```
 
-### Remove redundant tokens from :root:
-- `--color-primary-dark`
-- `--color-yellow`
-
-All Phase 7.6 styling must use the updated token system.
+Do not modify how sections are created.
 
 ---
 
-# 2. TYPOGRAPHY & HIERARCHY
+# PART 3 — Create script: `scripts/sync-projects-from-kb.ts`
 
-### AI messages:
-- Headings → use the site’s section-subheading / `h4` scale
-- Eyebrows → match case study eyebrow styling (size, weight, tracking)
-- Body text → match site body text size
+This script must:
 
-### User messages:
-- Same type scale as AI body
-- Slight visual distinction via weight or subtle token-based tint
+### ✔ Load all projects using `loadProjectsKB()`
+### ✔ Connect to Supabase using:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
 
-### System messages:
-- Blue-tinted styling using semantic tokens
-- Slightly reduced opacity and/or lighter weight
+### ✔ For each project:
+Upsert into the `projects` table:
 
-### Error messages:
-- Use `--state-error` for icon or left-accent
-- Background must remain neutral and readable (no red blocks)
+Required fields:
+- `slug`
+- `name` (project title)
+- `client`
+- `summary_short` ← **MUST equal `one_liner`**
 
-Do NOT invent new type sizes.
+Use:
 
----
+```ts
+onConflict: "slug"
+```
 
-# 3. ALIGNMENT & WIDTH
+### ✔ Log clear success/failure messages  
+### ✔ Never modify KB content  
+### ✔ Never write to `project_sections`  
+### ✔ Do not break existing logic
 
-### Desktop:
-- AI + user messages must align to the same max-width as primary content (ContentBlock).
-- Messages must never stretch to full viewport width.
+Example structure:
 
-### Mobile:
-- Ensure comfortable left/right padding.
-- Text must not hug screen edges.
+```ts
+import "dotenv/config";
+import { createClient } from "@supabase/supabase-js";
+import { loadProjectsKB } from "@/lib/kb/loader";
 
----
+async function syncProjects() {
+  console.log("[KB] Syncing projects…");
 
-# 4. VERTICAL SPACING & RHYTHM
+  const projects = loadProjectsKB();
 
-Apply consistent spacing tokens:
+  for (const proj of projects) {
+    const oneLiner =
+      proj.one_liner ??
+      proj.summary ??
+      "Portfolio project"; // safe fallback
 
-- Follow the site’s spacing rhythm (e.g., 16 / 24 / 32 / 40 or 1.5× increments).
-- Slightly tighter spacing for back-and-forth messages.
-- More spacing around system/error messages and major breaks.
-- AI modal needs correct top and bottom internal padding.
+    const { error } = await supabase.from("projects").upsert(
+      {
+        slug: proj.id,
+        name: proj.title,
+        client: proj.client,
+        summary_short: oneLiner,
+      },
+      { onConflict: "slug" }
+    );
 
-Use existing spacing tokens only — no arbitrary magic numbers.
+    if (error) {
+      console.error(`[KB] ❌ Failed to upsert project ${proj.id}`, error);
+    } else {
+      console.log(`[KB] ✅ Project synced: ${proj.id}`);
+    }
+  }
 
----
+  console.log("[KB] Done.");
+}
 
-# 5. VISUAL DIFFERENTIATION BETWEEN MESSAGE TYPES
+syncProjects().catch((err) => {
+  console.error("[KB] sync-projects-from-kb failed", err);
+  process.exit(1);
+});
+```
 
-### AI messages:
-- Neutral background using semantic tokens
-- Optional subtle border or left rule
+Place this file at:
 
-### User messages:
-- Same typography
-- Slight tint or border for distinction
-
-### System messages:
-- Blue-tinted background or accent using semantic tokens
-- Must feel auxiliary
-
-### Error messages:
-- Use error tokens for icon/border
-- Keep background neutral for readability
-
----
-
-# 6. ANIMATION & MICRO-INTERACTIONS
-
-### AI messages:
-- Subtle fade + slide-from-bottom animation
-- Duration ~150–200ms
-
-### User messages:
-- Appear instantly (no animation)
-
-### General:
-- Use consistent easing
-- No layout shift or jitter
-- System and error messages should not be over-animated
+```
+scripts/sync-projects-from-kb.ts
+```
 
 ---
 
-# 7. REMOVE ALL HARDCODED COLORS
+# PART 4 — Update package.json scripts
 
-Search all AI modal + conversation components for:
-- Inline hex codes
-- Tailwind arbitrary hex classes
-- CSS files with raw hex
+Add:
 
-Replace all of them with semantic tokens.
+```json
+"sync:projects": "tsx scripts/sync-projects-from-kb.ts",
+"sync-and-embed": "npm run sync:projects && npm run embed:kb"
+```
 
-Add TODO notes where new tokens will be needed.
+Do not remove or modify existing scripts.
 
 ---
 
-# FINAL CHECKLIST (Cursor must complete ALL items)
+# PART 5 — Run order for embedding
 
-- [ ] All design tokens updated to semantic system
-- [ ] No remaining hardcoded hex values
-- [ ] AI/user/system/error messages follow correct typography hierarchy
-- [ ] Width alignment matches ContentBlock on desktop
-- [ ] Mobile spacing is consistent and readable
-- [ ] Vertical spacing rhythm applied uniformly
-- [ ] Role-based message styles implemented (AI/user/system/error)
-- [ ] AI messages animate subtly; user messages do not
-- [ ] No layout jitter introduced
-- [ ] TODO comments added for missing future semantic tokens
-- [ ] No regressions to desktop or mobile layouts
+Embedding script (`embed-kb.ts`) must run **after** the sync.
+
+Correct workflow:
+
+```
+npm run sync:projects
+npm run embed:kb
+```
+
+Or the combined script:
+
+```
+npm run sync-and-embed
+```
+
+---
+
+# CHECKLIST (Cursor must verify all before finishing)
+
+### Types
+- [ ] `ProjectKBEntry` now includes `one_liner?: string`
+
+### Loader
+- [ ] `loadProjectsKB()` extracts one_liner correctly
+- [ ] No other functionality is changed
+
+### Project Sync Script
+- [ ] `scripts/sync-projects-from-kb.ts` exists
+- [ ] Uses `SUPABASE_SERVICE_ROLE_KEY`
+- [ ] Loads from KB, inserts into `projects`
+- [ ] Sets `summary_short = one_liner`
+- [ ] Uses `onConflict: "slug"`
+- [ ] Logs success/failure
+
+### package.json
+- [ ] Contains `"sync:projects"` script
+- [ ] Contains `"sync-and-embed"` script
+- [ ] Existing scripts untouched
+
+### Result
+- [ ] Running sync fixes foreign key errors
+- [ ] `projects` table is fully populated
+- [ ] Embedding script can run with no FK failures
+
+```
