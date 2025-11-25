@@ -1,0 +1,81 @@
+
+
+version: 1
+id: pfaff-designs
+kind: case_study
+
+meta:
+  title: "Generative‑UI Portfolio"
+  slug: "/work/pfaff-designs"
+
+project:
+  client: "Self‑initiated"
+  title: "Generative‑UI Portfolio"
+  role: "Applied AI Engineer / Front‑End Engineer"
+  year: "2024–2025"
+  one_liner: "Designed and built a generative-UI portfolio that uses RAG and structured agents to surface the right case studies on demand."
+
+context: |
+  This project began as a way to rethink how a portfolio could work for modern hiring workflows.  
+  Traditional portfolios bury important information deep in navigation layers, require recruiters to hunt for relevant details, and often present static case studies that don’t adapt to what the viewer actually wants to know.
+
+  I wanted to build a portfolio that behaved differently—one that could answer questions, surface the right information on demand, and generate structured, recruiter‑friendly content without ever inventing details.  
+  The result was a fully generative‑UI system powered by a structured knowledge base, a RAG pipeline, and two specialized AI agents for copywriting and layout orchestration.
+
+problem: |
+  Recruiters have limited time. Case studies are long. Portfolios often force users to scroll, skim, and guess where information lives.  
+  I needed a system that could:
+  - Let users ask natural‑language questions
+  - Provide grounded answers using only real project data
+  - Dynamically generate layouts while staying fully deterministic
+  - Maintain trust, clarity, and readability across all responses
+
+solution: |
+  I designed an architecture built from four core pieces:
+  1. **A structured knowledge base** of case studies, roles, proof points, tools, and longform narratives.
+  2. **A RAG pipeline** using Supabase embeddings and LangChain to retrieve only relevant information.
+  3. **A Copywriter Agent** that takes retrieved data and outputs strict, validated YAML following fixed schemas.
+  4. **An Orchestrator Agent** that converts YAML into validated JSON layouts using a whitelisted component registry.
+
+  The front end—built with Next.js, React, TypeScript, Tailwind, and shadcn—renders these JSON layouts deterministically.  
+  Every generative output is grounded, repeatable, and built directly from curated project data.
+
+process: |
+  I defined the system holistically: UI design, agent prompts, schema design, data modeling, RAG retrieval, and orchestration behavior.
+
+  **1. Knowledge Base Design**  
+  I structured all project content into normalized YAML/JSON entries, each with typed sections (tools, outcomes, role, problem, solution, etc.). This foundation became the single source of truth.
+
+  **2. RAG Retrieval**  
+  Built Supabase‑backed embeddings with metadata (projectId, sectionType, tags) so the system could distinguish “tools on this project” from “tools in general.”
+
+  **3. Copywriter Agent**  
+  Wrote a strict prompt with validation rules so it never invents facts and always outputs YAML that matches the required case study schema.
+
+  **4. Orchestrator Agent**  
+  Created a deterministic component registry and orchestrator prompt that turns YAML into layout JSON that the UI can render without surprises.
+
+  **5. Renderer**  
+  Implemented a JSON‑driven layout renderer with whitelisted components to ensure safety, clarity, and consistency.
+
+outcomes: |
+  The final system can answer natural‑language questions like:
+  - “What tools did you use on Tanger?”
+  - “What was your role on PMI?”
+  - “Tell me about your approach to AI.”
+
+  The responses are concise, scannable, grounded, and dynamically assembled into a cohesive layout.
+
+  Key outcomes:
+  - A portfolio that adapts to each viewer’s needs  
+  - Deterministic generative UI with no hallucinated content  
+  - A real example of applied AI engineering, orchestration, and interface design  
+  - A scalable architecture ready for features like command palette navigation and conversational browsing  
+
+reflections: |
+  This project brought together everything I care about as a creative technologist: clarity, system design, UX, and meaningful AI.  
+  It reinforced that the future of portfolios—and many digital experiences—will be a hybrid of deterministic UI and model‑driven content, grounded in structured knowledge and careful orchestration.
+
+links:
+  - label: "Visit pfaff-designs.com"
+    url: "https://pfaff-designs.com"

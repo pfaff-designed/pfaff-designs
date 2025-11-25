@@ -7,33 +7,36 @@ project:
   client: "Coca-Cola"
   industry: "Brand, Creative Technology, Innovation"
   role: "Creative Technologist / Front-End Engineer"
+  one_liner: "Prototyped AI-powered retail experiences for Coca-Cola, including a hydration-aware vending concept that recommends drinks."
 
 context: |
-  Coca-Cola was exploring ways to bring AI into their retail and experiential touchpoints. The goal was to imagine what the future of vending machines, product interactions, and brand experiences could look like if they were powered by intelligent, personalized technology.
+  Coca-Cola was exploring how AI could shape future retail and experiential touchpoints. The team wanted to understand what an intelligent, personalized brand interaction might look like—from vending machines to product discovery moments.
 
-  Through AKQA, I worked as a creative technologist supporting designers, art directors, and creative leadership. My role was to help translate early creative concepts into functional prototypes that made these ideas tangible.
+  Through AKQA, I worked as a creative technologist supporting designers, art directors, and creative leadership. My role was to translate early creative concepts into functional prototypes that made ambitious ideas tangible enough to evaluate.
 
-  One of the most notable explorations was an AI-enabled vending machine that could analyze a person’s hydration signals and recommend the most appropriate product. While the concept was experimental, it provided a way for the team to push the boundaries of what AI could do in a retail environment.
+  One of the key explorations was an AI‑enabled vending machine concept that analyzed a person’s hydration indicators and recommended products accordingly. Although experimental, it gave the team a concrete way to explore how AI‑driven personalization could enhance everyday brand interactions.
 
 problem: |
-  Coca-Cola needed a way to evaluate new AI-driven brand experiences without committing to full product development. They wanted working prototypes that showed how AI could personalize interactions, recommend products, or adapt based on user input.
+  Coca-Cola needed a way to evaluate AI‑driven brand experiences quickly, without committing to full-scale production. They were looking for working prototypes that demonstrated how AI could personalize interactions, recommend products, or adapt in real time based on user input.
 
 solution: |
-  I helped build front-end prototypes that connected to AI classification logic. These demos allowed the team to simulate different interactions, test user flows, and evaluate how AI could complement the brand experience.
+  I built front-end prototypes that connected to simple AI classification and recommendation logic, allowing the team to simulate different interaction flows and evaluate how AI might support the brand experience.
 
-  I collaborated closely with designers and art directors to bring their creative ideas into a working form. The UI elements needed to be simple, expressive, and clear enough to support rapid iteration as the team explored different versions of the experience.
+  Working closely with designers and art directors, I translated creative concepts into interactive UI elements that were clear, expressive, and flexible enough to iterate on rapidly during the exploration phase.
 
 process: |
-  I began by working with the creative team to outline the intended user journey and the types of AI inputs and outputs the concept would use. From there, I built interactive front-end prototypes that could simulate hydration detection, product recommendations, and adaptive states.
+  I partnered with the creative team to outline the intended user journey and understand which AI signals and outputs the concept required. From there, I developed interactive prototypes that simulated hydration detection, product recommendations, and adaptive UI states.
 
-  These prototypes evolved quickly as creative leadership refined the experience. I adjusted the UI, refined interactions, and aligned everything with Coca-Cola’s tone and visual direction. Because this was a rapid innovation sprint, the work required flexible thinking and tight collaboration between design and engineering.
+  These prototypes evolved quickly as creative leadership refined the direction. I adjusted the UI, updated interactions, and ensured everything aligned with Coca-Cola’s visual and tonal direction. Because this was a rapid innovation sprint, the work required flexible thinking, fast iteration, and close collaboration across disciplines.
 
 outcomes: |
-  The prototypes helped the Coca-Cola team understand how AI could enhance everyday brand interactions. They made abstract ideas concrete and gave leadership a clear sense of what future retail experiences could look like.
+  The prototypes helped Coca-Cola understand how AI could enrich everyday brand interactions. They turned abstract ideas into concrete experiences that leadership could react to, evaluate, and build from.
 
-  The work provided a foundation for exploring AI-assisted product selection, personalized recommendations, and adaptive experiential environments.
+  The work provided a starting point for exploring AI-assisted product selection, personalized recommendations, and adaptive retail environments.
 
 reflections: |
-  This project was a reminder of how valuable creative technology can be in early-stage exploration. I enjoyed working closely with designers and creative directors to turn imaginative ideas into something people could interact with. It sharpened my ability to build fast, expressive prototypes and strengthened my appreciation for how AI can support meaningful brand experiences.
+  This project reinforced how valuable creative technology is during early exploration. I enjoyed working tightly with designers and creative directors to turn imaginative ideas into something people could interact with.
+
+  It strengthened my ability to build fast, expressive prototypes and deepened my appreciation for how AI can support meaningful, human-centered brand experiences.
 
 links: []

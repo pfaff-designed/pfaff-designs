@@ -1,4 +1,18 @@
 /**
+ * @deprecated This script is deprecated in favor of scripts/embed-kb.ts
+ * 
+ * The new embed-kb.ts script:
+ * - Uses the unified KB loader (loadProjectsKB, loadGlobalKB)
+ * - Handles both project and global About sections
+ * - Provides better metadata and idempotency
+ * 
+ * Migration: Use `npm run embed:kb` instead of `npm run embed-projects`
+ * 
+ * This script is kept for backward compatibility but will not be maintained.
+ * 
+ * ---
+ * 
+ * Original description:
  * Ingestion script to chunk and embed long-form project documents
  * 
  * Usage: npm run embed-projects
