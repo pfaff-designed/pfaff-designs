@@ -4,6 +4,7 @@
     "projectId": "coca-cola-creative-technology",
     "client": "Coca-Cola",
     "industry": "Brand, Creative Technology, Innovation",
+    "one_liner": "Prototyped AI-powered retail experiences for Coca-Cola, including a hydration-aware vending concept that recommends drinks.",
     "timeline": {
       "year": 2023,
       "duration": "Innovation sprint"
@@ -18,35 +19,35 @@
         "AI/ML Experimentation Team"
       ]
     },
-    "projectSummary": "Prototyped AI-powered interactive experiences for Coca-Cola, including an AI-enabled vending machine concept that analyzed hydration signals and recommended products.",
+    "projectSummary": "Developed AI-powered experiential prototypes for Coca-Cola, including an interactive vending machine concept that analyzed hydration signals and recommended products.",
     "problem": {
-      "summary": "Coca-Cola was exploring how emerging AI capabilities could create more personalized, engaging brand experiences for retail and experiential environments."
+      "summary": "Coca-Cola needed fast, functional prototypes to evaluate how AI-driven personalization could enhance retail and experiential brand interactions."
     },
     "goals": [
-      "Prototype AI-driven interactive touchpoints",
-      "Translate creative concepts into working demos",
-      "Experiment with multimodal AI inputs and outputs",
-      "Showcase feasibility for future retail experiences"
+      "Explore how AI could personalize retail and experiential touchpoints",
+      "Create functional prototypes from early creative concepts",
+      "Simulate AI-driven recommendations and adaptive UI states",
+      "Help leadership evaluate feasibility for future brand experiences"
     ],
     "responsibilities": [
-      "Prototyping interactive AI features",
-      "Building front-end interfaces for concept demos",
-      "Collaborating with designers and art directors on experiential flows",
-      "Rapid iteration across creative and technical concepts",
-      "Integrating AI classification and recommendation logic into UI demos"
+      "Built front-end prototypes for AI-driven interaction concepts",
+      "Collaborated with designers and art directors to refine experiential flows",
+      "Simulated hydration detection, product recommendations, and adaptive UI behavior",
+      "Iterated quickly on creative and technical ideas during the innovation sprint",
+      "Translated imaginative concepts into interactive, testable demos"
     ],
     "skillsUsed": [
       "Creative technology prototyping",
       "Front-end engineering",
-      "Experience design",
-      "Rapid iteration",
-      "AI-assisted concept development",
-      "Collaborative ideation with design and creative leadership"
+      "Experience design collaboration",
+      "Rapid prototyping and iteration",
+      "AI-assisted interaction concepts",
+      "UI development for experimental product flows"
     ],
     "outcomes": [
-      "Delivered working prototypes for AI-enabled retail interactions",
-      "Helped validate feasibility of the AI vending concept",
-      "Enabled creative and leadership teams to visualize future brand experiences"
+      "Delivered interactive prototypes demonstrating AI-enabled retail experiences",
+      "Helped clarify how personalized recommendations could support brand interactions",
+      "Enabled creative leadership to evaluate next-step opportunities for AI-driven concepts"
     ],
     "links": []
   }

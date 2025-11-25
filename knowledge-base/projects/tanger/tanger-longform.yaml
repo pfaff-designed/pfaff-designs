@@ -7,32 +7,33 @@ project:
   client: "Tanger Outlets"
   industry: "Retail, E-commerce"
   role: "Front-End Engineer / Technologist"
+  one_liner: "Built a responsive, component-driven web experience for Tanger's outlet retail destinations and promotions."
 
 context: |
-  Tanger Outlets needed an updated digital experience that better reflected their modern retail brand. The redesign spanned marketing pages, promotional modules, retail listings, and content blocks that needed to be flexible enough to support ongoing updates. The work required close collaboration between design, engineering, and client teams.
+  Tanger Outlets needed a refreshed digital experience that better reflected their modern retail brand. The redesign spanned marketing pages, promotional modules, retail listings, and flexible content blocks that needed to support ongoing updates throughout the year.
 
-  Through AKQA, I worked as a front-end engineer focused on turning Figma designs into reusable, responsive components that could adapt to many use cases across the Tanger site.
+  Through AKQA, I worked as a front-end engineer focused on translating detailed Figma designs into reusable, responsive components that could adapt to a wide range of use cases across the Tanger platform.
 
 problem: |
-  Tanger’s existing platform needed more consistent components, clearer layouts, and more flexible content modules. Promotions, retail content, and marketing updates all needed to be easier to support, and the experience needed to be more polished across mobile and desktop screens.
+  The existing platform lacked consistency and flexibility. Promotional content, retail listings, and marketing modules all required more polished layouts and stronger component patterns to support frequent updates. The experience also needed to perform more predictably across mobile and desktop breakpoints.
 
 solution: |
-  I developed a set of component-driven UI modules using React and TypeScript. The work required translating design concepts into maintainable components that fit Tanger’s brand system and supported content variations. I focused heavily on responsive behavior to ensure the experience felt seamless across breakpoints.
+  I developed a library of reusable UI modules using React and TypeScript. Each component was designed to support variations in layout, content, and hierarchy while staying aligned with Tanger’s brand system. I placed special emphasis on responsive behavior to ensure every module adapted gracefully across breakpoints.
 
-  I also collaborated with designers and art directors to refine the details—spacing, hierarchy, alignment, and micro-interactions—to bring clarity and cohesion to the experience.
+  I also collaborated closely with designers and art directors to refine spacing, alignment, typography, and micro-interactions—ensuring each component felt intentional and cohesive within the broader experience.
 
 process: |
-  I began by reviewing the design specifications for each module and identifying the best architectural approach for flexibility and reuse. I then built components using predictable state handling and clear props structures.
+  I started by reviewing each Figma module and identifying the architectural patterns needed for flexibility and reuse. From there, I built components using predictable state handling, clear props structures, and semantic markup.
 
-  Throughout implementation, I worked closely with designers to adjust interactions, refine spacing, and ensure the UI behaved as intended. On the engineering side, I partnered with backend teams to integrate dynamic content and ensure components rendered correctly with real data.
+  Throughout implementation, I worked with designers to refine interaction details and spacing, and partnered with backend engineers to connect components with dynamic content. I tested modules across multiple devices and breakpoints to ensure layout, typography, and behavior remained consistent.
 
-  I tested everything across multiple devices to confirm that breakpoints, typography, and layout held together. The team iterated quickly, so communication and responsiveness were essential to keeping everything aligned.
+  Rapid iteration was a core part of the process, and tight communication across teams helped keep the build aligned with evolving design feedback.
 
 outcomes: |
-  The new components supported a more cohesive and modern digital experience for Tanger. Marketing teams gained flexible modules they could reuse across the site, and the updated layouts improved readability and navigation. The final work helped strengthen Tanger’s brand presence and made maintenance more efficient for future updates.
+  The new components created a more cohesive and modern digital experience for Tanger. Marketing teams gained flexible, reusable modules they could deploy across multiple pages, and the updated layouts improved clarity, readability, and navigation. The work also made future updates easier by establishing a more reliable component foundation.
 
 reflections: |
-  This project sharpened my ability to create components that balance design expectations with technical constraints. It reinforced the value of reusable architecture, especially for marketing-driven platforms where content needs to evolve frequently. I enjoyed shaping UI patterns that felt intentional, clean, and reliable at scale.
+  This project strengthened my ability to design and implement component systems that balance creative direction with real-world technical constraints. It reinforced the importance of reusable architecture in marketing-driven platforms, where content needs shift often. I enjoyed shaping UI patterns that felt clean, intentional, and dependable at scale.
 
 links:
   - label: "Tanger Outlet"

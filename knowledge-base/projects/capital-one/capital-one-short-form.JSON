@@ -4,6 +4,7 @@
     "projectId": "capital-one-travel",
     "client": "Capital One Travel",
     "industry": "Travel, Financial Services",
+    "one_liner": "Developed reusable front-end components for Capital One Travel's booking flows to support continuous UX and feature updates.",
     "timeline": {
       "year": 2023,
       "duration": "Multi-sprint engagement"
@@ -19,38 +20,38 @@
         "QA"
       ]
     },
-    "projectSummary": "Developed flexible, reusable front-end components and UI patterns for Capital One Travel, supporting new booking flows, UI updates, and user experience improvements.",
+    "projectSummary": "Built flexible, reusable front‑end components for Capital One Travel, supporting new booking flows, rewards interactions, and UI improvements across the platform.",
     "problem": {
-      "summary": "Capital One Travel needed to enhance parts of their booking platform with clearer UI patterns, more consistent components, and improved user flows for rewards-focused travelers."
+      "summary": "Parts of the travel booking experience required clearer UI patterns, more consistent components, and updates to support new rewards-focused user flows."
     },
     "goals": [
-      "Support new booking and rewards flow updates",
-      "Improve clarity and usability across travel modules",
-      "Translate complex design requirements into stable components",
-      "Strengthen consistency across the travel experience"
+      "Support updates across booking and rewards flows",
+      "Improve clarity and consistency throughout travel modules",
+      "Translate complex interaction requirements into stable components",
+      "Enhance the design system with predictable, reusable UI patterns"
     ],
     "responsibilities": [
-      "Building React components aligned with Capital One’s design system",
-      "Collaborating closely with designers to refine UI patterns",
-      "Translating Figma interactions into stable, predictable components",
-      "Implementing responsive layouts for travel modules",
-      "Improving clarity through front-end behavior and interaction polish",
-      "Supporting design QA and cross-browser testing"
+      "Building modular React components aligned with Capital One’s design system",
+      "Working closely with designers to refine spacing, layout, and interaction details",
+      "Translating detailed Figma interactions into predictable front‑end behavior",
+      "Implementing responsive layouts across travel booking modules",
+      "Supporting design QA, iteration, and cross‑browser testing",
+      "Documenting component behavior and edge cases for the engineering team"
     ],
     "skillsUsed": [
       "React",
       "TypeScript",
       "Next.js",
-      "Design-engineering collaboration",
+      "Tailwind CSS",
+      "Design‑engineer collaboration",
+      "Component architecture",
       "Responsive layout",
-      "UI polish",
-      "Design system implementation",
-      "Component-driven architecture"
+      "Front‑end interaction design"
     ],
     "outcomes": [
-      "Delivered flexible UI components used across new travel booking flows",
-      "Improved clarity and interaction patterns for rewards and purchase flows",
-      "Strengthened cross-team alignment on front-end UX details"
+      "Delivered stable, reusable components used across updated travel booking flows",
+      "Improved clarity and interaction patterns for rewards and purchase modules",
+      "Strengthened consistency and alignment across teams working on the platform"
     ],
     "links": [
       {
