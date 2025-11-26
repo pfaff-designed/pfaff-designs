@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Modal Graph</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      margin-top: 0;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 500;
+      color: #333;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    textarea {
+      min-height: 60px;
+      font-family: monospace;
+    }
+    button {
+      background: #0070f3;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    button:hover {
+      background: #0051cc;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .response {
+      margin-top: 24px;
+      padding: 16px;
+      background: #f9f9f9;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    .response pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 12px;
+    }
+    .error {
+      background: #fee;
+      border-color: #fcc;
+    }
+    .success {
+      background: #efe;
+      border-color: #cfc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Test Modal Graph</h1>
+    <form id="testForm">
+      <div class="form-group">
+        <label for="question">Question *</label>
+        <input type="text" id="question" name="question" value="tell me more" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="pagePath">Page Path</label>
+        <input type="text" id="pagePath" name="pagePath" value="/work/capital-one-travel">
+      </div>
+      
+      <div class="form-group">
+        <label for="projectSlug">Project Slug</label>
+        <input type="text" id="projectSlug" name="projectSlug" value="capital-one-travel">
+      </div>
+      
+      <div class="form-group">
+        <label for="sectionHeadline">Section Headline</label>
+        <input type="text" id="sectionHeadline" name="sectionHeadline" value="Travel rewards, refined">
+      </div>
+      
+      <div class="form-group">
+        <label for="sectionText">Section Text</label>
+        <textarea id="sectionText" name="sectionText">Short description of this section</textarea>
+      </div>
+      
+      <div class="form-group">
+        <label for="history">History (JSON array, optional)</label>
+        <textarea id="history" name="history" placeholder='[{"role": "user", "content": "previous question"}, {"role": "assistant", "content": "previous answer"}]'></textarea>
+      </div>
+      
+      <button type="submit" id="submitBtn">Invoke Graph</button>
+    </form>
+    
+    <div id="response" class="response" style="display: none;">
+      <h3>Response:</h3>
+      <pre id="responseContent"></pre>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('testForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const responseDiv = document.getElementById('response');
+    const responseContent = document.getElementById('responseContent');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Invoking...';
+      responseDiv.style.display = 'none';
+
+      const formData = new FormData(form);
+      const body = {
+        question: formData.get('question'),
+        pagePath: formData.get('pagePath') || undefined,
+        projectSlug: formData.get('projectSlug') || undefined,
+        sectionHeadline: formData.get('sectionHeadline') || undefined,
+        sectionText: formData.get('sectionText') || undefined,
+      };
+
+      // Parse history if provided
+      const historyText = formData.get('history');
+      if (historyText && historyText.trim()) {
+        try {
+          body.history = JSON.parse(historyText);
+        } catch (err) {
+          alert('Invalid JSON in history field');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Invoke Graph';
+          return;
+        }
+      }
+
+      try {
+        const response = await fetch('/api/dev/modal-graph', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+        });
+
+        const data = await response.json();
+        
+        responseDiv.className = response.ok ? 'response success' : 'response error';
+        responseContent.textContent = JSON.stringify(data, null, 2);
+        responseDiv.style.display = 'block';
+      } catch (error) {
+        responseDiv.className = 'response error';
+        responseContent.textContent = `Error: ${error.message}`;
+        responseDiv.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Invoke Graph';
+      }
+    });
+  </script>
+</body>
+</html>
+

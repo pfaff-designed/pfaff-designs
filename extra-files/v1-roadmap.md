@@ -1,404 +1,304 @@
-
-
 # V1 Roadmap — Generative-UI Portfolio
-*A fully conversational, AI-enhanced, editorial portfolio experience.*
+
+A fully conversational, AI-enhanced, editorial portfolio experience.
 
 ---
 
-# 🎯 Overview
-V1 of your portfolio delivers a deterministic generative-UI system, a conversational AI modal, an intent-aware interaction model, a global Cmd+K palette, and a seamless contact flow — all wrapped inside a beautifully minimal, editorial design language.
-
-This roadmap describes exactly how V1 is built, end-to-end.
-
----
-
-
-# Phase 0–4 — Foundations
-**Estimated Hours: 10–12 hrs**
-
-Establish the architecture that enables deterministic layout generation and consistent UI.
-
-## 0.1 Technical Foundations
-- Next.js 14 (App Router)
-- React 18
-- TypeScript 5
-- Tailwind CSS 4
-- shadcn/ui primitives
-- lucide-react icons
-- Storybook for visual testing
-- ESLint + Prettier
-
-## 0.2 Generative-UI Pipeline
-- RAG pipeline (Supabase embeddings + vector search)
-- Copywriter Agent (structured YAML synthesis)
-- Orchestrator Agent (YAML → JSON component tree)
-- Renderer (maps component JSON → deterministic React components)
-
-## 0.3 Design System & Tokens
-- Modular spacing, typography, radius tokens
-- Editorial grid system
-- Neutral palette + primary accent for AI identity
-- Motion tokens (150–180ms ease-in/out)
-
-## Success Criteria
-- Asking “Tell me about Tanger” generates a full page layout
-- Renderer shows stable, deterministic visual results
-- RAG, copywriter, and orchestrator operate within schema boundaries
-
----
-
-
-# Phase 5 — Intelligent Conversations
-**Estimated Hours: 12–16 hrs**
-
-Enable site-wide question answering — not just on case study pages.
-
-## 1.1 Copywriter + RAG Integration
-- Copywriter Agent produces structured `answer_blocks`
-- RAG retrieves relevant case study chunks
-- Orchestrator produces deterministic `PageJSON`
-
-## 1.2 Universal Answering
-The user should be able to ask:
-- “What are your AI skills?”
-- “What did you do for Coke?”
-- “What’s your background?”
-
-And receive:
-- A generated heading
-- Eyebrow type
-- Body content
-- Optional actions
-
-## Success Criteria
-- Zero hallucinated content (must come from KB)
-- Fast responses (<2s server round trip)
-- Clean AnswerBlock layout in Renderer
-
----
-
-
-# Phase 6 — Interaction Model (Hover Pill + Modal)
-**Status: Completed**
+## Phase 8 — LangGraph Dev Harness & Evaluation
+**Status: Not Started**  
 **Estimated Hours: 18–24 hrs**
 
-Your signature interaction: selectable content → contextual AI modal.
+A dedicated development harness for testing, observing, and refining the AI modal agent outside of the production pipeline.
 
-## 2.1 Hover-Pill Pattern
-- User hovers any ContentSection
-- Cursor transforms into your custom interactive cursor
-- A pill appears attached to cursor: “Ask AI about this”
-- Clicking opens the AI in contextual mode
-- Automatically passes section title, section ID, page path, selected text (if any)
+### 8.1 Dev Harness Architecture (`modalGraphApp`)
+Create a LangGraph-powered sandbox for the modal agent with a controlled, debuggable state machine.
 
-## 2.2 AI Modal (V1 Architecture)
-- Blur + fade-in
-- No rounded corners
-- Off-white background
-- Editorial typography
-- Conversation rows
-- Inline actions
-- Composer input
+#### 8.1.1 `ModalGraphState`
+State includes:
+- `question`
+- `pagePath`
+- `projectSlug`
+- `sectionHeadline`
+- `sectionText`
+- `history`
+- `retrievedChunks`
+- `contextBlob`
+- `mode` (`answer_direct` | `clarify_then_answer` | `low_context_fallback`)
+- `answerText`
+- `debugNotes[]`
 
-## 2.3 Lifecycle
-States:
-- `idle`
-- `opening`
-- `thinking`
-- `answer_showing`
-- `waiting_for_input`
-- `closing`
-- `error`
+#### 8.1.2 Nodes
+- **derive_context** — Inspect page path, project slug, headline; append debug note.
+- **retrieve_chunks** — Stubbed RAG retrieval for now.
+- **build_context_blob** — Combine relevant fields (section text, headline, history) into a single context string.
+- **conversation_policy** — Decide which conversation mode to use based on question clarity and available context.
+- **generate_answer** — Always acknowledges the user; tone is warm and conversational; uses `sectionHeadline` when possible; asks follow-up questions when ambiguous.
 
-## Success Criteria
-- Hover feels smooth across desktop
-- Pill only appears on ContentSection hover
-- Modal is fast and stable
-- No page navigation required for conversation
-
----
-
-
-# Phase 7 — UX Polish
-**Status: Done**
-**Estimated Hours: 12–16 hrs**
-**Actual Hours: 5**
-
-Refine the modal into a polished, delightful interaction.
-
-## 3.1 Thinking State
-- Inline TypingIndicator in an AI row
-- Composer stays enabled
-
-## 3.2 Error Handling
-- AI row for errors (non-technical)
-- Auto-clear on next submit
-
-## 3.3 Composer Refinements
-- Autofocus on open and after successful answer
-- Shift+Enter → newline
-- Enter → submit
-
-## 3.4 Message Management
-- Keep last 8–10 messages
-- Clean trimming logic
-
-## 3.5 Mobile UX
-- Full-width modal card
-- Scrollable content region
-- Composer visible above keyboard
-
-## 3.6 Visual Tuning
-- Alignment with ContentBlock spacing
-- AI accent color on eyebrow
-- Editorial spacing rhythm
-
----
-
-
-# Phase 8 — Global Command Palette (Cmd + K)
-**Status: Not Started**
-**Estimated Hours: 18–22 hrs**
-
-A universal entry point for asking questions, navigating, and searching.
-
-## 3.5.1 Trigger
-- Press `Cmd + K` (Mac) / `Ctrl + K` (Windows/Linux)
-- A tiny pill showing “⌘K” appears when cursor is not over interactable content
-
-## 3.5.2 Palette Functions (Hybrid Model C)
-
-### A) Ask AI
-- “Ask a question”
-- “Explain your skillset”
-- “Tell me about your work”
-- “Ask about a project”
-
-→ Opens the AI modal in global mode (no section context)
-
-### B) Search
-- Fuzzy search across:
-  - Case studies
-  - Sections
-  - Skills
-  - Keywords
-
-→ Navigates or opens modal deep dive
-
-### C) Navigate
-- Home
-- Work
-- Projects
-- Contact
-
-→ Pure navigation
-
-## 3.5.3 Visual Style
-- Editorial typography
-- Snappy 150ms animation
-- Clean list rendering
-
----
-
-
-# Phase 9 — Content
-**Status: In Progress**
-**Estimated Hours: 20–30 hrs**
-
-Ensure all material is complete, consistent, and ready for real-world consumption.
-
-## 4.1 Case Studies
-- PMI
-- Tanger
-- Coke
-- Capital One
-- Top Secret Real Estate
-- This RAG Portfolio
-
-Ensure each has:
-- Facts JSON
-- Long-form YAML
-- Images in Supabase
-- Proof points
-- KB entries for RAG retrieval
-
-## 4.2 Skills Pages
-- AI engineering  
-- Interaction design  
-- Front-end engineering  
-- Creative technology  
-
-## 4.3 About Page
-- Bio
-- Headshot
-- Philosophy
-- Approach
-- Toolset
-
----
-
-
-# Phase 10 — Contact Flow (AI + Classic Page)
-**Status: Not Started**
-**Estimated Hours: 12–18 hrs**
-
-A unified contact system that works both manually and through AI conversations.
-
-## 4.5.1 Intent Detection
-AI detects contact phrases:
-- “Can I hire you?”
-- “How do I reach you?”
-- “Are you available?”
-- “Let’s get in touch.”
-
-Then switches modal into contact mode.
-
-## 4.5.2 Inline Contact Form (Inside Modal)
-Fields:
-- Name
-- Email
-- Message
-
-Features:
-- Inline validation
-- Editorial styling
-- Success replaces form
-- Composer hides while form is open
-
-## 4.5.3 Backend Email Delivery
-New endpoint: `/api/contact`
-
-Payload:
-```ts
-{
-  name,
-  email,
-  message,
-  source: "ai-modal",
-  pagePath
-}
+#### 8.1.3 Graph Wiring
+```mermaid
+flowchart LR
+  derive_context --> retrieve_chunks --> build_context_blob --> conversation_policy --> generate_answer
 ```
 
-Sent via:
-- Postmark or
-- Resend
-
-## 4.5.4 Classic Contact Page
-At `/contact`:
-- Standard form
-- POST → `/api/contact`
-- Confirmation message
-
-## 4.5.5 AI Integration
-AI may proactively suggest:
-> “If you’d like to talk more, I can bring up the contact form.”
+#### 8.1.4 Deliverable
+- Exported `modalGraphApp`
+- Deterministic node order
+- Transparent debug notes at each step
 
 ---
 
+### 8.2 Dev Route: `/api/dev/modal-graph`
+A local-only endpoint used for interactive debugging and verifying agent behavior.
 
-# Phase 11 — Launch Polish
-**Status: Not Started**
+#### 8.2.1 Behavior
+- Accept request body:
+  ```json
+  {
+    "question": string,
+    "pagePath": string,
+    "projectSlug": string,
+    "sectionHeadline": string,
+    "sectionText": string,
+    "history": Array
+  }
+  ```
+- Build initial `ModalGraphState`
+- Invoke `modalGraphApp.invoke()`
+- Return full state as JSON:
+  - `answerText`
+  - `mode`
+  - `contextBlob`
+  - `debugNotes`
+
+#### 8.2.2 Purpose
+- Quickly check tone, routing, and answer behavior
+- Confirm warm conversational flow before integrating with Copywriter Agent
+- Independently test edge cases like vague questions ("tell me more")
+
+---
+
+### 8.3 Behavior Definition (Answer Quality)
+Foundational behavioral rules for generating warm, human responses.
+
+#### 8.3.1 Requirements
+- Always acknowledge the user's question
+- Use `sectionHeadline` and `sectionText` when available
+- Ask clarifying follow-up questions when ambiguity is genuinely present
+- Avoid "AI-speak" or overly generic filler
+- Provide concrete, helpful answers when possible
+
+#### 8.3.2 Fallback Behavior
+When context is low or missing:
+- Never complain about missing inputs
+- Provide a grounded, general explanation of Charles’s work
+- Ask what direction the user wants to explore (role, tools, process, impact)
+
+---
+
+### 8.4 Evaluation Strategy (LangSmith)
+Prepare for automated testing of the modal agent as it evolves.
+
+#### 8.4.1 Dataset A — Final Answer Quality
+10 small examples defining:
+- Question
+- Section context
+- Expected description of a "good" answer
+
+Evaluated using an LLM judge (structured: `is_correct`, `tone_ok`, `uses_context`, `asks_followup`, `rationale`).
+
+#### 8.4.2 Dataset B — Mode/Routing
+10 examples containing:
+- Question
+- Presence/absence of section context
+- Expected `mode`
+
+Evaluated with deterministic equality.
+
+#### 8.4.3 Dataset C — Trajectory
+5 examples defining the ideal ordered node execution:
+```json
+["derive_context", "retrieve_chunks", "build_context_blob", "conversation_policy", "generate_answer"]
+```
+Evaluated via:
+- `extra_steps`
+- `unmatched_steps`
+- `in_order` (boolean)
+
+---
+
+### 8.5 Target Functions (for LangSmith)
+- **Final Answer Target** — Return `{ answer: finalState.answerText }`
+- **Routing Target** — Return `{ mode: finalState.mode }`
+- **Trajectory Target** — Return `{ steps: executionSteps[] }`
+
+---
+
+### 8.6 Success Criteria
+- Conversational flow feels natural and human
+- Vague questions receive follow-up rather than generic boilerplate
+- Responses use page context intelligently
+- Debug notes allow clear inspection of agent reasoning
+- Routing modes behave predictably
+- LangSmith evals pass consistently
+
+---
+
+## Phase 9 — Integrate LangGraph Agent into Modal
+**Status: Not Started**  
+**Estimated Hours: 12–16 hrs**
+
+Wire the LangGraph dev harness into the existing `/api/ai/modal` route and UI.
+
+### 9.1 Replace Direct Copywriter Call
+- Use `modalGraphApp` inside the real modal route.
+- Map existing request shape (question, pagePath, topicLabel, sectionHeadline, sectionText, history) into `ModalGraphState`.
+- Let `generate_answer` produce the conversational answer.
+
+### 9.2 Bridge to Copywriter Blocks
+- For section-based questions, use the graph answer as the **body** of an `answer_block`.
+- Continue to store/render answer blocks via the existing Renderer, but with:
+  - Warmer, conversational copy from LangGraph
+  - Better handling of low-context queries
+
+### 9.3 UI & Interaction Polish
+- Ensure hover pills, chips, and inline prompts all call the same modal route.
+- Show subtle hints in the UI when the agent is clarifying vs answering directly.
+
+### 9.4 Success Criteria
+- The production modal feels like a real conversation, not a static QA block generator.
+- Low-context questions are handled gracefully.
+- No regressions in JSON shape or rendering.
+
+---
+
+## Phase 10 — Command Palette (Cmd+K) & Global Actions
+**Status: Not Started**  
+**Estimated Hours: 18–24 hrs**
+
+Build a global command palette inspired by Atlas-style experiences: fast, keyboard-first, and intent-aware.
+
+### 10.1 Command Palette UX
+- Global `Cmd+K` / `Ctrl+K` invocation.
+- Minimal, elegant overlay:
+  - Search bar
+  - Result list
+  - Hints for navigation vs AI actions
+- Visually aligned with the existing editorial design.
+
+### 10.2 Command Types
+- **Navigation commands**
+  - "Go to Home"
+  - "Open Tanger case study"
+  - "Jump to About"
+- **AI commands**
+  - "Summarize this project"
+  - "Compare Tanger and PMI"
+  - "What should I look at next?"
+- **Utility commands**
+  - "Contact Charles"
+  - "Schedule a chat"
+
+### 10.3 Wiring & Behavior
+- Reuse existing intent router where possible.
+- For high-confidence navigation commands (e.g., "take me to the PMI page"):
+  - Auto-navigate without confirmation when confidence > threshold.
+- For mixed/ambiguous intents:
+  - Offer options: navigate, scroll, or generate an answer inline.
+
+### 10.4 Dev Harness & Testing
+- Local dev page to:
+  - Preview palette design
+  - Test various input phrases
+  - Inspect resolved actions/intent
+
+### 10.5 Success Criteria
+- Palette feels as smooth and responsive as Atlas-style experiences.
+- Keyboard-first navigation is delightful and predictable.
+- AI/Navigation actions are clearly differentiated but share one entry point.
+
+---
+
+## Phase 11 — Contact Flow & Scheduling
+**Status: Not Started**  
 **Estimated Hours: 10–14 hrs**
 
-## 5.1 Visual Polish
-- Margins
-- Typography
-- Responsive layout
-- Image quality
-- Favicon + OG images
-- Loading transitions
+Make it easy for people to reach you, with forms wired up and optional scheduling.
 
-## 5.2 SEO
-- Meta descriptions
-- Project schema
-- Sitemap
-- Social previews
+### 11.1 Contact Form Implementation
+- Simple, focused form:
+  - Name
+  - Email
+  - How they found you (optional)
+  - Message / what they’re interested in
+- Form lives on:
+  - Dedicated Contact page
+  - As a command in the Cmd+K palette
 
-## 5.3 Accessibility
-- Keyboard navigation
-- ARIA labels
-- Focus traps
-- High contrast
+### 11.2 Email Delivery
+- Use an email provider (e.g., Postmark, Resend, or similar) to:
+  - Send form submissions to your inbox
+  - Optionally send a confirmation email to the sender
+
+### 11.3 Scheduling Integration
+- Connect to a scheduling tool (e.g., Calendly, SavvyCal, or similar):
+  - Link from Contact page
+  - Expose as a palette command: "Schedule time with Charles"
+- Make sure the flow feels cohesive:
+  - Contact → "This looks like a fit" → Scheduler
+
+### 11.4 Success Criteria
+- You reliably receive inquiries via email.
+- Visitors can book time without friction.
+- Palette and page-based contact affordances feel unified.
 
 ---
 
-
-# Phase 12 — Performance
-**Status: Not Started**
+## Phase 12 — Post-V1 Analytics & Insight Layer
+**Status: Not Started**  
 **Estimated Hours: 8–12 hrs**
 
-## 6.1 Caching
-- RAG result caching
-- Copywriter output caching
-- Suspense boundaries
-- Static caching for non-AI pages
+Lightweight analytics to understand how people actually use the site and the AI features.
 
-## 6.2 Speed
-- Bundle size improvements
-- Optimized images
-- Avoid large client components
+### 12.1 Basic Site Analytics
+- Integrate a privacy-friendly analytics tool (e.g., Plausible, Fathom, or similar).
+- Track:
+  - Page views
+  - Referrers
+  - Basic geography / device breakdown
 
----
+### 12.2 AI & Palette Usage Events
+- Custom events for:
+  - Modal opens
+  - Types of questions asked (high-level categories only)
+  - Command palette opens
+  - Most-used commands (navigate vs AI)
 
+### 12.3 Contact & Conversion Signals
+- Track:
+  - Contact form submissions
+  - Clicks to scheduling links
+  - Successful scheduled events (if supported by the scheduling provider)
 
-# Phase 13 — Analytics
-**Status: Not Started**
-**Estimated Hours: 6–10 hrs**
+### 12.4 Feedback Hooks (Optional)
+- Tiny, low-friction way to capture feedback on AI answers or case studies:
+  - "Was this helpful?" thumbs up/down
+  - Optional short text comment
 
-## 7.1 AI Analytics
-- Questions asked
-- Actions used
-- Drop-off points
-- Contact intent frequency
-
-## 7.2 Page Analytics
-- Navigation patterns
-- Cmd+K usage
-- Scroll depth
-
----
-
-
-# Phase 14 — Maintenance
-**Status: Not Started**
-**Estimated Hours: 6–8 hrs**
-
-## 8.1 KB Updates
-- Add new case studies
-- Update skills
-- Add project assets
-
-## 8.2 Code Quality
-- ESLint
-- Storybook coverage
-- TypeScript upgrades
+### 12.5 Success Criteria
+- You can open your analytics dashboard and answer:
+  - How are people getting here?
+  - What are they looking at?
+  - Are they using the AI features and Cmd+K palette?
+  - Are they contacting or booking time with you?
 
 ---
 
-# 🚀 V1 Launch Criteria
+## Overall V1 Completion Definition
+V1 is "done" when:
+- The modal agent feels like a warm, capable conversational guide.
+- The LangGraph harness + LangSmith evaluation gives you confidence to iterate without fear.
+- The command palette provides a fast, Atlas-like way to navigate and query the site.
+- Contact and scheduling flows are wired, tested, and comfortable for you to use.
+- Analytics give you a clear sense of how the site and AI affordances are being used.
 
-You are ready to launch when:
-
-### AI
-- Modal answers reliably
-- Hover-pill appears correctly
-- Cmd+K works everywhere
-- Contact flow fully functional (AI + classic)
-
-### Content
-- Case studies complete
-- Skills + About page complete
-
-### Design
-- Editorial style consistent
-- Smooth animations
-- Fully responsive
-
-### Tech
-- No TS errors
-- All endpoints tested
-- Deterministic rendering stable
-
----
-
-This completes the V1 roadmap.
+At that point, further work becomes V1.1+ polish and experimentation, not "catch-up" foundational work.
