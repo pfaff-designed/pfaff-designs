@@ -65,7 +65,7 @@ export const AiConversationRow: React.FC<AiConversationRowProps> = ({
         {/* TODO (V2 streaming): When isStreaming is true, render partial content
             with a cursor/indicator. Display partialContent instead of body. */}
         {typeof body === "string" ? (
-          <BodyText body={body} />
+          <BodyText body={body} markdown={role === "ai"} />
         ) : (
           body
         )}

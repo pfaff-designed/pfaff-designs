@@ -197,7 +197,7 @@ function generateModalActions(params: {
     },
     {
       patterns: [/\bpmi\b/, /project management institute/],
-      path: "/work/pmi-agile-certification",
+      path: "/work/pmi",
       label: "Go to PMI case study",
     },
     {
@@ -347,20 +347,24 @@ export async function POST(req: NextRequest) {
     }
 
     // 6. Call modal-specific copywriter
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[API /ai/modal] Calling modal copywriter");
+    console.log("[API /ai/modal] Calling modal copywriter");
+    let modalOutput;
+    try {
+      modalOutput = await runModalCopywriter({
+        question,
+        context: finalContext,
+        projectSlug,
+        pagePath,
+        sectionHeadline,
+        sectionText,
+        topicLabel,
+        history: history ?? [],
+      });
+    } catch (copywriterError) {
+      console.error("[API /ai/modal] Copywriter threw error:", copywriterError);
+      // Re-throw to be caught by outer catch block
+      throw copywriterError;
     }
-
-    const modalOutput = await runModalCopywriter({
-      question,
-      context: finalContext,
-      projectSlug,
-      pagePath,
-      sectionHeadline,
-      sectionText,
-      topicLabel,
-      history: history ?? [],
-    });
 
     if (process.env.NODE_ENV !== "production") {
       console.log("[API /ai/modal] Modal copywriter completed", {
@@ -390,30 +394,32 @@ export async function POST(req: NextRequest) {
     }
 
     // 9. Build response
+    console.log("[API /ai/modal] Building response");
     const responseBody: ModalResponseBody = {
       answer,
       actions,
     };
 
     if (process.env.NODE_ENV !== "production") {
-      console.log("[API /ai/modal] Response ready", {
-        answerLength: answer.length,
-        actionsCount: actions.length,
-      });
+      console.log("[API /ai/modal] FULL RESPONSE BODY:", JSON.stringify(responseBody, null, 2));
     }
 
     return NextResponse.json(responseBody);
   } catch (error) {
-    if (process.env.NODE_ENV !== "production") {
-      console.error("[API /ai/modal] Error:", error);
-      console.error("[API /ai/modal] Error details:", {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-      });
-    }
+    // Always log errors in development, and include error message in response
+    console.error("[API /ai/modal] Error:", error);
+    console.error("[API /ai/modal] Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
 
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
     return NextResponse.json(
-      { error: "Failed to generate AI response" },
+      { 
+        error: "Failed to generate AI response",
+        message: process.env.NODE_ENV !== "production" ? errorMessage : undefined,
+      },
       { status: 500 }
     );
   }

@@ -103,13 +103,15 @@ export async function uploadFileToStorage(
  */
 export function getPublicStorageURL(bucket: string, path: string): string {
   if (!supabase) {
-    throw new Error("Supabase client not configured");
+    // Silently return empty string - Supabase not configured is expected in some environments
+    return "";
   }
 
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   
   if (!data?.publicUrl) {
-    throw new Error("Failed to get public URL");
+    // Silently return empty string - file might not exist
+    return "";
   }
 
   return data.publicUrl;

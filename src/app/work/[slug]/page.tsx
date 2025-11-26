@@ -70,6 +70,8 @@ export default function CaseStudyPage() {
           {projectMeta && (() => {
             const heroMedia = getMediaItemById(projectMeta.heroImageId);
             const heroImageUrl = heroMedia ? getPublicStorageURL(SUPABASE_MEDIA_BUCKET, heroMedia.path) : undefined;
+            // Filter out empty strings (when Supabase is not configured)
+            const validHeroImageUrl = heroImageUrl && heroImageUrl.trim() !== "" ? heroImageUrl : undefined;
             
             // Truncate body to 30 words max
             const truncateToWords = (text: string, maxWords: number): string => {
@@ -87,7 +89,7 @@ export default function CaseStudyPage() {
                 eyebrow={`Case Study · ${caseStudy.client}`}
                 headline={caseStudy.projectName}
                 body={heroBody}
-                imageSrc={heroImageUrl}
+                imageSrc={validHeroImageUrl}
                 imageAlt={heroMedia?.alt || `${caseStudy.projectName} hero image`}
                 projectDetails={{
                   client: caseStudy.client,

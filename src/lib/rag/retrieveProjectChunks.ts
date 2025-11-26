@@ -59,6 +59,19 @@ export async function retrieveProjectChunks(
 
     if (error) {
       console.error("[RAG] Error calling match_project_chunks:", error);
+      console.error("[RAG] Error details:", {
+        message: error.message,
+        code: error.code,
+        hint: error.hint,
+      });
+      
+      // If RPC function doesn't exist, return empty array instead of throwing
+      // This allows the modal to still work with fallback context
+      if (error.code === "42883" || error.message?.includes("function") || error.message?.includes("does not exist")) {
+        console.warn("[RAG] RPC function match_project_chunks not found. Returning empty chunks. Please create the RPC function in Supabase.");
+        return [];
+      }
+      
       throw error;
     }
 
