@@ -80,6 +80,7 @@ export function AiModalHost() {
   
   // Refs for auto-scroll and autofocus
   const bottomRef = React.useRef<HTMLDivElement>(null);
+  const actionsRef = React.useRef<HTMLDivElement>(null);
   const composerInputRef = React.useRef<HTMLTextAreaElement>(null);
 
   // "Replace while open" helper for opening from selection
@@ -262,15 +263,23 @@ export function AiModalHost() {
     handleComposerSubmit(lastQuestion);
   }, [lastQuestion, handleComposerSubmit]);
 
-  // Auto-scroll to bottom when messages change or thinking state changes
+  // Auto-scroll to show actions or bottom when content changes
   React.useEffect(() => {
-    if (isOpen && bottomRef.current) {
-      // Small delay to ensure DOM has updated with new content
-      requestAnimationFrame(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      });
-    }
-  }, [messages, isThinking, hasError, isOpen]);
+    if (!isOpen) return;
+    
+    // Small delay to ensure DOM has updated with new content
+    const timeoutId = setTimeout(() => {
+      // If actions are present, scroll to show them
+      if (actionsRef.current && (actions.length > 0 || (hasError && lastQuestion))) {
+        actionsRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+      } else if (bottomRef.current) {
+        // Otherwise scroll to bottom
+        bottomRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }, 150);
+    
+    return () => clearTimeout(timeoutId);
+  }, [messages, isThinking, hasError, isOpen, actions, lastQuestion]);
 
   // Autofocus composer when modal opens or after successful answer
   React.useEffect(() => {
@@ -386,26 +395,34 @@ export function AiModalHost() {
           // Show retry button if there's an error and we have a last question
           if (hasError && lastQuestion) {
             return (
-              <AiActionsRow
-                actions={[
-                  {
-                    type: "suggest_question",
-                    label: "Try again",
-                    suggestedQuestion: lastQuestion,
-                  },
-                ]}
-                onActionClick={() => handleRetry()}
-              />
+              <div ref={actionsRef}>
+                <AiActionsRow
+                  actions={[
+                    {
+                      type: "suggest_question",
+                      label: "Try again",
+                      suggestedQuestion: lastQuestion,
+                    },
+                  ]}
+                  onActionClick={() => handleRetry()}
+                />
+              </div>
             );
           }
           
           // Otherwise show regular actions
-          return (
-            <AiActionsRow
-              actions={actions}
-              onActionClick={handleActionClick}
-            />
-          );
+          if (actions.length > 0) {
+            return (
+              <div ref={actionsRef}>
+                <AiActionsRow
+                  actions={actions}
+                  onActionClick={handleActionClick}
+                />
+              </div>
+            );
+          }
+          
+          return null;
         }}
         renderComposer={() => (
           <Composer
