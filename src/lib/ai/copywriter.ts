@@ -1,11 +1,13 @@
 import { anthropic } from "./client";
 import { ChatAnthropic } from "@langchain/anthropic";
+import { BaseMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import {
   CopywriterOutputSchema,
   type CopywriterOutput,
   type CopywriterInput,
 } from "./copywriterSchemas";
+import { getCopywriterPromptTemplate } from "./promptLoader";
 
 // ============================================================
 // MODAL COPYWRITER TYPES (NEW - Phase 6.1)
@@ -45,6 +47,7 @@ const copywriterModel = new ChatAnthropic({
   // It will use ANTHROPIC_API_KEY from your env and LANGCHAIN_* for LangSmith
 });
 
+
 function makeCopywriterCacheKey(input: CopywriterInput): string {
   const contextHash = input.context.substring(0, 200).replace(/\s/g, "");
   return JSON.stringify({
@@ -55,142 +58,66 @@ function makeCopywriterCacheKey(input: CopywriterInput): string {
 }
 
 /**
- * Build the prompt for the LLM.
- * We are NOT asking for JSON here, only plain text.
+ * Build project short facts as JSON text string for the LangChain prompt template
  */
-function buildCopywriterPrompt(input: CopywriterInput): string {
-  const {
-    question,
-    context,
-    projectId,
-    projectShortFacts,
-    intent,
-    contentGoals,
-    requiredSections,
-  } = input;
-
-  const factsLines: string[] = [];
-  if (projectShortFacts?.client) {
-    factsLines.push(`client: ${projectShortFacts.client}`);
-  }
-  if (projectShortFacts?.projectNameOrUrl) {
-    factsLines.push(`project: ${projectShortFacts.projectNameOrUrl}`);
-  }
-  if (projectShortFacts?.role) {
-    factsLines.push(`role: ${projectShortFacts.role}`);
-  }
-  if (projectShortFacts?.description) {
-    factsLines.push(`description: ${projectShortFacts.description}`);
-  }
-  if (projectShortFacts?.yearOrTimeline) {
-    factsLines.push(`timeline: ${projectShortFacts.yearOrTimeline}`);
-  }
-  if (projectShortFacts?.team) {
-    factsLines.push(`team: ${projectShortFacts.team}`);
-  }
-  if (projectShortFacts?.keyOutcomes?.length) {
-    factsLines.push(`keyOutcomes: ${projectShortFacts.keyOutcomes.join(", ")}`);
-  }
-  if (projectShortFacts?.keySkills?.length) {
-    factsLines.push(`keySkills: ${projectShortFacts.keySkills.join(", ")}`);
+function formatProjectShortFacts(projectShortFacts?: CopywriterInput["projectShortFacts"]): string {
+  if (!projectShortFacts) {
+    return "{}";
   }
 
-  const factsBlock =
-    factsLines.length > 0
-      ? factsLines.map((l) => `- ${l}`).join("\n")
-      : "(no structured facts provided)";
+  const facts: Record<string, any> = {};
+  if (projectShortFacts.client) facts.client = projectShortFacts.client;
+  if (projectShortFacts.projectNameOrUrl) facts.projectNameOrUrl = projectShortFacts.projectNameOrUrl;
+  if (projectShortFacts.role) facts.role = projectShortFacts.role;
+  if (projectShortFacts.description) facts.description = projectShortFacts.description;
+  if (projectShortFacts.yearOrTimeline) facts.yearOrTimeline = projectShortFacts.yearOrTimeline;
+  if (projectShortFacts.team) facts.team = projectShortFacts.team;
+  if (projectShortFacts.keyOutcomes?.length) facts.keyOutcomes = projectShortFacts.keyOutcomes;
+  if (projectShortFacts.keySkills?.length) facts.keySkills = projectShortFacts.keySkills;
 
-  // Build intent-specific audience and content guidance
-  let audienceGuidance = "Recruiters, hiring managers, and tech leads who skim quickly.";
-  let contentGuidance = "Focus on role, actions, tools, and impact where relevant.";
-
-  if (intent === "recruiter") {
-    audienceGuidance = "Recruiters and talent acquisition professionals who need a quick, scannable overview.";
-    contentGuidance = "Focus on skills, qualifications, proof points, and concise summaries. Make it easy to skim.";
-  } else if (intent === "hiring_manager") {
-    audienceGuidance = "Hiring managers and tech leads who want depth, architecture reasoning, and technical process details.";
-    contentGuidance = "Focus on technical depth, decision-making process, collaboration style, and architectural choices.";
-  } else if (intent === "client") {
-    audienceGuidance = "Potential clients and collaborators who want to understand services, outcomes, and how you work.";
-    contentGuidance = "Focus on trust-building, services offered, concrete outcomes, and working style.";
-  } else if (intent === "general") {
-    audienceGuidance = "General visitors seeking an overview of work and experience.";
-    contentGuidance = "Provide a balanced overview that covers key aspects without assuming specific needs.";
-  }
-
-  const contentGoalsBlock = contentGoals && contentGoals.length > 0
-    ? `\nCONTENT GOALS:\n${contentGoals.map(g => `- ${g}`).join("\n")}`
-    : "";
-
-  const requiredSectionsBlock = requiredSections && requiredSections.length > 0
-    ? `\nREQUIRED SECTIONS (logical structure):\n${requiredSections.map(s => `- ${s}`).join("\n")}\n\nNote: Structure your answer to address these sections conceptually, even if you're writing a single answer block.`
-    : "";
-
-  const intentBlock = intent
-    ? `\nINTENT CATEGORY:\n- ${intent}\n\nThis question is from a ${intent === "recruiter" ? "recruiter" : intent === "hiring_manager" ? "hiring manager" : intent === "client" ? "potential client" : "general visitor"}.`
-    : "";
-
-  const prompt = `
-You are the Copywriter Agent for a design-minded engineer's portfolio.
-
-Your job:
-- Read the user's question.
-- Read the project context and short facts.
-- Write a clear, concise answer tailored to the audience intent.
-
-${intentBlock}
-
-Audience:
-- ${audienceGuidance}
-
-Tone:
-- Clear, confident, warm, and professional.
-- No fluff, no hype language, no buzzword soup.
-
-Content rules:
-- ${contentGuidance}
-- Use **bold** formatting for key phrases and skills.
-- Do NOT invent companies, roles, dates, or metrics that are not in the context or facts.
-- If information is missing, say so briefly and honestly.
-- Write 2–6 sentences for brief answers, up to 10 sentences for complex questions about outcomes, team dynamics, challenges, or process.
-- You may use line breaks, but avoid bullet lists; write in short paragraphs instead.
-- Do NOT mention that you are an AI or talk about prompts.
-- IMPORTANT: The context includes both semantic search results AND the full project information. Use ALL available context to answer comprehensively - you have access to outcomes, team dynamics, challenges, process details, tools, impact, and more.${contentGoalsBlock}${requiredSectionsBlock}
-
-QUESTION:
-${question}
-
-PROJECT ID:
-${projectId ?? "(none)"}
-
-PROJECT FACTS:
-${factsBlock}
-
-CONTEXT (includes semantic search results AND full project information):
-${context}
-
-Now, write the best possible answer to the question using ALL available information from the context above. 
-- If the question is about outcomes, use the impact/outcomes information from the project sections.
-- If the question is about team dynamics, use the role, process, and collaboration details.
-- If the question is about challenges, use information about process, constraints, and problem-solving.
-- Draw from ALL relevant sections and information, not just what directly matches the question keywords.
-`;
-
-  return prompt.trim();
+  return JSON.stringify(facts, null, 2);
 }
 
 /**
- * Call Anthropic once and return a plain-text answer.
+ * Call Anthropic using LangChain prompt template and return structured JSON output.
  */
-async function callCopywriterLLM(prompt: string): Promise<string> {
+async function callCopywriterLLM(input: CopywriterInput): Promise<CopywriterOutput> {
   console.time("copywriter-haiku");
 
+  // Get the LangChain prompt template from LangSmith (fallback disabled)
+  const { template: promptTemplate, source: promptSource } = await getCopywriterPromptTemplate();
+  
+  // Log which prompt source is being used (should always be langsmith now)
+    console.log("[Copywriter] ✅ Using LangSmith prompt: pfaff-copywriter-answer-blocks-v3");
+
+  // Format project short facts as JSON text
+  const projectShortFactsText = formatProjectShortFacts(input.projectShortFacts);
+
+  // Build global style guide (includes intent-specific guidance)
+  let globalStyleGuide = "Clear, confident, warm, and professional. No fluff, no hype language.";
+  if (input.intent === "recruiter") {
+    globalStyleGuide = "Recruiters and talent acquisition professionals who need a quick, scannable overview. Focus on skills, qualifications, proof points, and concise summaries.";
+  } else if (input.intent === "hiring_manager") {
+    globalStyleGuide = "Hiring managers and tech leads who want depth, architecture reasoning, and technical process details. Focus on technical depth, decision-making process, collaboration style.";
+  } else if (input.intent === "client") {
+    globalStyleGuide = "Potential clients and collaborators who want to understand services, outcomes, and how you work. Focus on trust-building, services offered, concrete outcomes.";
+  }
+
+  // Format the prompt with variables - returns BaseMessage[]
+  const messages: BaseMessage[] = await promptTemplate.formatMessages({
+    question: input.question,
+    context: input.context,
+    project_short_facts: projectShortFactsText,
+    project_id: input.projectId || "",
+    global_style_guide: globalStyleGuide,
+  });
+
   // Using LangChain's ChatAnthropic so LangSmith can trace this call
-  const res = await copywriterModel.invoke(prompt);
+  const res = await copywriterModel.invoke(messages);
 
   console.timeEnd("copywriter-haiku");
 
-  // res.content is usually a string; if it's not, fall back gracefully
+  // Extract content
   const content =
     typeof res.content === "string"
       ? res.content
@@ -205,10 +132,38 @@ async function callCopywriterLLM(prompt: string): Promise<string> {
   const text = content.trim();
   if (!text) {
     console.warn("Copywriter LLM returned empty content:", res);
-    return "I had trouble generating a detailed answer here, but I can still share a brief response based on the available information.";
+    throw new Error("Copywriter LLM returned empty content");
   }
 
-  return text;
+  // Parse JSON from response
+  let jsonText = text.trim();
+  
+  // Extract JSON from markdown code blocks if present
+  const codeBlockMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (codeBlockMatch) {
+    jsonText = codeBlockMatch[1].trim();
+  }
+
+  // Extract JSON object if wrapped in other text
+  const jsonStart = jsonText.indexOf("{");
+  const jsonEnd = jsonText.lastIndexOf("}");
+  if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+    jsonText = jsonText.substring(jsonStart, jsonEnd + 1);
+  }
+
+  // Parse and validate JSON
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch (error) {
+    console.error("[Copywriter] Failed to parse JSON:", error);
+    console.error("[Copywriter] Raw response:", text.substring(0, 500));
+    throw new Error("Failed to parse copywriter JSON response");
+  }
+
+  // Validate against schema
+  const result = CopywriterOutputSchema.parse(parsed);
+  return result;
 }
 
 /**
@@ -222,115 +177,39 @@ async function generateCopywriterOutputInternal(
   input: CopywriterInput
 ): Promise<CopywriterOutput> {
   try {
-    const prompt = buildCopywriterPrompt(input);
-    const textAnswer = await callCopywriterLLM(prompt);
+    // Use LangChain prompt template - expects JSON output
+    const result = await callCopywriterLLM(input);
+    return result;
+  } catch (error) {
+    console.error("Error generating copywriter output (outer catch):", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
 
-    // Basic heuristic for question_type based on the question text
-    const q = input.question.toLowerCase();
-    let question_type: CopywriterOutput["question_type"] = "general";
-    if (
-      q.includes("overview") ||
-      q.includes("what is this") ||
-      q.includes("what was this project")
-    ) {
-      question_type = "overview";
-    } else if (
-      q.includes("role") ||
-      q.includes("responsibilit") ||
-      q.includes("what did you do")
-    ) {
-      question_type = "role";
-    } else if (
-      q.includes("tool") ||
-      q.includes("stack") ||
-      q.includes("tech") ||
-      q.includes("technology") ||
-      q.includes("skills")
-    ) {
-      question_type = "tools";
-    } else if (
-      q.includes("process") ||
-      q.includes("how did you") ||
-      q.includes("workflow") ||
-      q.includes("approach")
-    ) {
-      question_type = "process";
-    } else if (
-      q.includes("impact") ||
-      q.includes("result") ||
-      q.includes("outcome")
-    ) {
-      question_type = "impact";
-    } else if (q.includes("compare") || q.includes("comparison")) {
-      question_type = "comparison";
+    // If it's a LangSmith prompt loading error, re-throw it with context
+    if (error instanceof Error && error.message.includes("LangSmith")) {
+      throw new Error(`Copywriter failed: ${error.message}`);
     }
 
-    const eyebrow =
-      question_type === "overview"
-        ? "Overview"
-        : question_type === "role"
-        ? "Role"
-        : question_type === "tools"
-        ? "Tools"
-        : question_type === "process"
-        ? "Process"
-        : question_type === "impact"
-        ? "Impact"
-        : question_type === "comparison"
-        ? "Comparison"
-        : "Answer";
-
-    const heading =
-      input.question.length <= 80
-        ? input.question
-        : "Answer to your question";
-
-    const rawOutput: CopywriterOutput = {
+    // Last-resort fallback (should rarely be reached now that fallback is disabled)
+    const fallback: CopywriterOutput = {
       answer_blocks: [
         {
           type: "answer_block",
-          eyebrow,
-          heading,
-          body: textAnswer,
-          // IMPORTANT: adjust key name if your AnswerBlockSchema uses image_id instead.
-          imageId: undefined,
-        },
-      ],
-      question_type,
-      focus_tags: [],
-    };
-
-    // Validate with Zod just to be safe, but don't throw if it fails.
-    const result = CopywriterOutputSchema.safeParse(rawOutput);
-    if (!result.success) {
-      console.error("CopywriterOutput failed validation, but returning anyway:", {
-        errors: result.error.issues,
-      });
-      return rawOutput;
-    }
-
-    return result.data;
-  } catch (error) {
-    console.error("Error generating copywriter output (outer catch):", error);
-
-    // Last-resort fallback
-  const fallback: CopywriterOutput = {
-    answer_blocks: [
-      {
-        type: "answer_block",
-        eyebrow: "Answer",
-        heading: "AI answer",
+          eyebrow: "Answer",
+          heading: "AI answer",
           body:
             "I ran into an issue while generating a detailed answer, but I'm still here. Try rephrasing the question or asking something a bit simpler.",
           imageId: undefined,
-      },
-    ],
-    question_type: "general",
-    focus_tags: [],
-  };
+        },
+      ],
+      question_type: "general",
+      focus_tags: [],
+    };
 
-  return fallback;
-}
+    return fallback;
+  }
 }
 
 /**
@@ -371,6 +250,11 @@ export async function runCopywriter(
 export async function runModalCopywriter(
   input: ModalCopywriterInput
 ): Promise<ModalCopywriterOutput> {
+  console.log("[runModalCopywriter] CALLED with:", {
+    question: input.question,
+    projectSlug: input.projectSlug,
+    pagePath: input.pagePath,
+  });
   try {
     const {
       question,
@@ -383,79 +267,68 @@ export async function runModalCopywriter(
       history,
     } = input;
 
-    // Build conversation history text (last 2 turns = 4 messages max)
-    const historyText = (history ?? [])
-      .slice(-4)
-      .map((turn) => `${turn.role.toUpperCase()}: ${turn.text}`)
-      .join("\n");
+    const contextBlobParts: string[] = [];
 
-    // Build section context block
-    const sectionBlockLines: string[] = [];
-    if (sectionHeadline) sectionBlockLines.push(`Headline: ${sectionHeadline}`);
-    if (sectionText) sectionBlockLines.push(`Body: ${sectionText}`);
+    if (pagePath) contextBlobParts.push(`PAGE PATH: ${pagePath}`);
+    if (projectSlug) contextBlobParts.push(`PROJECT SLUG: ${projectSlug}`);
+    if (topicLabel) contextBlobParts.push(`TOPIC LABEL: ${topicLabel}`);
 
-    const sectionBlock =
-      sectionBlockLines.length > 0
-        ? sectionBlockLines.join("\n")
-        : topicLabel
-        ? `Topic: ${topicLabel}`
-        : "No specific section context available.";
+    if (sectionHeadline) contextBlobParts.push(`SECTION TITLE: ${sectionHeadline}`);
+    if (sectionText) contextBlobParts.push(`SECTION BODY:\n${sectionText}`);
 
-    const projectLine = projectSlug
-      ? `PROJECT: ${projectSlug}`
-      : pagePath
-      ? `PAGE: ${pagePath}`
-      : "PROJECT: (not specified)";
+    if (context && context.trim().length > 0) {
+      contextBlobParts.push(`EXTRA CONTEXT:\n${context}`);
+    }
 
-    // System prompt optimized for modal Q&A
-    const systemPrompt = `
-You are an expert AI assistant embedded inside a portfolio website.
+    if (history && history.length > 0) {
+      const formattedHistory = history
+        .map((turn) => `${turn.role.toUpperCase()}: ${turn.text}`)
+        .join("\n");
+      contextBlobParts.push(`HISTORY:\n${formattedHistory}`);
+    }
 
-BEHAVIOR RULES:
-- Always use only the provided context.
-- NEVER invent facts, roles, metrics, dates, or projects.
-- DEFAULT OUTPUT: concise answer (1–2 short paragraphs).
-- If the user clearly asks "why", "how", or "explain", give a deeper explanation (2–4 paragraphs).
-- If unsure due to missing context, say so and explain what you CAN answer.
-- Tone: confident, direct, professional.
-- Audience: recruiters, hiring managers, collaborators.
-- Output only plain text. No YAML, no markdown fences, no headings.
+    const contextBlob = contextBlobParts.join("\n\n");
+    console.log("[runModalCopywriter] Built contextBlob length:", contextBlob.length);
 
-Stay grounded. Stay precise.
-`.trim();
+    const { template: promptTemplate } = await getCopywriterPromptTemplate();
+    console.log("[Copywriter] ✅ Using LangSmith prompt: pfaff-copywriter-answer-blocks-v4 (modal)");
 
-    const modalContextText = `
-${projectLine}
+    const formattedMessages: BaseMessage[] = await promptTemplate.formatMessages({
+      question,
+      context_blob: contextBlob,
+    });
 
-SECTION:
-${sectionBlock}
+    // Log formatted messages before sending to model
+    console.log("[Copywriter] Formatted messages for model:", formattedMessages);
 
-CONTEXT:
-${context}
+    // Sanity check for the first message
+    const first = formattedMessages[0];
+    console.log("[Copywriter] First message content:", (first as any)?.content);
 
-CONVERSATION HISTORY:
-${historyText || "No prior conversation."}
-
-USER QUESTION:
-${question}
-`.trim();
+    if (!first || !(first as any).content || String((first as any).content).trim().length === 0) {
+      console.error(
+        "[Copywriter] ❌ First message has empty content before sending to model. Messages:",
+        formattedMessages
+      );
+    }
 
     // Create modal-specific model instance (Haiku, lower temp, lower tokens)
     const modalModel = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      model: "claude-3-5-haiku-20241022",
       temperature: 0.2,
       maxTokens: 450,
     });
-
-    // Build the complete prompt
-    const fullPrompt = `${systemPrompt}\n\n${modalContextText}`;
 
     if (process.env.NODE_ENV !== "production") {
       console.time("modal-copywriter-haiku");
     }
 
-    const res = await modalModel.invoke(fullPrompt);
-
+    // Using LangChain's ChatAnthropic so LangSmith can trace this call
+    const res = await modalModel.invoke(formattedMessages);
+console.log(
+  "[ModalCopywriter] Raw model response (truncated):",
+  JSON.stringify(res, null, 2).slice(0, 800)
+);
     if (process.env.NODE_ENV !== "production") {
       console.timeEnd("modal-copywriter-haiku");
     }
@@ -472,20 +345,89 @@ ${question}
             .join(" ")
         : "";
 
-    const answerText =
-      content.trim() ||
-      "I couldn't generate an answer for that question based on the available context.";
-
-    return { answer: answerText };
-  } catch (error) {
-    if (process.env.NODE_ENV !== "production") {
-      console.error("[runModalCopywriter] Error:", error);
+    const text = content.trim();
+    if (!text) {
+      console.warn("Modal copywriter LLM returned empty content:", res);
+      return {
+        answer: "I couldn't generate an answer for that question based on the available context.",
+      };
     }
 
-    // Fallback answer on error
-    return {
-      answer:
-        "I ran into an issue while generating an answer. Could you try rephrasing your question?",
-    };
+    // Parse JSON from response (same as runCopywriter)
+    let jsonText = text.trim();
+    
+    // Extract JSON from markdown code blocks if present
+    const codeBlockMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (codeBlockMatch) {
+      jsonText = codeBlockMatch[1].trim();
+    }
+
+    // Extract JSON object if wrapped in other text
+    const jsonStart = jsonText.indexOf("{");
+    const jsonEnd = jsonText.lastIndexOf("}");
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      jsonText = jsonText.substring(jsonStart, jsonEnd + 1);
+    }
+
+    // Parse and validate JSON
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonText);
+    } catch (error) {
+      console.error("[Modal Copywriter] Failed to parse JSON:", error);
+      console.error("[Modal Copywriter] Raw response text:", text.substring(0, 500));
+      // If JSON parsing fails, use the raw text as the answer
+      return { answer: text };
+    }
+
+    // Validate against schema
+    let result: CopywriterOutput;
+    try {
+      result = CopywriterOutputSchema.parse(parsed);
+    } catch (error) {
+      console.error("[Modal Copywriter] Schema validation failed:", error);
+      console.error("[Modal Copywriter] Parsed JSON:", JSON.stringify(parsed, null, 2));
+      // If schema validation fails, try to extract body from parsed JSON anyway
+      if (parsed && typeof parsed === "object" && "answer_blocks" in parsed) {
+        const blocks = (parsed as any).answer_blocks;
+        if (Array.isArray(blocks) && blocks.length > 0 && blocks[0].body) {
+          return { answer: blocks[0].body };
+        }
+      }
+      // Last resort: use raw text
+      return { answer: text };
+    }
+
+    console.log("[runModalCopywriter] Parsed answer_blocks count:", result.answer_blocks.length);
+
+    const joinedAnswer =
+      result.answer_blocks.map((block) => block.body).join("\n\n") ||
+      "I couldn't generate an answer for that question based on the available context.";
+
+    return { answer: joinedAnswer };
+  } catch (error) {
+    // Always log errors with full details
+    console.error("[runModalCopywriter] ❌ Error caught:", error);
+    if (error instanceof Error) {
+      console.error("[runModalCopywriter] Error message:", error.message);
+      console.error("[runModalCopywriter] Error stack:", error.stack);
+    } else {
+      console.error("[runModalCopywriter] Non-Error object:", JSON.stringify(error, null, 2));
+    }
+
+    // If it's a LangSmith prompt loading error, re-throw it to be caught by API route
+    if (error instanceof Error && error.message.includes("LangSmith")) {
+      console.error("[runModalCopywriter] ❌ LangSmith error detected, re-throwing");
+      throw error; // Re-throw the original error
+    }
+
+    // For other errors, also re-throw to let the API route handle it
+    // This ensures we get proper error responses instead of silent fallbacks
+    if (error instanceof Error) {
+      throw error;
+    }
+    
+    // Last resort: if it's not an Error object, wrap it
+    throw new Error(`Modal copywriter failed: ${String(error)}`);
   }
 }

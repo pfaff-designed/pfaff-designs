@@ -1,0 +1,10 @@
+{
+  "graphs": {
+    "basic_graph": "graphs/basic_graph.py:graph"
+  },
+  "dependencies": [
+    "langgraph>=0.2.0"
+  ],
+  "env": ".env.local"
+}
+

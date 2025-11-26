@@ -125,22 +125,14 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
 
     React.useEffect(() => {
       // Auto-fetch section image if projectSlug and sectionIndex are provided
-      console.log("[ContentSection] useEffect check:", {
-        finalSectionImageSrc,
-        projectSlug,
-        sectionIndex,
-        hasProjectSlug: !!projectSlug,
-        hasSectionIndex: !!sectionIndex,
-      });
-      
-      if (!finalSectionImageSrc && projectSlug && sectionIndex) {
+      // Only run when projectSlug or sectionIndex changes, not when finalSectionImageSrc changes
+      if (!sectionImageSrc && projectSlug && sectionIndex) {
         const url = getSectionImageURLSync(projectSlug, sectionIndex);
-        console.log("[ContentSection] Generated URL:", url);
-        if (url) {
-          setFinalSectionImageSrc(url);
-        }
+        // Set state even if URL is empty to prevent infinite loop
+        // Empty string means Supabase isn't configured, which is fine
+        setFinalSectionImageSrc(url || undefined);
       }
-    }, [finalSectionImageSrc, projectSlug, sectionIndex]);
+    }, [sectionImageSrc, projectSlug, sectionIndex]); // Use sectionImageSrc prop, not finalSectionImageSrc state
     const renderVariant = () => {
       switch (variant) {
 
@@ -251,14 +243,6 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
         (projectSlug && sectionIndex 
           ? `${projectSlug} section ${sectionIndex} UI image`
           : "Section image");
-
-      // Log section image (not hero images)
-      console.log("Section Image:", {
-        url: finalSectionImageSrc,
-        projectSlug,
-        sectionIndex,
-        alt: altText,
-      });
 
       return (
         <div className="w-full mt-12 md:mt-16 max-w-[52.5625rem] mx-auto">
