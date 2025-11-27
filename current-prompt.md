@@ -1046,3 +1046,480 @@ Use `/api/dev/modal-graph` to verify the node:
 - No TypeScript errors.
 
 Make these changes now.
+You are working in the `pfaff-designs` repo.
+
+## Goal (Phase 9.1)
+
+Rewire the **AI modal assistant** to use the LangGraph `modalGraphApp` as its backend brain instead of the old low-context logic / copywriter pipeline.
+
+High-level behavior we want:
+- The modal sends a rich request (question + page context + history) to an API route.
+- The API route builds a `ModalGraphState`-compatible object.
+- The route calls `modalGraphApp.invoke(initialState)`.
+- The response returns a conversational payload:
+  - `mode` (conversation mode)
+  - `answer` (final answer string from the graph)
+  - optional `debugNotes` (for dev)
+- The frontend uses `answer` as the assistant message content.
+
+We **do not** need to change the dev harness (`/api/dev/modal-graph`) in this phase.
+
+---
+
+## 1. Locate the current modal API route and types
+
+1. Search for the existing modal assistant API route, likely under one of:
+   - `src/app/api/ai/modal/route.ts`
+   - `src/app/api/modal/route.ts`
+   - or any file that handles the modal assistant POST request.
+
+2. Open that route file and identify:
+   - The **request body type** (e.g. `ModalRequest`, `AiModalRequest`, etc.).
+   - The **response type** (e.g. `ModalResponse`, `AiModalResponse`).
+   - The current AI call (this might be a copywriter/orchestrator pipeline or a simpler LLM call).
+
+3. Do **not** delete the old logic yet; we will replace the internal AI call but keep the route shape stable for the frontend.
+
+---
+
+## 2. Locate the modal graph and state type
+
+1. Search for `modalGraphApp` in the repo.
+   - It should live in something like `src/lib/ai/modalGraph.ts` (or similar).
+
+2. In that module, find and note:
+   - The `modalGraphApp` export.
+   - The `ModalGraphState` type (or equivalent) that the graph uses as its input and output state.
+
+3. Confirm that the state fields include, at minimum, fields like:
+   - `question: string`
+   - `pagePath: string`
+   - `projectSlug?: string`
+   - `sectionHeadline: string`
+   - `sectionText: string`
+   - `history: Array<{ role: "user" | "assistant"; content: string }>`
+   - `answerText?: string`
+   - `debugNotes?: string[]`
+   - and any other required fields.
+
+If there is already a helper like `buildInitialState` or `buildModalGraphStateFromRequest` (used by `/api/dev/modal-graph` or `runModalGraphEval`), prefer to reuse it instead of duplicating mapping logic.
+
+---
+
+## 3. Add a helper to map modal requests → ModalGraphState
+
+In a shared location (either within the modal API route file or a small helper module, depending on current structure), implement a helper that builds a valid `ModalGraphState` from the modal request body.
+
+Prefer reusing existing helpers if they already exist (for the dev harness or eval target). Otherwise, create a new one.
+
+Example shape (adjust property names to match real types):
+
+```ts
+import type { ModalGraphState } from "@/lib/ai/modalGraph";
+
+// Use the actual modal request type if one exists.
+// For example: import type { ModalRequest } from "...";
+
+type ModalRequest = {
+  question: string;
+  pagePath: string;
+  projectSlug?: string | null;
+  sectionHeadline?: string;
+  sectionText?: string;
+  history?: Array<{ role: "user" | "assistant"; content: string }>;
+};
+
+function buildModalGraphStateFromModalRequest(body: ModalRequest): ModalGraphState {
+  return {
+    question: body.question,
+    pagePath: body.pagePath,
+    projectSlug: body.projectSlug ?? undefined,
+    sectionHeadline: body.sectionHeadline ?? "",
+    sectionText: body.sectionText ?? "",
+    history: body.history ?? [],
+    // Include any other required fields from ModalGraphState with safe defaults.
+    // For example: retrievedChunks: [], contextBlob: "", debugNotes: [], etc.
+  } as ModalGraphState;
+}
+```
+
+Key rules:
+- Match the actual `ModalGraphState` required fields.
+- Use `undefined` (not `null`) for optional fields like `projectSlug`.
+- Use empty strings for string fields that must exist.
+- Use empty arrays for `history` and any list fields.
+
+If there is already an equivalent helper used by `/api/dev/modal-graph` or `runModalGraphEval`, factor it into a shared file and reuse it here instead of defining a new one.
+
+---
+
+## 4. Replace the old AI call with `modalGraphApp.invoke`
+
+Inside the modal API route handler (e.g. the POST handler in `route.ts`):
+
+1. Parse the request body as usual:
+
+```ts
+const body = await req.json();
+```
+
+2. Build the initial graph state:
+
+```ts
+const initialState = buildModalGraphStateFromModalRequest(body);
+```
+
+3. Invoke the graph:
+
+```ts
+import { modalGraphApp } from "@/lib/ai/modalGraph";
+
+const finalState = await modalGraphApp.invoke(initialState);
+```
+
+4. Extract the fields we care about for the modal:
+
+```ts
+const mode =
+  (finalState as any).conversationMode ??
+  (finalState as any).mode ??
+  "answer_direct";
+
+const answer: string =
+  (finalState as any).answerText ??
+  (finalState as any).answer ??
+  "";
+
+const debugNotes: string[] = (finalState as any).debugNotes ?? [];
+```
+
+5. Return a response object that is safe for the existing frontend.
+
+If the frontend currently expects a shape like `{ answer: string }`, keep that and add new fields rather than breaking everything:
+
+```ts
+return NextResponse.json({
+  answer,
+  mode,
+  debugNotes,
+  // Optionally keep the finalState in dev for debugging only.
+  // rawState: process.env.NODE_ENV === "development" ? finalState : undefined,
+});
+```
+
+If there is an existing `ModalResponse` type, update it so that it includes at least:
+
+```ts
+export type ModalResponse = {
+  answer: string;
+  mode: "answer_direct" | "clarify_then_answer" | "low_context_fallback";
+  debugNotes?: string[];
+  // keep any legacy fields the UI relies on
+};
+```
+
+Make sure the route’s return type matches this updated shape.
+
+---
+
+## 5. Update the frontend modal assistant to use the new response
+
+1. Find the frontend code that calls the modal API route.
+   - Likely a hook or component like `AiModal`, `ComposerModal`, or a `useModalAssistant` hook.
+   - Search for `"/api/ai/modal"` or the modal route path.
+
+2. Locate where the response is parsed, e.g.:
+
+```ts
+const res = await fetch("/api/ai/modal", { ... });
+const data = await res.json();
+
+// Before:
+setMessages((prev) => [
+  ...prev,
+  { role: "assistant", content: data.answerText ?? data.answer },
+]);
+```
+
+3. Update it so that it uses the new `answer` field from the modal graph response and (optionally) captures the mode for future behavior:
+
+```ts
+setMessages((prev) => [
+  ...prev,
+  {
+    role: "assistant",
+    content: data.answer,
+    mode: data.mode, // optional; useful later for branching UI
+  },
+]);
+```
+
+4. Ensure that whatever message type you’re using on the frontend (e.g. `ChatMessage`) is updated to allow an optional `mode` field if you choose to store it.
+
+For 9.1, it’s okay if the UI just displays `content` and ignores `mode` — the important part is that the **answer string is coming from the modal graph**.
+
+---
+
+## 6. Optional: add a feature flag
+
+If you want a safety switch while integrating:
+
+1. Add an env flag, e.g. `USE_MODAL_GRAPH_AGENT=true`.
+2. In the API route, branch on this flag:
+
+```ts
+if (!process.env.USE_MODAL_GRAPH_AGENT) {
+  // Existing behavior (legacy pipeline or simple LLM call)
+  // return the old response shape here
+}
+
+// New behavior using modalGraphApp
+const initialState = buildModalGraphStateFromModalRequest(body);
+const finalState = await modalGraphApp.invoke(initialState);
+// ...extract mode/answer/debugNotes and return
+```
+
+This lets you fall back quickly if something goes wrong.
+
+---
+
+## 7. Sanity checks
+
+Before calling this done, verify:
+
+- The dev harness `/api/dev/modal-graph` still works as before.
+- The modal assistant in the UI:
+  - Sends the correct request body (question + context + history).
+  - Receives `{ answer, mode, debugNotes }` from the server with no runtime errors.
+  - Displays the assistant answer from `data.answer`.
+- The graph behavior (modes, follow-up questions, etc.) is visible in the live modal.
+
+---
+
+## ✅ Cursor Checklist (for you to verify before stopping)
+
+- [ ] Located the modal API route and identified current request/response types.
+- [ ] Located `modalGraphApp` and `ModalGraphState`.
+- [ ] Implemented (or reused) a helper to map modal request → `ModalGraphState`.
+- [ ] Replaced the old AI call with `modalGraphApp.invoke(initialState)` in the modal API route.
+- [ ] Extracted `mode`, `answer`, and `debugNotes` from the final graph state.
+- [ ] Returned a JSON response that includes at least `{ answer, mode, debugNotes }` and doesn’t break existing UI types.
+- [ ] Updated the frontend modal assistant to use `data.answer` as the assistant’s message content.
+- [ ] Confirmed the modal works end-to-end using the LangGraph agent.
+- [ ] Verified `/api/dev/modal-graph` still works.
+# Cursor Prompt — Phase 9.2 (PMI Fix + Mode-Carrying)
+
+You are working in the `pfaff-designs` repo.
+
+## Phase 9.2 Goals
+
+1. **PMI Fix (Backend)**
+   - Enrich the PMI project data so the agent has concrete tools + facts.
+   - Prevent hallucinated answers like:
+     “context for the PMI project is light… modern web technologies like Vue.js, TensorFlow…”
+   - Ensure tools questions for PMI (and other projects) are answered from **grounded facts**, not guesses.
+
+2. **Mode-Carrying in Modal (Frontend)**
+   - Make the modal UI store and surface the `mode` returned from `modalGraphApp`:
+     `"answer_direct"` | `"clarify_then_answer"` | `"low_context_fallback"`.
+   - Preserve all current UX.
+   - Add a small dev-only label indicating conversation mode.
+
+---
+
+## 9.2A — Fix PMI Data & Tools Behavior
+
+### Step 1 — Locate PMI KB entries
+
+Search for PMI data in:
+
+```
+src/lib/kb/
+src/lib/ai/kb/
+```
+
+Look for:
+- `pmi-longform.yaml`
+- `pmi-shortform.json`
+- Any aggregated project facts (`loadAllProjects`, `projectFacts`, etc.).
+
+You will update both the short-form KB + the global ProjectFacts entry.
+
+---
+
+### Step 2 — Enrich PMI project facts
+
+Update PMI's facts (shortform and ProjectFacts) to include:
+
+**Role**
+- Front-end engineer & technologist on the redesign of PMI.org.
+
+**Summary**
+- Redesigned PMI.org with a modular component system and improvements to IA, navigation, template patterns, and consistency across a content-heavy site.
+
+**Tools (authoritative)**
+- React  
+- TypeScript  
+- Next.js  
+- Storybook  
+- Figma  
+
+**Process**
+- Broke high-fidelity designs into reusable components.
+- Improved information architecture consistency.
+- Partnered with UX to refine complex layouts.
+- Maintained component integrity during iterative development.
+
+**Impact**
+- Cleaner, more intuitive navigation.
+- Reusable patterns across templates.
+- Scalable frontend system for future updates.
+
+Update the PMI entry in `loadAllProjects()` or its equivalent so `tools` matches:
+
+```ts
+{
+  slug: "pmi",
+  name: "PMI.org Redesign",
+  client: "Project Management Institute",
+  role: "Front-end engineer & technologist",
+  summary:
+    "Redesigned PMI.org with a modular component system and improvements to IA, navigation, and template consistency across a content-heavy site.",
+  tools: ["React", "TypeScript", "Next.js", "Storybook", "Figma"],
+}
+```
+
+---
+
+### Step 3 — Strengthen deterministic tools answers
+
+In `src/lib/ai/modalGraph.ts`, locate the `generate_answer` node.
+
+Add or refine the deterministic tools branch:
+
+```ts
+const q = state.question.toLowerCase();
+const toolsQ =
+  q.includes("tools") ||
+  q.includes("tech stack") ||
+  q.includes("stack did you use") ||
+  q.includes("what did you use");
+
+if (toolsQ && state.projectSlug && state.allProjects && state.allProjects.length > 0) {
+  const current = state.allProjects.find((p) => p.slug === state.projectSlug);
+  const tools = current?.tools ?? [];
+
+  if (tools.length > 0) {
+    const answer = [
+      "For this project, Charles used:",
+      ...tools.map((t) => `- ${t}`),
+      "These tools supported a modular, maintainable front-end that could evolve over time.",
+    ].join("\n");
+
+    state.debugNotes?.push("generate_answer: deterministic tools answer from ProjectFacts");
+
+    return {
+      ...state,
+      answerText: answer,
+    };
+  }
+}
+```
+
+If tools exist → **never call Anthropic** for a tools-only question.
+
+---
+
+### Step 4 — Prevent hallucinated toolkits in low-context mode
+
+In `GENERATE_ANSWER_SYSTEM_PROMPT`, add:
+
+- “Do not invent tools or frameworks that are not in the KB.”
+- “Do not mention Vue.js, TensorFlow, PyTorch, or cloud platforms unless explicitly present in context.”
+- “If tools are missing, stay high‑level about process and outcomes rather than guessing.”
+
+---
+
+## 9.2B — Carry Conversation Mode Through the Modal
+
+### Step 5 — Update the chat message type
+
+Find the message type used by the modal (e.g. `ChatMessage`).  
+Add:
+
+```ts
+type ConversationMode =
+  | "answer_direct"
+  | "clarify_then_answer"
+  | "low_context_fallback";
+
+type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  mode?: ConversationMode;
+};
+```
+
+---
+
+### Step 6 — Pass mode from API response to chat messages
+
+Where the modal calls the AI route:
+
+```ts
+const res = await fetch("/api/ai/modal", { ... });
+const data = await res.json();
+
+setMessages((prev) => [
+  ...prev,
+  {
+    id: crypto.randomUUID?.() ?? String(Date.now()),
+    role: "assistant",
+    content: data.answer,
+    mode: data.mode,
+  },
+]);
+```
+
+Log debug notes in dev mode:
+
+```ts
+if (process.env.NODE_ENV === "development") {
+  console.log("[modalGraph] mode:", data.mode);
+  console.log("[modalGraph] debugNotes:", data.debugNotes);
+}
+```
+
+---
+
+### Step 7 — Display a dev-only mode label in the assistant bubble
+
+In the component that renders chat messages:
+
+```tsx
+{isAssistant && message.mode && process.env.NODE_ENV === "development" && (
+  <span className="mb-1 block text-xs text-muted-foreground">
+    {message.mode === "answer_direct" && "Direct answer"}
+    {message.mode === "clarify_then_answer" && "Answer + follow-up"}
+    {message.mode === "low_context_fallback" && "Low-context overview"}
+  </span>
+)}
+```
+
+This should be small, non-intrusive, and dev-only.
+
+---
+
+## Definition of Done
+
+- [ ] PMI facts enriched in KB & ProjectFacts.
+- [ ] Deterministic tools answers now work for PMI.
+- [ ] No hallucinated tools appear in PMI responses.
+- [ ] System prompt prevents generic AI-toolkits.
+- [ ] Modal API returns `mode` correctly.
+- [ ] Assistants messages store `mode`.
+- [ ] Dev-only label shows conversation mode.
+- [ ] No TypeScript errors.
+
+Make these changes now.
