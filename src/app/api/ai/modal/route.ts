@@ -38,7 +38,21 @@ function deriveProjectSlugFromPath(pagePath?: string): string | undefined {
   
   // Match paths like /work/capital-one or /work/coca-cola
   const match = pagePath.match(/^\/work\/([^/]+)/);
-  return match ? match[1] : undefined;
+  if (!match) return undefined;
+  
+  let slug = match[1];
+  
+  // Normalize PMI-related paths to canonical slug
+  if (
+    slug === "pmi" ||
+    slug === "pmi-agile" ||
+    slug === "pmi-acp" ||
+    slug.startsWith("pmi-")
+  ) {
+    slug = "pmi";
+  }
+  
+  return slug;
 }
 
 /**

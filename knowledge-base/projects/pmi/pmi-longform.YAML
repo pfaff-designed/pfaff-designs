@@ -2,9 +2,10 @@ version: "1"
 kind: "project_longform"
 
 project:
-  id: "pmi-agile-certification"
-  title: "PMI Agile Certification Site"
-  client: "PMI (Project Management Institute)"
+  id: "pmi"
+  slug: "pmi"
+  title: "PMI.org Redesign"
+  client: "Project Management Institute"
   industry: "Professional Certification, Education"
   role: "Front-End Engineer / Technologist"
   one_liner: "Built a modern, responsive front-end for PMI's Agile certification site to clarify the value and make the path to certification easier to follow."

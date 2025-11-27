@@ -208,6 +208,11 @@ Content:
 - Prefer concrete details over abstractions.
 - Keep the output scannable and recruiter-friendly.
 
+Tools & Technologies:
+- Do not invent tools or frameworks that are not in the KB.
+- Do not mention Vue.js, TensorFlow, PyTorch, or cloud platforms unless explicitly present in context.
+- If tools are missing, stay high-level about process and outcomes rather than guessing.
+
 Your output should ONLY be the final answer text. No metadata, no reasoning traces.
 `;
 
@@ -299,8 +304,9 @@ async function loadAllProjects(): Promise<
       slug: "pmi",
       name: "PMI.org Redesign",
       client: "Project Management Institute",
-      role: "Front-end engineer / technologist",
-      summary: "Redesigned PMI.org with modular components, improved IA, and a scalable design system.",
+      role: "Front-end engineer & technologist",
+      summary:
+        "Redesigned PMI.org with a modular component system and improvements to IA, navigation, and template consistency across a content-heavy site.",
       tools: ["React", "TypeScript", "Next.js", "Storybook", "Figma"],
     },
     {
@@ -440,11 +446,53 @@ async function deriveContextNode(state: ModalGraphState): Promise<Partial<ModalG
     `entry: received history length=${history.length}`,
   ];
 
-  // Load project facts based on projectSlug
-  const projectFacts = await loadProjectFactsForSlug(state.projectSlug);
+  // Normalize projectSlug from pagePath (if not already set)
+  let projectSlug = state.projectSlug;
+  const pagePath = state.pagePath;
+
+  if (pagePath && !projectSlug) {
+    // Extract from pagePath
+    const match = pagePath.match(/^\/work\/([^/]+)/);
+    if (match) {
+      projectSlug = match[1];
+    }
+  }
+
+  // Normalize PMI-related paths to canonical slug
+  if (pagePath && (
+    pagePath.startsWith("/work/pmi") ||
+    pagePath.startsWith("/work/pmi-agile") ||
+    pagePath.startsWith("/work/pmi-acp")
+  )) {
+    projectSlug = "pmi";
+    debugNotes.push("derive_context: normalized projectSlug to 'pmi' from pagePath");
+  }
+
+  // Optional: Alias detection in question text (if projectSlug still not set)
+  if (!projectSlug && state.question) {
+    const lowerQ = state.question.toLowerCase();
+    if (
+      lowerQ.includes("pmi acp") ||
+      lowerQ.includes("pmi-acp") ||
+      lowerQ.includes("pmi agile") ||
+      lowerQ.includes("pmi.org")
+    ) {
+      projectSlug = "pmi";
+      debugNotes.push("derive_context: normalized projectSlug to 'pmi' from question text");
+    }
+  }
+
+  // Normalize any existing PMI variants to canonical slug
+  if (projectSlug === "pmi-agile" || projectSlug === "pmi-acp" || projectSlug === "pmi-agile-certification") {
+    projectSlug = "pmi";
+    debugNotes.push("derive_context: normalized projectSlug variant to 'pmi'");
+  }
+
+  // Load project facts based on normalized projectSlug
+  const projectFacts = await loadProjectFactsForSlug(projectSlug);
   
   if (projectFacts) {
-    debugNotes.push(`derive_context: loaded projectFacts for ${state.projectSlug}`);
+    debugNotes.push(`derive_context: loaded projectFacts for ${projectSlug}`);
   }
 
   // Load all projects from KB
@@ -454,6 +502,7 @@ async function deriveContextNode(state: ModalGraphState): Promise<Partial<ModalG
   return {
     ...state,
     history,
+    projectSlug,
     projectFacts,
     allProjects,
     debugNotes,
@@ -516,6 +565,44 @@ He helped ensure the UI could scale for future travel experiences.
         text: capitalOneContext,
         relevanceScore: 0.85,
         projectSlug: "capital-one-travel",
+      },
+    ];
+  } else if (state.projectSlug === "pmi") {
+    // For PMI, provide structured project context
+    const pmiContext = `
+[PROJECT_FACTS]
+Client: Project Management Institute
+Project: PMI.org Redesign
+Role: Front-end engineer & technologist
+Summary: Redesigned PMI.org with a modular component system and improvements to IA, navigation, and template consistency across a content-heavy site.
+
+[ROLE]
+Charles worked as a front-end engineer and technologist on the redesign of PMI.org, focusing on modular components, information architecture, and template consistency.
+
+[TOOLS]
+- React
+- TypeScript
+- Next.js
+- Storybook
+- Figma
+
+[PROCESS]
+- Broke high-fidelity designs into reusable components.
+- Improved information architecture consistency.
+- Partnered with UX to refine complex layouts.
+- Maintained component integrity during iterative development.
+
+[IMPACT]
+- Cleaner, more intuitive navigation.
+- Reusable patterns across templates.
+- Scalable frontend system for future updates.
+`.trim();
+
+    retrievedChunks = [
+      {
+        text: pmiContext,
+        relevanceScore: 0.85,
+        projectSlug: "pmi",
       },
     ];
   } else {
@@ -690,7 +777,12 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
   const allProjects = state.allProjects ?? [];
 
   // Detect question types
-  const toolsQ = questionLower.includes("tools") || questionLower.includes("tech stack") || questionLower.includes("technologies");
+  const toolsQ =
+    questionLower.includes("tools") ||
+    questionLower.includes("tech stack") ||
+    questionLower.includes("technologies") ||
+    questionLower.includes("stack did you use") ||
+    questionLower.includes("what did you use");
   const projectsQ =
     questionLower.includes("other projects") ||
     questionLower.includes("worked on") ||
@@ -747,7 +839,7 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
   }
 
   // 2. Tools-focused questions (current project only)
-  if (toolsQ && !projectsQ && allProjects.length > 0) {
+  if (toolsQ && !projectsQ && state.projectSlug && allProjects.length > 0) {
     const current = allProjects.find((p) => p.slug === state.projectSlug);
     const tools = current?.tools ?? [];
 
@@ -755,7 +847,7 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
       const answer = [
         "For this project, Charles used:",
         ...tools.map((t) => `- ${t}`),
-        "Those tools made it easier to build a modular, maintainable front-end that could evolve over time.",
+        "These tools supported a modular, maintainable front-end that could evolve over time.",
       ].join("\n");
 
       updatedHistory = [
@@ -763,7 +855,7 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
         { role: "assistant" as const, content: answer },
       ];
 
-      debugNotes.push("generate_answer: current-project-tools");
+      debugNotes.push("generate_answer: deterministic tools answer from ProjectFacts");
 
       return {
         ...state,

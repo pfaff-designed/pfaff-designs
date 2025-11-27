@@ -178,19 +178,24 @@ export function AiModalHost() {
           console.log("[AiModalHost] API response received", {
             answerLength: data.answer?.length || 0,
             actionsCount: data.actions?.length || 0,
+            mode: data.mode,
+            debugNotes: data.debugNotes,
           });
+          console.log("[modalGraph] mode:", data.mode);
+          console.log("[modalGraph] debugNotes:", data.debugNotes);
         }
 
         const answerText =
           data.answer?.trim() ||
           "I couldn't generate an answer for that question.";
 
-        // 6. Append AI message
+        // 6. Append AI message with mode
         setMessages((currentMessages) => [
           ...currentMessages,
           {
             role: "ai" as const,
             body: answerText,
+            mode: data.mode,
           },
         ]);
 
@@ -359,6 +364,7 @@ export function AiModalHost() {
                 role={msg.role}
                 body={msg.body}
                 eyebrowLabel={msg.eyebrowLabel}
+                mode={msg.mode}
               />
             ))}
 
