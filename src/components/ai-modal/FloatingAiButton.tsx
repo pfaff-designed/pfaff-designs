@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAiModal } from "./AiModalContext";
@@ -15,14 +16,28 @@ export interface FloatingAiButtonProps {
  * Opens the AI modal when tapped
  */
 export const FloatingAiButton: React.FC<FloatingAiButtonProps> = ({ className }) => {
-  const { openGlobal } = useAiModal();
+  const { openAiModal } = useAiModal();
+  const pathname = usePathname();
 
   const handleClick = React.useCallback(() => {
-    openGlobal({
-      headline: "Ask about this portfolio",
-      source: "floating-button",
+    // Derive projectSlug from pathname if on a work page
+    const projectSlugMatch = pathname?.match(/^\/work\/([^/]+)/);
+    let projectSlug: string | undefined;
+    if (projectSlugMatch) {
+      let slug = projectSlugMatch[1];
+      // Normalize PMI paths
+      if (slug === "pmi" || slug === "pmi-agile" || slug === "pmi-acp" || slug.startsWith("pmi-")) {
+        slug = "pmi";
+      }
+      projectSlug = slug;
+    }
+
+    openAiModal({
+      question: "What can you tell me about this portfolio?",
+      pagePath: pathname ?? undefined,
+      projectSlug,
     });
-  }, [openGlobal]);
+  }, [openAiModal, pathname]);
 
   return (
     <button
