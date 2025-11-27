@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { retrieveProjectChunks, buildContextFromChunks } from "@/lib/rag/retrieveProjectChunks";
-import { runModalCopywriter } from "@/lib/ai/copywriter";
+import { modalGraphApp, type ModalGraphState } from "@/lib/ai/modalGraph";
 import { getCaseStudyBySlug } from "@/lib/caseStudies/data";
 import type { AiModalAction } from "@/components/ai-modal/AiActionsRow";
 import type { CaseStudyPage } from "@/lib/caseStudies/types";
@@ -25,6 +24,8 @@ export interface ModalRequestBody {
 
 export interface ModalResponseBody {
   answer: string;
+  mode?: "answer_direct" | "clarify_then_answer" | "low_context_fallback";
+  debugNotes?: string[];
   actions: AiModalAction[];
 }
 
@@ -100,6 +101,33 @@ function deriveSectionContext({
   return {
     sectionHeadline: matched.heading ?? topicLabel ?? null,
     sectionText: matched.body ?? null,
+  };
+}
+
+/**
+ * Build ModalGraphState from ModalRequestBody.
+ * Reuses the same pattern as /api/dev/modal-graph and runModalGraphEval.
+ */
+function buildModalGraphStateFromRequest(
+  body: ModalRequestBody,
+  projectSlug: string | undefined,
+  sectionHeadline: string | null,
+  sectionText: string | null
+): Partial<ModalGraphState> {
+  // Map history from ModalRequestBody format to ModalGraphState format
+  const history = (body.history ?? []).map((h) => ({
+    role: h.role === "ai" ? ("assistant" as const) : ("user" as const),
+    content: h.text,
+  }));
+
+  return {
+    question: body.question,
+    pagePath: body.pagePath ?? "",
+    projectSlug: projectSlug ?? undefined,
+    sectionHeadline: sectionHeadline ?? "",
+    sectionText: sectionText ?? "",
+    history,
+    debugNotes: [],
   };
 }
 
@@ -272,8 +300,8 @@ function generateModalActions(params: {
  * Modal-specific AI endpoint
  * 
  * Accepts a lightweight Q&A request from the AI modal.
- * Uses RAG + copywriter to generate a simple text answer.
- * Does NOT use orchestrator or PageJSON.
+ * Uses LangGraph modalGraphApp to generate conversational answers.
+ * Returns answer, mode, debugNotes (dev only), and smart actions.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -309,30 +337,10 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2. Retrieve relevant chunks using RAG (increased from 6 to 8 for richer context)
-    const retrievedChunks = await retrieveProjectChunks(question, {
-      projectId: projectSlug,
-      matchCount: 8,
-    });
-
-    const context = buildContextFromChunks(retrievedChunks);
-
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[API /ai/modal] RAG retrieval completed", {
-        chunksRetrieved: retrievedChunks.length,
-        contextLength: context?.length || 0,
-      });
-    }
-
-    // 3. If no context, provide minimal fallback
-    const finalContext = context && context.trim().length > 0
-      ? context
-      : `User question: ${question}\n\nContext: Answering based on general portfolio knowledge.`;
-
-    // 4. Get case study data (used for section context and action generation)
+    // 2. Get case study data (used for section context and action generation)
     const caseStudy = projectSlug ? getCaseStudyBySlug(projectSlug) : null;
 
-    // 5. Best-effort section context lookup
+    // 3. Best-effort section context lookup
     const { sectionHeadline, sectionText } = deriveSectionContext({
       projectSlug,
       topicLabel,
@@ -346,38 +354,56 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 6. Call modal-specific copywriter
-    console.log("[API /ai/modal] Calling modal copywriter");
-    let modalOutput;
-    try {
-      modalOutput = await runModalCopywriter({
-        question,
-        context: finalContext,
-        projectSlug,
-        pagePath,
-        sectionHeadline,
-        sectionText,
-        topicLabel,
-        history: history ?? [],
+    // 4. Build initial state for modal graph
+    const initialState = buildModalGraphStateFromRequest(
+      body,
+      projectSlug,
+      sectionHeadline,
+      sectionText
+    );
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[API /ai/modal] Invoking modal graph", {
+        question: initialState.question?.substring(0, 100),
+        projectSlug: initialState.projectSlug,
+        hasSectionText: !!initialState.sectionText,
+        historyLength: initialState.history?.length || 0,
       });
-    } catch (copywriterError) {
-      console.error("[API /ai/modal] Copywriter threw error:", copywriterError);
+    }
+
+    // 5. Invoke the modal graph
+    let finalState: ModalGraphState;
+    try {
+      finalState = await modalGraphApp.invoke(initialState);
+    } catch (graphError) {
+      console.error("[API /ai/modal] Modal graph threw error:", graphError);
       // Re-throw to be caught by outer catch block
-      throw copywriterError;
+      throw graphError;
     }
 
     if (process.env.NODE_ENV !== "production") {
-      console.log("[API /ai/modal] Modal copywriter completed", {
-        answerLength: modalOutput.answer?.length || 0,
+      console.log("[API /ai/modal] Modal graph completed", {
+        answerLength: finalState.answerText?.length || 0,
+        mode: (finalState as any).mode,
+        debugNotesCount: finalState.debugNotes?.length || 0,
       });
     }
 
-    // 7. Extract answer
-    const answer =
-      modalOutput.answer?.trim() ||
+    // 6. Extract answer, mode, and debugNotes from final state
+    const mode =
+      (finalState as any).conversationMode ??
+      (finalState as any).conversation_mode ??
+      (finalState as any).mode ??
+      "answer_direct";
+
+    const answer: string =
+      finalState.answerText ??
+      (finalState as any).answer ??
       "I couldn't generate an answer for that question. Could you try rephrasing it?";
 
-    // 8. Generate smart actions
+    const debugNotes: string[] = finalState.debugNotes ?? [];
+
+    // 7. Generate smart actions
     const actions = generateModalActions({
       question,
       projectSlug,
@@ -393,10 +419,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 9. Build response
+    // 8. Build response
     console.log("[API /ai/modal] Building response");
     const responseBody: ModalResponseBody = {
       answer,
+      mode,
+      debugNotes: process.env.NODE_ENV !== "production" ? debugNotes : undefined,
       actions,
     };
 
