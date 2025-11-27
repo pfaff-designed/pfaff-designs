@@ -1523,3 +1523,836 @@ This should be small, non-intrusive, and dev-only.
 - [ ] No TypeScript errors.
 
 Make these changes now.
+# Cursor Prompt — Unify PMI Identity in `pfaff-designs`
+
+You are working in the **pfaff-designs** repo.
+
+Your goal: **unify all references to the PMI project into a single canonical identity** so that the LangGraph modal agent, RAG, and UI all agree on what "PMI" is.
+
+Right now, the same project is referred to as:
+- "PMI"
+- "Project Management Institute"
+- "PMI.org"
+- "PMI Agile"
+- "PMI-ACP"
+- page paths like `/work/pmi-agile`
+
+This fragmentation causes:
+- weak/empty retrieval for PMI
+- `projectSlug` mismatches
+- tools not being found for PMI
+- hallucinated answers like generic toolkits
+
+You will make **PMI.org Redesign** use one canonical identity throughout the system.
+
+---
+
+## Canonical PMI Identity
+
+Use this as the **single source of truth** everywhere:
+
+- **slug:** `"pmi"`
+- **name:** `"PMI.org Redesign"`
+- **client:** `"Project Management Institute"`
+
+Tools (authoritative):
+- React
+- TypeScript
+- Next.js
+- Storybook
+- Figma
+
+Role (canonical):
+- Front-end engineer & technologist on the redesign of PMI.org.
+
+Summary (canonical):
+- Redesigned PMI.org with a modular component system and improvements to IA, navigation, template patterns, and consistency across a content-heavy site.
+
+You will align **all code + KB** to this identity.
+
+---
+
+## Step 1 — Normalize PMI in ProjectFacts / loadAllProjects
+
+1. Find the central project facts/registry:
+   - Look for `loadAllProjects`, `projectFacts`, or similar in:
+
+   ```
+   src/lib/ai/modalGraph.ts
+   src/lib/kb/
+   src/lib/ai/kb/
+   ```
+
+2. Locate the PMI entry.
+   - It may be called `pmi`, `pmi-agile`, `pmi-acp`, or similar.
+
+3. Replace or create the PMI entry so it **exactly** matches this shape:
+
+   ```ts
+   {
+     slug: "pmi",
+     name: "PMI.org Redesign",
+     client: "Project Management Institute",
+     role: "Front-end engineer & technologist",
+     summary:
+       "Redesigned PMI.org with a modular component system and improvements to IA, navigation, and template consistency across a content-heavy site.",
+     tools: ["React", "TypeScript", "Next.js", "Storybook", "Figma"],
+   }
+   ```
+
+4. Remove or rename any old PMI variants (e.g. `"pmi-agile"`, `"pmi-acp"`) so there is only **one** PMI-related ProjectFacts entry using `slug: "pmi"`.
+
+---
+
+## Step 2 — Normalize PMI in KB files
+
+1. In `src/lib/kb/` or `src/lib/ai/kb/`, find the PMI KB files:
+   - `pmi-longform.yaml` / `pmi-longform.YAML`
+   - `pmi-shortform.json` or similar.
+
+2. At the top of the longform KB, ensure the metadata clearly states:
+
+   ```yaml
+   project: PMI.org Redesign
+   slug: pmi
+   client: Project Management Institute
+   ```
+
+3. In short-form KB (JSON/TS), ensure the same canonical values are used for:
+   - `slug: "pmi"`
+   - `name: "PMI.org Redesign"`
+   - `client: "Project Management Institute"`
+
+4. Remove any obsolete references like:
+   - `slug: "pmi-agile"`
+   - `slug: "pmi-acp"`
+   - inconsistent names like `"PMI Agile"` when they’re actually referring to the same redesign work.
+
+Keep the **content** of the narrative intact; just normalize its identifiers.
+
+---
+
+## Step 3 — Map page paths to `projectSlug = "pmi"` in `derive_context`
+
+1. Open `src/lib/ai/modalGraph.ts` and locate the node/function that derives context, likely called `derive_context`.
+
+2. Find where `projectSlug` is determined from `pagePath`.
+   - E.g. logic like:
+
+   ```ts
+   if (pagePath.startsWith("/work/capital-one-travel")) {
+     projectSlug = "capital-one-travel";
+   }
+   ```
+
+3. Add a **PMI mapping block** so that all PMI-related paths set the same slug:
+
+   ```ts
+   if (
+     pagePath.startsWith("/work/pmi") ||
+     pagePath.startsWith("/work/pmi-agile") ||
+     pagePath.startsWith("/work/pmi-acp")
+   ) {
+     projectSlug = "pmi";
+   }
+   ```
+
+4. Make sure this mapping happens **before** returning the updated state, and that the returned state uses the canonical `projectSlug`:
+
+   ```ts
+   return {
+     ...state,
+     pagePath,
+     projectSlug,
+     // other fields
+   };
+   ```
+
+5. Append a debug note when PMI is detected to help with future debugging:
+
+   ```ts
+   if (projectSlug === "pmi") {
+     state.debugNotes.push("derive_context: normalized projectSlug to 'pmi'");
+   }
+   ```
+
+---
+
+## Step 4 — Normalize PMI mentions in modalGraph logic
+
+1. Still in `modalGraph.ts`, search for any hard-coded checks using older PMI identifiers, e.g.:
+
+   ```ts
+   "pmi-agile"
+   "pmi-acp"
+   "Project Management Institute" // in places where slug equality is needed
+   ```
+
+2. Where those checks are used to determine behavior for a *project*, update them to rely on the canonical slug instead:
+
+   ```ts
+   if (state.projectSlug === "pmi") {
+     // PMI-specific logic here
+   }
+   ```
+
+3. Do **not** remove human-readable mentions of "Project Management Institute" in answer text or KB content — just ensure **programmatic routing** uses `projectSlug === "pmi"`.
+
+---
+
+## Step 5 — Normalize PMI in any `loadAllProjects` or cross-project logic
+
+1. Look for any cross-project logic that relies on slugs, such as:
+   - `loadAllProjects()`
+   - `state.allProjects`
+   - cross-project tools filtering in `generate_answer`
+
+2. Ensure PMI is represented exactly once with `slug: "pmi"` and uses the canonical tools list:
+
+   ```ts
+   tools: ["React", "TypeScript", "Next.js", "Storybook", "Figma"]
+   ```
+
+3. If there is any logic that tries to special-case `"pmi-agile"` or `"pmi-acp"`, update it to the canonical slug.
+
+4. Confirm that tools-only questions on a PMI page (e.g. "What tools did you use on this project?") now:
+   - set `projectSlug === "pmi"`
+   - find the PMI entry from `allProjects`
+   - return a deterministic answer with the canonical tools.
+
+---
+
+## Step 6 — Optional: Alias detection in user questions
+
+If there is a simple, safe place to do it (and without adding heavy complexity), you may add minimal alias detection so that user questions like:
+
+- "What did he do for PMI-ACP?"
+- "What about PMI Agile?"
+
+are recognized as PMI:
+
+```ts
+const lowerQ = state.question.toLowerCase();
+
+if (
+  !state.projectSlug &&
+  (lowerQ.includes("pmi acp") ||
+    lowerQ.includes("pmi-acp") ||
+    lowerQ.includes("pmi agile") ||
+    lowerQ.includes("pmi.org"))
+) {
+  state.projectSlug = "pmi";
+  state.debugNotes.push("derive_context: normalized projectSlug to 'pmi' from question text");
+}
+```
+
+This is optional but helpful for queries coming from non-PMI pages.
+
+---
+
+## Definition of Done
+
+You are done when all of the following are true:
+
+- [ ] There is exactly **one** PMI ProjectFacts entry using `slug: "pmi"` with the canonical name, client, tools, role, and summary.
+- [ ] The PMI KB files (`pmi-longform.yaml`, `pmi-shortform.json`, etc.) use `slug: pmi` and `project: PMI.org Redesign` consistently.
+- [ ] `derive_context` maps all PMI-related page paths (e.g. `/work/pmi`, `/work/pmi-agile`, `/work/pmi-acp`) to `projectSlug = "pmi"`.
+- [ ] Any older references to `"pmi-agile"` or `"pmi-acp"` used for routing/logic have been updated to use `"pmi"`.
+- [ ] Tools-only questions on PMI pages resolve to a deterministic tools list (React, TypeScript, Next.js, Storybook, Figma) **without** hallucinated stacks.
+- [ ] `state.debugNotes` includes a note when PMI is normalized, making this behavior visible in the dev harness.
+
+Make these changes now.
+# Cursor Prompt — Unify PMI Identity in `pfaff-designs`
+
+You are working in the **pfaff-designs** repo.
+
+Your goal: **unify all references to the PMI project into a single canonical identity** so that the LangGraph modal agent, RAG, and UI all agree on what "PMI" is.
+
+Right now, the same project is referred to as:
+- "PMI"
+- "Project Management Institute"
+- "PMI.org"
+- "PMI Agile"
+- "PMI-ACP"
+- page paths like `/work/pmi-agile`
+
+This fragmentation causes:
+- weak/empty retrieval for PMI
+- `projectSlug` mismatches
+- tools not being found for PMI
+- hallucinated answers like generic toolkits
+
+You will make **PMI.org Redesign** use one canonical identity throughout the system.
+
+---
+
+## Canonical PMI Identity
+
+Use this as the **single source of truth** everywhere:
+
+- **slug:** `"pmi"`
+- **name:** `"PMI.org Redesign"`
+- **client:** `"Project Management Institute"`
+
+Tools (authoritative):
+- React
+- TypeScript
+- Next.js
+- Storybook
+- Figma
+
+Role (canonical):
+- Front-end engineer & technologist on the redesign of PMI.org.
+
+Summary (canonical):
+- Redesigned PMI.org with a modular component system and improvements to IA, navigation, template patterns, and consistency across a content-heavy site.
+
+You will align **all code + KB** to this identity.
+
+---
+
+## Step 1 — Normalize PMI in ProjectFacts / loadAllProjects
+
+1. Find the central project facts/registry:
+   - Look for `loadAllProjects`, `projectFacts`, or similar in:
+
+   ```
+   src/lib/ai/modalGraph.ts
+   src/lib/kb/
+   src/lib/ai/kb/
+   ```
+
+2. Locate the PMI entry.
+   - It may be called `pmi`, `pmi-agile`, `pmi-acp`, or similar.
+
+3. Replace or create the PMI entry so it **exactly** matches this shape:
+
+   ```ts
+   {
+     slug: "pmi",
+     name: "PMI.org Redesign",
+     client: "Project Management Institute",
+     role: "Front-end engineer & technologist",
+     summary:
+       "Redesigned PMI.org with a modular component system and improvements to IA, navigation, and template consistency across a content-heavy site.",
+     tools: ["React", "TypeScript", "Next.js", "Storybook", "Figma"],
+   }
+   ```
+
+4. Remove or rename any old PMI variants (e.g. `"pmi-agile"`, `"pmi-acp"`) so there is only **one** PMI-related ProjectFacts entry using `slug: "pmi"`.
+
+---
+
+## Step 2 — Normalize PMI in KB files
+
+1. In `src/lib/kb/` or `src/lib/ai/kb/`, find the PMI KB files:
+   - `pmi-longform.yaml` / `pmi-longform.YAML`
+   - `pmi-shortform.json` or similar.
+
+2. At the top of the longform KB, ensure the metadata clearly states:
+
+   ```yaml
+   project: PMI.org Redesign
+   slug: pmi
+   client: Project Management Institute
+   ```
+
+3. In short-form KB (JSON/TS), ensure the same canonical values are used for:
+   - `slug: "pmi"`
+   - `name: "PMI.org Redesign"`
+   - `client: "Project Management Institute"`
+
+4. Remove any obsolete references like:
+   - `slug: "pmi-agile"`
+   - `slug: "pmi-acp"`
+   - inconsistent names like `"PMI Agile"` when they’re actually referring to the same redesign work.
+
+Keep the **content** of the narrative intact; just normalize its identifiers.
+
+---
+
+## Step 3 — Map page paths to `projectSlug = "pmi"` in `derive_context`
+
+1. Open `src/lib/ai/modalGraph.ts` and locate the node/function that derives context, likely called `derive_context`.
+
+2. Find where `projectSlug` is determined from `pagePath`.
+   - E.g. logic like:
+
+   ```ts
+   if (pagePath.startsWith("/work/capital-one-travel")) {
+     projectSlug = "capital-one-travel";
+   }
+   ```
+
+3. Add a **PMI mapping block** so that all PMI-related paths set the same slug:
+
+   ```ts
+   if (
+     pagePath.startsWith("/work/pmi") ||
+     pagePath.startsWith("/work/pmi-agile") ||
+     pagePath.startsWith("/work/pmi-acp")
+   ) {
+     projectSlug = "pmi";
+   }
+   ```
+
+4. Make sure this mapping happens **before** returning the updated state, and that the returned state uses the canonical `projectSlug`:
+
+   ```ts
+   return {
+     ...state,
+     pagePath,
+     projectSlug,
+     // other fields
+   };
+   ```
+
+5. Append a debug note when PMI is detected to help with future debugging:
+
+   ```ts
+   if (projectSlug === "pmi") {
+     state.debugNotes.push("derive_context: normalized projectSlug to 'pmi'");
+   }
+   ```
+
+---
+
+## Step 4 — Normalize PMI mentions in modalGraph logic
+
+1. Still in `modalGraph.ts`, search for any hard-coded checks using older PMI identifiers, e.g.:
+
+   ```ts
+   "pmi-agile"
+   "pmi-acp"
+   "Project Management Institute" // in places where slug equality is needed
+   ```
+
+2. Where those checks are used to determine behavior for a *project*, update them to rely on the canonical slug instead:
+
+   ```ts
+   if (state.projectSlug === "pmi") {
+     // PMI-specific logic here
+   }
+   ```
+
+3. Do **not** remove human-readable mentions of "Project Management Institute" in answer text or KB content — just ensure **programmatic routing** uses `projectSlug === "pmi"`.
+
+---
+
+## Step 5 — Normalize PMI in any `loadAllProjects` or cross-project logic
+
+1. Look for any cross-project logic that relies on slugs, such as:
+   - `loadAllProjects()`
+   - `state.allProjects`
+   - cross-project tools filtering in `generate_answer`
+
+2. Ensure PMI is represented exactly once with `slug: "pmi"` and uses the canonical tools list:
+
+   ```ts
+   tools: ["React", "TypeScript", "Next.js", "Storybook", "Figma"]
+   ```
+
+3. If there is any logic that tries to special-case `"pmi-agile"` or `"pmi-acp"`, update it to the canonical slug.
+
+4. Confirm that tools-only questions on a PMI page (e.g. "What tools did you use on this project?") now:
+   - set `projectSlug === "pmi"`
+   - find the PMI entry from `allProjects`
+   - return a deterministic answer with the canonical tools.
+
+---
+
+## Step 6 — Optional: Alias detection in user questions
+
+If there is a simple, safe place to do it (and without adding heavy complexity), you may add minimal alias detection so that user questions like:
+
+- "What did he do for PMI-ACP?"
+- "What about PMI Agile?"
+
+are recognized as PMI:
+
+```ts
+const lowerQ = state.question.toLowerCase();
+
+if (
+  !state.projectSlug &&
+  (lowerQ.includes("pmi acp") ||
+    lowerQ.includes("pmi-acp") ||
+    lowerQ.includes("pmi agile") ||
+    lowerQ.includes("pmi.org"))
+) {
+  state.projectSlug = "pmi";
+  state.debugNotes.push("derive_context: normalized projectSlug to 'pmi' from question text");
+}
+```
+
+This is optional but helpful for queries coming from non-PMI pages.
+
+---
+
+## Definition of Done
+
+You are done when all of the following are true:
+
+- [ ] There is exactly **one** PMI ProjectFacts entry using `slug: "pmi"` with the canonical name, client, tools, role, and summary.
+- [ ] The PMI KB files (`pmi-longform.yaml`, `pmi-shortform.json`, etc.) use `slug: pmi` and `project: PMI.org Redesign` consistently.
+- [ ] `derive_context` maps all PMI-related page paths (e.g. `/work/pmi`, `/work/pmi-agile`, `/work/pmi-acp`) to `projectSlug = "pmi"`.
+- [ ] Any older references to `"pmi-agile"` or `"pmi-acp"` used for routing/logic have been updated to use `"pmi"`.
+- [ ] Tools-only questions on PMI pages resolve to a deterministic tools list (React, TypeScript, Next.js, Storybook, Figma) **without** hallucinated stacks.
+- [ ] `state.debugNotes` includes a note when PMI is normalized, making this behavior visible in the dev harness.
+
+Make these changes now.
+# Cursor Prompt — Final PMI Normalization Fixes
+
+You are working in the **pfaff-designs** repo.
+Your task: **complete PMI normalization** by addressing the final remaining items.
+
+PMI unification is *almost* fully complete. The remaining work is small and focused.
+
+---
+
+## ✅ REQUIRED FIX 1 — Add canonical metadata to `pmi-shortform.json`
+
+Open:
+```
+src/lib/kb/pmi-shortform.json
+```
+
+Add the missing top‑level metadata so it matches the structure used by other shortform KB files (e.g., Capital One, Tanger):
+
+```jsonc
+{
+  "slug": "pmi",
+  "name": "PMI.org Redesign",
+  "client": "Project Management Institute",
+  // keep the rest of the existing content intact
+}
+```
+
+This makes shortform KB consistent with:
+- `loadAllProjects()`
+- `pmi-longform.YAML`
+- modalGraph canonical slug
+
+Do **not** rename or remove the existing narrative fields — only add the metadata.
+
+---
+
+## ⚠️ REQUIRED FIX 2 — Verify PMI identity is fully unified
+
+Search the repo for:
+```
+pmi-agile
+pmi-acp
+```
+
+These identifiers should appear **only** in:
+- `derive_context` (path normalization like `/work/pmi-agile` → `projectSlug = "pmi"`)
+- optional question‑based alias detection
+
+If they appear **anywhere else** (slug definitions, ProjectFacts entries, KB metadata), update those references so the canonical value is always:
+
+```ts
+slug: "pmi"
+```
+
+The normalization logic *should stay* — don’t remove it.
+
+---
+
+## 🟢 REQUIRED FIX 3 — Do NOT modify narrative content
+
+In `pmi-longform.yaml`, leave narrative references like:
+- "PMI-ACP"
+- "Agile certification"
+
+These references are correct in the story and should **not** be rewritten.
+
+Only identifiers (slug, project name, client) needed normalization — narrative content stays the same.
+
+---
+
+## 🧪 REQUIRED FIX 4 — Verify PMI responses via the dev harness
+
+After making the above updates, test using:
+```
+/api/dev/modal-graph
+```
+With payload examples like:
+
+### Example A — Tools question
+```json
+{
+  "question": "What tools did you use on this project?",
+  "pagePath": "/work/pmi",
+  "projectSlug": "pmi",
+  "sectionHeadline": "Overview",
+  "sectionText": "",
+  "history": []
+}
+```
+Expected:
+- `projectSlug: "pmi"`
+- deterministic tools answer (React, TypeScript, Next.js, Storybook, Figma)
+- **no hallucinated stacks**
+
+### Example B — Alias detection
+```json
+{
+  "question": "What did he do for PMI-ACP?",
+  "pagePath": "/",
+  "projectSlug": null,
+  "sectionHeadline": "",
+  "sectionText": "",
+  "history": []
+}
+```
+Expected:
+- `projectSlug` normalized to `"pmi"`
+- debugNotes includes alias detection
+- answer grounded in PMI.org Redesign
+
+---
+
+## Definition of Done
+PMI normalization is fully complete when:
+- [ ] `pmi-shortform.json` includes `slug`, `name`, and `client` fields
+- [ ] No KB files or project registrations use `pmi-agile` or `pmi-acp` as slugs
+- [ ] Normalization logic only appears in path and alias detection
+- [ ] Narrative content remains unchanged
+- [ ] `/api/dev/modal-graph` tests show consistent PMI identity and correct deterministic tools answers
+
+Make these changes now.
+# Cursor Prompt — Phase 9.2B — Mode-Carrying in the Modal UI
+
+You are working in the **pfaff-designs** repo.
+Your task: **implement end-to-end mode-carrying** in the AI modal assistant so that:
+- The modal API returns `mode` from the LangGraph agent.
+- The frontend stores that `mode` on assistant messages.
+- The UI displays a **dev-only label** showing which mode was used.
+
+Do NOT modify layout, orchestrator, or RAG here. Only modal wiring.
+
+---
+
+## 1. Ensure the modal API returns `{ answer, mode, debugNotes }`
+
+Open the modal assistant API route. It will be one of:
+```
+src/app/api/ai/modal/route.ts
+src/app/api/modal/route.ts
+```
+
+Inside the POST handler:
+- The old AI logic may still exist. **Replace only the AI call**, not the route shape.
+- After building `initialState`, call:
+
+```ts
+const finalState = await modalGraphApp.invoke(initialState);
+```
+
+Extract safe values:
+
+```ts
+const mode =
+  (finalState as any).conversationMode ||
+  (finalState as any).mode ||
+  "answer_direct";
+
+const answer =
+  (finalState as any).answerText ||
+  (finalState as any).answer ||
+  "";
+
+const debugNotes = (finalState as any).debugNotes || [];
+```
+
+Return the modal response:
+
+```ts
+return NextResponse.json({
+  answer,
+  mode,
+  debugNotes,
+});
+```
+
+Make sure the API does NOT return the entire `finalState` in production.
+
+---
+
+## 2. Update the frontend chat message type
+
+Find the modal message type (e.g. `ChatMessage`). Add:
+
+```ts
+type ConversationMode =
+  | "answer_direct"
+  | "clarify_then_answer"
+  | "low_context_fallback";
+
+export type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  mode?: ConversationMode; // only for assistant messages
+};
+```
+
+Fix any TypeScript errors in places that construct messages.
+
+---
+
+## 3. Store `mode` when appending assistant messages
+
+Open the hook/component that sends the modal request. It likely does:
+```ts
+const res = await fetch("/api/ai/modal", {...});
+const data = await res.json();
+```
+
+Update the message append logic:
+
+```ts
+setMessages((prev) => [
+  ...prev,
+  {
+    id: crypto.randomUUID?.() ?? String(Date.now()),
+    role: "assistant",
+    content: data.answer,
+    mode: data.mode,
+  },
+]);
+```
+
+Add dev logging:
+
+```ts
+if (process.env.NODE_ENV === "development") {
+  console.log("[modalGraph] mode:", data.mode);
+  console.log("[modalGraph] debugNotes:", data.debugNotes);
+}
+```
+
+---
+
+## 4. Add a dev-only mode label to the assistant bubble
+
+Find the component rendering chat bubbles (e.g. `ChatMessageBubble`). Then:
+
+```tsx
+{message.role === "assistant" &&
+  message.mode &&
+  process.env.NODE_ENV === "development" && (
+    <span className="mb-1 block text-xs text-muted-foreground">
+      {message.mode === "answer_direct" && "Direct answer"}
+      {message.mode === "clarify_then_answer" && "Answer + follow-up"}
+      {message.mode === "low_context_fallback" && "Low-context overview"}
+    </span>
+)}
+```
+
+Keep the styling minimal and consistent.
+
+---
+
+## 5. Sanity Checks
+
+After implementing:
+- Ask “What tools did you use?” on a project page → label says **Direct answer**.
+- Ask “What other projects has he worked on?” → label says **Answer + follow-up**.
+- Ask “What does he do?” on the homepage → label shows **Low-context overview**.
+
+Ensure:
+- No TypeScript errors.
+- No runtime errors.
+- Modal still opens and scrolls properly.
+
+---
+
+## Cursor Checklist
+
+- [ ] Modal API returns `{ answer, mode, debugNotes }`.
+- [ ] ChatMessage type includes `mode?: ConversationMode`.
+- [ ] Assistant messages store `mode`.
+- [ ] Dev-only mode label renders in assistant bubbles.
+- [ ] Everything compiles and UI works.
+
+Make these changes now.
+
+---
+
+## 📝 Cursor Feedback & Observations
+
+**Date:** 2024-12-19
+
+### ✅ Implementation Status
+
+Based on code review and conversation history, the following phases appear to be **complete**:
+
+- ✅ **Phase 8.1** — Conversation Policy: `ConversationMode` type, `computeContextScores`, deterministic `conversationPolicyNode` implemented
+- ✅ **Phase 8.3** — Generate Answer Mode Handling: Structured user message format, mode-aware system prompt, error handling
+- ✅ **Phase 9.1** — Production Modal Rewiring: `/api/ai/modal` now uses `modalGraphApp.invoke()`
+- ✅ **Phase 9.2A** — PMI Data & Tools: PMI facts enriched, deterministic tools answers, system prompt anti-hallucination rules
+- ✅ **Phase 9.2B** — Mode-Carrying: Frontend stores `mode`, dev-only label implemented
+- ✅ **PMI Normalization** — Canonical identity unified: `slug: "pmi"` throughout, path normalization, alias detection, KB files updated
+
+### 📋 File Organization Suggestion
+
+This file contains **multiple historical prompts** stacked sequentially. Consider:
+
+1. **Archiving completed prompts** to a `prompts/archive/` directory
+2. **Keeping only the active/current prompt** at the top
+3. **Adding a status header** indicating which phase is currently active
+4. **Creating a roadmap summary** that references archived prompts by phase number
+
+This would make it easier to:
+- Identify what work is currently needed
+- Avoid confusion about which instructions are active
+- Track progress through phases
+- Reference historical context when needed
+
+### 🔍 Code Quality Observations
+
+**Strengths:**
+- Well-structured LangGraph implementation with clear node separation
+- Comprehensive debug notes for troubleshooting
+- Deterministic routing logic prevents unnecessary LLM calls
+- Good separation of concerns (derive → retrieve → build → policy → generate)
+
+**Potential Improvements:**
+- Consider extracting `GENERATE_ANSWER_SYSTEM_PROMPT` to a separate file if it grows
+- The `loadAllProjects()` helper uses static data — consider documenting when/if this should be replaced with dynamic KB loading
+- PMI normalization logic is well-implemented but could benefit from unit tests
+
+### 🧪 Testing Recommendations
+
+The test scripts created (`test-pmi-normalization.sh`, `test-phase-9.2.sh`) are helpful. Consider:
+
+1. **Automated integration tests** for the modal graph nodes
+2. **Snapshot tests** for deterministic answers (tools, project lists)
+3. **E2E tests** for the modal UI flow
+4. **Regression tests** for PMI normalization edge cases
+
+### 📌 Next Steps (If Applicable)
+
+If there's a **new active phase**, consider:
+- Adding a clear header: `# ACTIVE PROMPT — Phase X.Y — [Description]`
+- Moving completed phases to an archive section
+- Updating the roadmap file (`extra-files/v1-roadmap.md`) with current status
+
+### ⚠️ Potential Issues to Watch
+
+1. **Environment Variables**: Ensure `NEXT_PUBLIC_NODE_ENV` is set correctly for dev-only features (mode labels)
+2. **Type Safety**: Some `(finalState as any)` casts in API routes — consider stronger typing
+3. **Error Handling**: Verify Anthropic API error fallbacks are user-friendly in production
+4. **Performance**: Monitor graph execution time as more nodes are added
+
+### 💡 Suggestions
+
+1. **Documentation**: Consider adding JSDoc comments to key functions explaining the graph flow
+2. **Logging**: The debug notes system is excellent — consider adding structured logging for production monitoring
+3. **Validation**: Add runtime validation for `ModalGraphState` to catch type mismatches early
+
+---
+
+**Overall Assessment:** The implementation is well-structured and follows the prompts accurately. The main improvement would be organizing this prompt file to clearly indicate what's active vs. historical.
