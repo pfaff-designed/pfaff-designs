@@ -70,7 +70,7 @@ export const AiConversationRow: React.FC<AiConversationRowProps> = ({
         )}
       >
         {/* Dev-only mode label for assistant messages */}
-        {role === "ai" && mode && typeof window !== "undefined" && (
+        {role === "ai" && mode && process.env.NEXT_PUBLIC_NODE_ENV === "development" && (
           <span className="mb-1 block text-xs text-[color:var(--text-muted)] opacity-60">
             {mode === "answer_direct" && "Direct answer"}
             {mode === "clarify_then_answer" && "Answer + follow-up"}

@@ -1,6 +1,9 @@
 
 
 {
+  "slug": "pmi",
+  "name": "PMI.org Redesign",
+  "client": "Project Management Institute",
   "one_liner": "Built a modern, responsive front-end for PMI's Agile certification site to clarify the value and make the path to certification easier to follow.",
   "projectSummary": "Redesigned and rebuilt the PMI Agile Certified Practitioner (ACP) page with a clearer structure, modern UI, and accessible, responsive components.",
   "problem": {
