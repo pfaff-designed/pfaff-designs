@@ -142,10 +142,14 @@ export function AiModalHost() {
       });
 
       // 4. Build conversation history from the updated messages (last 2 turns = 4 messages)
-      const history = historyMessages.slice(-4).map((m) => ({
-        role: m.role,
-        text: typeof m.body === "string" ? m.body : "",
-      }));
+      // Filter out "system" role and ensure only "user" | "ai" roles
+      const history = historyMessages
+        .slice(-4)
+        .filter((m) => m.role === "user" || m.role === "ai")
+        .map((m) => ({
+          role: m.role === "ai" ? ("ai" as const) : ("user" as const),
+          text: typeof m.body === "string" ? m.body : "",
+        }));
 
       // 5. Call the real API
       try {
@@ -369,11 +373,15 @@ export function AiModalHost() {
       ]);
 
       // Build conversation history from updated messages
+      // Filter out "system" role and ensure only "user" | "ai" roles
       const updatedMessages = [...messages, { role: "user" as const, body: question }];
-      const history = updatedMessages.slice(-4).map((m) => ({
-        role: m.role,
-        text: typeof m.body === "string" ? m.body : "",
-      }));
+      const history = updatedMessages
+        .slice(-4)
+        .filter((m) => m.role === "user" || m.role === "ai")
+        .map((m) => ({
+          role: m.role === "ai" ? ("ai" as const) : ("user" as const),
+          text: typeof m.body === "string" ? m.body : "",
+        }));
 
       // Make API call directly (don't use handleComposerSubmit to avoid duplicate message)
       const makeApiCall = async () => {

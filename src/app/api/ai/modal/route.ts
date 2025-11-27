@@ -382,8 +382,8 @@ export async function POST(req: NextRequest) {
     const initialState = buildModalGraphStateFromRequest(
       body,
       effectiveProjectSlug ?? undefined,
-      sectionHeadline ?? undefined,
-      sectionText ?? undefined
+      sectionHeadline ?? null,
+      sectionText ?? null
     );
 
     if (process.env.NODE_ENV !== "production") {

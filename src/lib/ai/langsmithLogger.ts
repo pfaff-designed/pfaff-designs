@@ -22,16 +22,14 @@ export const logToLangSmith = (
   if (langsmithClient && process.env.LANGSMITH_API_KEY) {
     try {
       // Create a feedback/event in LangSmith
-      langsmithClient.createFeedback({
-        run_id: runId || "orchestrator-run",
-        key: level,
-        score: level === "error" ? 0 : level === "warn" ? 0.5 : 1,
-        comment: message,
-        metadata: {
-          ...metadata,
-          timestamp: new Date().toISOString(),
-        },
-      }).catch((err) => {
+      langsmithClient.createFeedback(
+        runId || "orchestrator-run",
+        level,
+        {
+          score: level === "error" ? 0 : level === "warn" ? 0.5 : 1,
+          comment: `${message}${metadata ? ` | Metadata: ${JSON.stringify(metadata)}` : ""} | Timestamp: ${new Date().toISOString()}`,
+        }
+      ).catch((err) => {
         // Fallback to console if LangSmith fails
         console[level](`[LangSmith] ${message}`, metadata);
       });
