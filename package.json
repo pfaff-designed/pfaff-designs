@@ -13,7 +13,9 @@
     "embed-projects": "tsx scripts/embedProjects.ts",
     "embed:kb": "tsx scripts/embed-kb.ts",
     "sync:projects": "tsx scripts/sync-projects-from-kb.ts",
-    "sync-and-embed": "npm run sync:projects && npm run embed:kb"
+    "sync-and-embed": "npm run sync:projects && npm run embed:kb",
+    "eval": "tsx scripts/run-evaluation.ts",
+    "eval:push-datasets": "tsx scripts/ls-push.ts"
   },
   "repository": {
     "type": "git",
@@ -49,6 +51,7 @@
     "lucide-react": "^0.553.0",
     "next": "^14.2.33",
     "openai": "^6.9.1",
+    "openevals": "^0.1.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^10.1.0",
