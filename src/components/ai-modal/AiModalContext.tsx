@@ -162,7 +162,7 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
         ? {
             ...state,
             isOpen: true,
-            status: "thinking", // Go directly to thinking since we're submitting
+            status: "thinking" as AiModalStatus, // Go directly to thinking since we're submitting
             source: "button" as AiModalSource,
             errorMessage: undefined,
             composerValue: "",
@@ -170,7 +170,7 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
           }
         : {
             ...state,
-            status: "thinking", // Go directly to thinking since we're submitting
+            status: "thinking" as AiModalStatus, // Go directly to thinking since we're submitting
             errorMessage: undefined,
             composerValue: "",
             lastQuestion: question,

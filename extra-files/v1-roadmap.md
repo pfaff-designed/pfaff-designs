@@ -281,16 +281,106 @@ This phase became unnecessary after introducing LangGraph in Phase 8.
 
 ---
 
-# Phase 10 — Cmd+K Palette  
+# Phase 10 — Cmd+K Command Palette (Atlas-Style)
 **Status: Not Started**  
-**Estimate: 18–24 hrs**
+**Estimated Time: 22–30 hrs**
 
-Global command system:
-- Navigation  
-- AI commands  
-- Contact  
-- Scrolling  
-- Case study shortcuts
+Phase 10 introduces an **Atlas-style command environment**, triggered via Cmd+K, enabling global navigation, quick inline AI actions, deep modal queries, and system-level behaviors (download resume, jump to sections, etc.). V1 focuses on deterministic command execution; V2 will expand into full generative-UI composition.
+
+---
+
+## 10.1 Command Model, Registry & Context Object (No UI)
+**Estimated Time: 5–7 hrs**
+
+### Goal
+Implement the core “brain” of the command palette: a structured command schema, a centralized registry, and a context object describing the current page, selection, and available actions.
+
+### Deliverables
+- `Command` interface with fields for:
+  - `id`, `kind`, `label`, `keywords`, `visible(ctx)`, `run(ctx)`
+- Supported command kinds:
+  - `nav`, `ai_quick`, `ai_deep`, `download`, `help`
+- Full command registry including:
+  - Navigation commands (Home, Work, each project)
+  - Quick AI actions (summaries, rewrites, explainers)
+  - Deep AI actions (open modalGraph via `openAiModal()`)
+  - Download commands (resume)
+  - Help / fallback command
+- `CommandContext` object containing:
+  - Current path
+  - Project slug
+  - Selected text
+  - Section headline/body
+  - Actions: `openAiModal`, `openInlineChat`, `navigate`, `download`
+- Deterministic `filterCommands(input, ctx)` helper
+- No UI yet
+
+---
+
+## 10.2 CommandPalette Shell (Minimal UI)
+**Estimated Time: 6–8 hrs**
+
+### Goal
+Build a keyboard-driven command palette UI similar to Atlas.
+
+### Deliverables
+- Cmd+K listener
+- Pill-shaped input positioned near the cursor
+- Simple fuzzy search on commands
+- Scrollable result list
+- Arrow-key navigation & Enter to execute
+- Show/hide animations
+
+---
+
+## 10.3 Inline Chat Window (Quick Responses)
+**Estimated Time: 5–7 hrs**
+
+### Goal
+Build a lightweight, movable chat window for JSON-level responses: summarize, rewrite, explain.
+
+### Deliverables
+- Draggable floating window component
+- Renders single-turn Q → A
+- Uses simplified `/api/ai/quick` route
+- Accepts selectionText and sectionText
+- Not tied to modalGraph
+
+---
+
+## 10.4 Modal Deep-Link Integration
+**Estimated Time: 3–5 hrs**
+
+### Goal
+Use existing modalGraph (modal assistant) for deeper or multi-turn queries.
+
+### Deliverables
+- Commands with `kind: "ai_deep"` call `openAiModal()`
+- Modal opens even if palette is up
+- Uses mode-carrying from Phase 9
+
+---
+
+## 10.5 Unsupported Query Handling
+**Estimated Time: 2–3 hrs**
+
+### Goal
+Provide helpful suggestions when users attempt unsupported actions.
+
+### Deliverables
+- Detect no-match queries
+- Trigger `help` command
+- Suggest relevant groups:
+  - Navigation
+  - Ask AI (quick)
+  - Deep AI
+  - Downloads
+
+---
+
+#### 📘 Phase History (Updated)
+- Nov 25–26: Phase respecified after modal stabilization; aligned with Atlas browser model.
+- V2 notes added for generative-UI composition via orchestrator.
 
 ---
 

@@ -8,7 +8,8 @@ import { resolveIntent } from "./intentResolver";
 import { componentRegistry } from "@/lib/registry/componentRegistry";
 import type { RoutedIntent, PageContext } from "./queryTypes";
 import { getHeroFacts } from "@/lib/kb/CaseStudyHeroFacts";
-import { getCaseStudyBySlug, type CaseStudyPage } from "@/lib/caseStudies/data";
+import { getCaseStudyBySlug } from "@/lib/caseStudies/data";
+import type { CaseStudyPage } from "@/lib/caseStudies/types";
 import type { IntentProfile } from "./intents";
 import type { ContentStrategy } from "./contentStrategies";
 import type { LayoutStrategy } from "./layoutStrategies";
@@ -48,7 +49,7 @@ function buildComprehensiveProjectContext(caseStudy: CaseStudyPage): string {
   // All sections (complete project information)
   if (caseStudy.sections && caseStudy.sections.length > 0) {
     parts.push("\n---\nPROJECT SECTIONS:\n");
-    caseStudy.sections.forEach((section) => {
+    caseStudy.sections.forEach((section: { eyebrow: string; heading: string; body: string }) => {
       parts.push(`\n[${section.eyebrow}] ${section.heading}\n${section.body}`);
     });
   }
@@ -247,10 +248,13 @@ export async function runCopywriterPipeline(
           kind: "answer",
           blocks: [
             {
-              type: "answer_block",
-              eyebrow: "AI · Generated Response",
-              heading: "Answer",
-              body: "I'm working on generating a detailed answer for your question. Please try rephrasing or asking a more specific question.",
+              id: "fallback-answer",
+              component: "ContentSection",
+              props: {
+                eyebrow: "AI · Generated Response",
+                headline: "Answer",
+                body: "I'm working on generating a detailed answer for your question. Please try rephrasing or asking a more specific question.",
+              },
             },
           ],
         },
@@ -276,10 +280,13 @@ export async function runCopywriterPipeline(
           kind: "answer",
           blocks: [
             {
-              type: "answer_block",
-              eyebrow: "AI · Generated Response",
-              heading: "Unable to Generate Full Answer",
-              body: `I encountered an issue while generating an answer: ${error instanceof Error ? error.message : String(error)}. Please try rephrasing your question or contact support if this persists.`,
+              id: "error-answer",
+              component: "ContentSection",
+              props: {
+                eyebrow: "AI · Generated Response",
+                headline: "Unable to Generate Full Answer",
+                body: `I encountered an issue while generating an answer: ${error instanceof Error ? error.message : String(error)}. Please try rephrasing your question or contact support if this persists.`,
+              },
             },
           ],
         },
