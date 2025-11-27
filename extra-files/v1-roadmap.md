@@ -5,8 +5,7 @@ A fully conversational, AI-enhanced, editorial portfolio experience.
 ---
 
 ## Phase 8 — LangGraph Dev Harness & Evaluation
-**Status: Not Started**  
-**Estimated Hours: 18–24 hrs**
+**Status: In Progress (8.1–8.5 complete; 8.6 in progress)**  
 
 A dedicated development harness for testing, observing, and refining the AI modal agent outside of the production pipeline.
 
@@ -100,36 +99,68 @@ Prepare for automated testing of the modal agent as it evolves.
 
 #### 8.4.1 Dataset A — Final Answer Quality
 10 small examples defining:
-- Question
-- Section context
-- Expected description of a "good" answer
+- Question + page context (pagePath, projectSlug, sectionHeadline, sectionText, history)
+- Expected `expected_mode`
+- A natural-language description of a "good" answer
 
-Evaluated using an LLM judge (structured: `is_correct`, `tone_ok`, `uses_context`, `asks_followup`, `rationale`).
+Evaluated using a single LLM judge that outputs structured JSON:
+
+```json
+{
+  "routing_correct": boolean,
+  "mode_contract_respected": boolean,
+  "answer_quality": 1-5,
+  "grounded_in_projects": boolean,
+  "explanation": "short rationale"
+}
+```
+
+The judge checks:
+- Mode choice (answer_direct / clarify_then_answer / low_context_fallback)
+- Adherence to the mode contract (follow-up questions, overview behavior, etc.)
+- Tone (warm, recruiter-friendly, no AI-speak)
+- Grounding in real projects (Capital One, Tanger, PMI, Coke, portfolio)
 
 #### 8.4.2 Dataset B — Mode/Routing
 10 examples containing:
-- Question
-- Presence/absence of section context
-- Expected `mode`
+- Question + page context
+- Expected `expected_mode`
 
-Evaluated with deterministic equality.
+Evaluated using the same LLM judge and/or deterministic equality by comparing:
+- `expected_mode` (dataset) vs `mode` (from the modal graph run).
 
 #### 8.4.3 Dataset C — Trajectory
 5 examples defining the ideal ordered node execution:
+
 ```json
 ["derive_context", "retrieve_chunks", "build_context_blob", "conversation_policy", "generate_answer"]
 ```
+
+Each example includes `expected_trajectory`, and the modal graph eval returns `trajectory` derived from `executionSteps` (or falls back to the canonical order).
+
 Evaluated via:
-- `extra_steps`
-- `unmatched_steps`
-- `in_order` (boolean)
+- LLM judge reading `expected_trajectory` vs `trajectory`, and/or
+- Simple programmatic comparison (order and membership).
 
 ---
 
 ### 8.5 Target Functions (for LangSmith)
-- **Final Answer Target** — Return `{ answer: finalState.answerText }`
-- **Routing Target** — Return `{ mode: finalState.mode }`
-- **Trajectory Target** — Return `{ steps: executionSteps[] }`
+- **Unified Modal Graph Target** — `runModalGraphEval(input)`
+  - Input (from dataset):  
+    `{ question, pagePath, projectSlug, sectionHeadline, sectionText, history }`
+  - Output (for judge + metrics):
+    ```json
+    {
+      "mode": "answer_direct" | "clarify_then_answer" | "low_context_fallback",
+      "answer": "final answer string (from answerText)",
+      "trajectory": ["derive_context", "retrieve_chunks", "build_context_blob", "conversation_policy", "generate_answer"],
+      "debugNotes": ["optional debug strings..."]
+    }
+    ```
+  - Internally:
+    - Builds `ModalGraphState` using the same mapping as `/api/dev/modal-graph`
+    - Invokes `modalGraphApp.invoke(initialState)`
+    - Extracts `mode`, `answerText`, `executionSteps`/trajectory, and `debugNotes` from the final state without changing graph behavior.
 
 ---
 
