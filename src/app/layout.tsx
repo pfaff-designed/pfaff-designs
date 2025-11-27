@@ -4,7 +4,7 @@ import { Header } from "@/components/page-components/Header";
 import { Footer } from "@/components/page-components/Footer";
 import { AIAnswerProvider } from "@/components/ai/AIAnswerContext";
 import { SectionProvider } from "@/components/ai/SectionContext";
-import { AiModalProvider, AiModalHost, AiHoverPillHost, FloatingAiButton } from "@/components/ai-modal";
+import { AiModalProvider, AiModalHost, AiHoverPillHost, FloatingAiButton, AiKeyboardShortcut } from "@/components/ai-modal";
 
 export const metadata: Metadata = {
   title: "pfaff-designs",
@@ -39,6 +39,8 @@ export default function RootLayout({
           <AiHoverPillHost />
           {/* Global floating AI button - mobile-only FAB in bottom-right */}
           <FloatingAiButton />
+          {/* Global keyboard shortcut handler - Cmd+K / Ctrl+K */}
+          <AiKeyboardShortcut />
         </AiModalProvider>
       </body>
     </html>
