@@ -31,6 +31,11 @@ export interface AiModalState {
   // Context fields for API calls
   topicLabel?: string | null;
   topicId?: string | null;
+  // Additional context for openAiModal
+  pagePath?: string | null;
+  projectSlug?: string | null;
+  sectionHeadline?: string | null;
+  sectionText?: string | null;
 }
 
 // ============================================================
@@ -40,6 +45,7 @@ export interface AiModalState {
 export type AiModalEvent =
   | { type: "OPEN_FROM_SELECTION"; payload: { selectedText: string; headline?: string } }
   | { type: "OPEN_GLOBAL"; payload?: { headline?: string; topicLabel?: string; topicId?: string; source?: AiModalSource; selectedText?: string } }
+  | { type: "OPEN_AI_MODAL"; payload: { question: string; pagePath?: string; projectSlug?: string; sectionHeadline?: string; sectionText?: string } }
   | { type: "SET_COMPOSER_VALUE"; payload: { value: string } }
   | { type: "SUBMIT_QUESTION"; payload?: { question?: string } }
   | { type: "SET_THINKING" }
@@ -64,6 +70,10 @@ const initialState: AiModalState = {
   errorMessage: undefined,
   topicLabel: null,
   topicId: null,
+  pagePath: null,
+  projectSlug: null,
+  sectionHeadline: null,
+  sectionText: null,
 };
 
 // ============================================================
@@ -142,6 +152,38 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
           // isOpen stays true
         };
       }
+    }
+
+    case "OPEN_AI_MODAL": {
+      const { question, pagePath, projectSlug, sectionHeadline, sectionText } = event.payload;
+      
+      // Open modal if closed, set context, and immediately submit question
+      const baseState = !state.isOpen
+        ? {
+            ...state,
+            isOpen: true,
+            status: "thinking", // Go directly to thinking since we're submitting
+            source: "button" as AiModalSource,
+            errorMessage: undefined,
+            composerValue: "",
+            lastQuestion: question,
+          }
+        : {
+            ...state,
+            status: "thinking", // Go directly to thinking since we're submitting
+            errorMessage: undefined,
+            composerValue: "",
+            lastQuestion: question,
+          };
+
+      return {
+        ...baseState,
+        pagePath: pagePath ?? null,
+        projectSlug: projectSlug ?? null,
+        sectionHeadline: sectionHeadline ?? null,
+        sectionText: sectionText ?? null,
+        topicLabel: sectionHeadline ?? null,
+      };
     }
 
     case "SET_COMPOSER_VALUE": {
@@ -227,6 +269,10 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
         errorMessage: undefined,
         topicLabel: null,
         topicId: null,
+        pagePath: null,
+        projectSlug: null,
+        sectionHeadline: null,
+        sectionText: null,
       };
     }
 
@@ -251,6 +297,14 @@ export interface OpenGlobalOptions {
   selectedText?: string;
 }
 
+export interface OpenAiModalOptions {
+  question: string;
+  pagePath?: string;
+  projectSlug?: string;
+  sectionHeadline?: string;
+  sectionText?: string;
+}
+
 export interface AiModalContextValue {
   state: AiModalState;
   // Derived flags
@@ -260,6 +314,7 @@ export interface AiModalContextValue {
   // Actions
   openFromSelection: (payload: { selectedText: string; headline?: string }) => void;
   openGlobal: (payload?: OpenGlobalOptions) => void;
+  openAiModal: (options: OpenAiModalOptions) => void;
   setComposerValue: (value: string) => void;
   submitQuestion: (options?: { question?: string }) => void;
   markAnswerReceived: (options?: { headline?: string }) => void;
@@ -287,6 +342,9 @@ export function AiModalProvider({ children }: { children: React.ReactNode }) {
       openFromSelection: (payload) =>
         dispatch({ type: "OPEN_FROM_SELECTION", payload }),
       openGlobal: (payload) => dispatch({ type: "OPEN_GLOBAL", payload }),
+      openAiModal: (options) => {
+        dispatch({ type: "OPEN_AI_MODAL", payload: options });
+      },
       setComposerValue: (value) =>
         dispatch({ type: "SET_COMPOSER_VALUE", payload: { value } }),
       submitQuestion: (options) =>

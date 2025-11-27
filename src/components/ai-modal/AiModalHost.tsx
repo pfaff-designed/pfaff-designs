@@ -149,12 +149,18 @@ export function AiModalHost() {
 
       // 5. Call the real API
       try {
+        // Use state.pagePath if available (from openAiModal), otherwise fallback to pathname
+        const effectivePagePath = state.pagePath ?? pathname;
+        
         const requestBody: ModalRequestBody = {
           question: trimmed,
-          topicLabel: state.topicLabel ?? undefined,
+          topicLabel: state.topicLabel ?? state.sectionHeadline ?? undefined,
           topicId: state.topicId ?? undefined,
-          source: state.source ?? "hover-pill",
-          pagePath: pathname,
+          source: state.source ?? "button",
+          pagePath: effectivePagePath,
+          projectSlug: state.projectSlug ?? undefined,
+          sectionHeadline: state.sectionHeadline ?? undefined,
+          sectionText: state.sectionText ?? undefined,
           history,
         };
 
@@ -219,7 +225,19 @@ export function AiModalHost() {
         setError(errorMessage);
       }
     },
-    [submitQuestion, markAnswerReceived, setError, state.topicLabel, state.topicId, state.source, pathname]
+    [
+      submitQuestion,
+      markAnswerReceived,
+      setError,
+      state.topicLabel,
+      state.topicId,
+      state.source,
+      state.pagePath,
+      state.projectSlug,
+      state.sectionHeadline,
+      state.sectionText,
+      pathname,
+    ]
   );
 
   // Handle action button clicks
@@ -332,6 +350,129 @@ export function AiModalHost() {
     }
   }, [isThinking, queuedUserMessage, handleComposerSubmit]);
 
+  // Detect when openAiModal was called and trigger API call
+  React.useEffect(() => {
+    // Check if openAiModal was used: status is "thinking", lastQuestion is set,
+    // but no user message exists yet (messages array doesn't contain the question)
+    if (
+      isThinking &&
+      state.lastQuestion &&
+      state.lastQuestion.trim().length > 0 &&
+      !messages.some((m) => m.role === "user" && m.body === state.lastQuestion)
+    ) {
+      const question = state.lastQuestion;
+      
+      // Add user message first
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        { role: "user" as const, body: question },
+      ]);
+
+      // Build conversation history from updated messages
+      const updatedMessages = [...messages, { role: "user" as const, body: question }];
+      const history = updatedMessages.slice(-4).map((m) => ({
+        role: m.role,
+        text: typeof m.body === "string" ? m.body : "",
+      }));
+
+      // Make API call directly (don't use handleComposerSubmit to avoid duplicate message)
+      const makeApiCall = async () => {
+        try {
+          const effectivePagePath = state.pagePath ?? pathname;
+          
+          const requestBody: ModalRequestBody = {
+            question,
+            topicLabel: state.topicLabel ?? state.sectionHeadline ?? undefined,
+            topicId: state.topicId ?? undefined,
+            source: state.source ?? "button",
+            pagePath: effectivePagePath,
+            projectSlug: state.projectSlug ?? undefined,
+            sectionHeadline: state.sectionHeadline ?? undefined,
+            sectionText: state.sectionText ?? undefined,
+            history,
+          };
+
+          if (process.env.NODE_ENV !== "production") {
+            console.log("[AiModalHost] Calling /api/ai/modal (from openAiModal)", requestBody);
+          }
+
+          const res = await fetch("/api/ai/modal", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestBody),
+          });
+
+          if (!res.ok) {
+            throw new Error(`Modal API failed with status ${res.status}`);
+          }
+
+          const data: ModalResponseBody = await res.json();
+          
+          if (process.env.NODE_ENV !== "production") {
+            console.log("[AiModalHost] API response received (from openAiModal)", {
+              answerLength: data.answer?.length || 0,
+              actionsCount: data.actions?.length || 0,
+              mode: data.mode,
+              debugNotes: data.debugNotes,
+            });
+          }
+
+          const answerText =
+            data.answer?.trim() ||
+            "I couldn't generate an answer for that question.";
+
+          // Append AI message with mode
+          setMessages((currentMessages) => [
+            ...currentMessages,
+            {
+              role: "ai" as const,
+              body: answerText,
+              mode: data.mode,
+            },
+          ]);
+
+          // Update actions if any
+          if (data.actions && data.actions.length > 0) {
+            setActions(data.actions);
+          }
+
+          // Notify the state machine that an answer has been received
+          markAnswerReceived();
+        } catch (error) {
+          if (process.env.NODE_ENV !== "production") {
+            console.error("[AiModalHost] Error calling API (from openAiModal):", error);
+          }
+          
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Sorry, something went wrong answering that question.";
+          
+          setError(errorMessage);
+        }
+      };
+
+      // Use a small delay to ensure state is updated
+      setTimeout(() => {
+        makeApiCall();
+      }, 0);
+    }
+  }, [
+    isThinking,
+    state.lastQuestion,
+    state.pagePath,
+    state.projectSlug,
+    state.sectionHeadline,
+    state.sectionText,
+    state.topicLabel,
+    state.topicId,
+    state.source,
+    messages,
+    markAnswerReceived,
+    setError,
+    pathname,
+  ]);
+
   // Clear queue when modal closes
   React.useEffect(() => {
     if (!isOpen && queuedUserMessage) {
@@ -358,15 +499,24 @@ export function AiModalHost() {
             )}
 
             {/* Show messages (managed externally in local state) */}
-            {messages.map((msg, index) => (
-              <AiConversationRow
-                key={msg.id ?? index}
-                role={msg.role}
-                body={msg.body}
-                eyebrowLabel={msg.eyebrowLabel}
-                mode={msg.mode}
-              />
-            ))}
+            {messages.map((msg, index) => {
+              // Determine if this is the first assistant message of a turn
+              // (i.e., previous message is a user message)
+              const previousMessage = index > 0 ? messages[index - 1] : null;
+              const isFirstAssistantMessageOfTurn =
+                msg.role === "ai" && previousMessage?.role === "user";
+
+              return (
+                <AiConversationRow
+                  key={msg.id ?? index}
+                  role={msg.role}
+                  body={msg.body}
+                  eyebrowLabel={msg.eyebrowLabel}
+                  mode={msg.mode}
+                  isFirstAssistantMessageOfTurn={isFirstAssistantMessageOfTurn}
+                />
+              );
+            })}
 
             {/* Show thinking state with TypingIndicator */}
             {isThinking && messages.length > 0 && messages[messages.length - 1].role === "user" && (

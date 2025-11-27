@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 import { AskAiPill } from "./AskAiPill";
 import { useAiModal } from "./AiModalContext";
 
@@ -40,7 +41,8 @@ const lerp = (start: number, end: number, amt: number) => start + (end - start) 
  * This component is mounted once at the app root level.
  */
 export function AiHoverPillHost() {
-  const { openGlobal } = useAiModal();
+  const { openAiModal } = useAiModal();
+  const pathname = usePathname();
   const [state, setState] = React.useState<HoverState>({
     active: false,
     x: 0,
@@ -115,13 +117,27 @@ export function AiHoverPillHost() {
       if (region && activeRegionRef.current === region) {
         // Extract text content from the region for context
         const textContent = region.textContent?.trim() || "";
+        const sectionHeadline = state.topicLabel || "This section";
         
-        // Open modal with the current topic and section content
-        openGlobal({
-          headline: state.topicLabel || "This section",
-          topicLabel: state.topicLabel || "This section",
-          source: "hover-pill",
-          selectedText: textContent,
+        // Derive projectSlug from pathname (same logic as API route)
+        const projectSlugMatch = pathname?.match(/^\/work\/([^/]+)/);
+        let projectSlug: string | undefined;
+        if (projectSlugMatch) {
+          let slug = projectSlugMatch[1];
+          // Normalize PMI paths
+          if (slug === "pmi" || slug === "pmi-agile" || slug === "pmi-acp" || slug.startsWith("pmi-")) {
+            slug = "pmi";
+          }
+          projectSlug = slug;
+        }
+        
+        // Use openAiModal with unified helper
+        openAiModal({
+          question: `Tell me more about ${sectionHeadline}`,
+          pagePath: pathname ?? undefined,
+          projectSlug,
+          sectionHeadline,
+          sectionText: textContent,
         });
       }
     }
@@ -189,7 +205,7 @@ export function AiHoverPillHost() {
         clearTimeout(fadeOutTimeoutRef.current);
       }
     };
-  }, [state.active, state.topicLabel, openGlobal]);
+  }, [state.active, state.topicLabel, openAiModal, pathname]);
 
   // Mobile/Touch: tap on region shows pill at top-center
   React.useEffect(() => {
@@ -264,13 +280,27 @@ export function AiHoverPillHost() {
         onClick={() => {
           // Extract text content from the active region for context
           const textContent = activeRegionRef.current?.textContent?.trim() || "";
+          const sectionHeadline = state.topicLabel || "This section";
           
-          // Open the AI modal using the topic label as headline
-          openGlobal({
-            headline: state.topicLabel || "This section",
-            topicLabel: state.topicLabel || "This section",
-            source: "hover-pill",
-            selectedText: textContent,
+          // Derive projectSlug from pathname (same logic as API route)
+          const projectSlugMatch = pathname?.match(/^\/work\/([^/]+)/);
+          let projectSlug: string | undefined;
+          if (projectSlugMatch) {
+            let slug = projectSlugMatch[1];
+            // Normalize PMI paths
+            if (slug === "pmi" || slug === "pmi-agile" || slug === "pmi-acp" || slug.startsWith("pmi-")) {
+              slug = "pmi";
+            }
+            projectSlug = slug;
+          }
+          
+          // Use openAiModal with unified helper
+          openAiModal({
+            question: `Tell me more about ${sectionHeadline}`,
+            pagePath: pathname ?? undefined,
+            projectSlug,
+            sectionHeadline,
+            sectionText: textContent,
           });
         }}
       />

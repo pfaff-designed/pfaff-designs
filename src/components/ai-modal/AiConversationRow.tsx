@@ -16,7 +16,8 @@ export interface AiConversationRowProps {
   body: string | React.ReactNode;
   className?: string;
   isExiting?: boolean; // Used for trimming animation
-  mode?: ConversationMode; // Conversation mode from modalGraphApp (dev-only display)
+  mode?: ConversationMode; // Conversation mode from modalGraphApp
+  isFirstAssistantMessageOfTurn?: boolean; // True if this is the first assistant message after a user message
   // TODO (V2 streaming): Add optional props:
   // - isStreaming?: boolean - to show streaming indicator
   // - partialContent?: string - to display partial/incomplete text
@@ -30,6 +31,7 @@ export const AiConversationRow: React.FC<AiConversationRowProps> = ({
   className,
   isExiting = false,
   mode,
+  isFirstAssistantMessageOfTurn = false,
 }) => {
   // Compute the label: use provided eyebrowLabel or default based on role
   const computedLabel = eyebrowLabel || (role === "user" ? "User" : role === "ai" ? "AI" : "System");
@@ -76,6 +78,14 @@ export const AiConversationRow: React.FC<AiConversationRowProps> = ({
             {mode === "clarify_then_answer" && "Answer + follow-up"}
             {mode === "low_context_fallback" && "Low-context overview"}
           </span>
+        )}
+        {/* User-facing mode hint - shown only for first assistant message of each turn */}
+        {role === "ai" && mode && isFirstAssistantMessageOfTurn && (
+          <div className="mb-1 text-xs text-[color:var(--text-muted)] opacity-80">
+            {mode === "answer_direct" && "Direct answer"}
+            {mode === "clarify_then_answer" && "Answer + follow-up"}
+            {mode === "low_context_fallback" && "Overview from limited context"}
+          </div>
         )}
         {/* TODO (V2 streaming): When isStreaming is true, render partial content
             with a cursor/indicator. Display partialContent instead of body. */}

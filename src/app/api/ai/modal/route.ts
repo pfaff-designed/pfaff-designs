@@ -16,6 +16,9 @@ export interface ModalRequestBody {
   topicId?: string;
   source?: AiModalSource;
   pagePath?: string;
+  projectSlug?: string;
+  sectionHeadline?: string;
+  sectionText?: string;
   history?: Array<{
     role: "user" | "ai";
     text: string;
@@ -341,25 +344,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1. Derive project context from pagePath
-    const projectSlug = deriveProjectSlugFromPath(pagePath);
+    // 1. Derive project context from pagePath (use provided projectSlug if available)
+    const effectiveProjectSlug = body.projectSlug ?? deriveProjectSlugFromPath(pagePath);
     
     if (process.env.NODE_ENV !== "production") {
       console.log("[API /ai/modal] Context derived", {
-        projectSlug,
+        projectSlug: effectiveProjectSlug,
         hasTopicLabel: !!topicLabel,
+        providedProjectSlug: !!body.projectSlug,
+        providedSectionHeadline: !!body.sectionHeadline,
       });
     }
 
     // 2. Get case study data (used for section context and action generation)
-    const caseStudy = projectSlug ? getCaseStudyBySlug(projectSlug) : null;
+    const caseStudy = effectiveProjectSlug ? getCaseStudyBySlug(effectiveProjectSlug) : null;
 
-    // 3. Best-effort section context lookup
-    const { sectionHeadline, sectionText } = deriveSectionContext({
-      projectSlug,
+    // 3. Use provided section context if available, otherwise derive it
+    const providedSectionHeadline = body.sectionHeadline;
+    const providedSectionText = body.sectionText;
+    const derivedSection = deriveSectionContext({
+      projectSlug: effectiveProjectSlug,
       topicLabel,
       topicId,
     });
+    
+    const sectionHeadline = providedSectionHeadline ?? derivedSection.sectionHeadline ?? null;
+    const sectionText = providedSectionText ?? derivedSection.sectionText ?? null;
 
     if (process.env.NODE_ENV !== "production") {
       console.log("[API /ai/modal] Section context derived", {
@@ -371,9 +381,9 @@ export async function POST(req: NextRequest) {
     // 4. Build initial state for modal graph
     const initialState = buildModalGraphStateFromRequest(
       body,
-      projectSlug,
-      sectionHeadline,
-      sectionText
+      effectiveProjectSlug ?? undefined,
+      sectionHeadline ?? undefined,
+      sectionText ?? undefined
     );
 
     if (process.env.NODE_ENV !== "production") {
@@ -420,7 +430,7 @@ export async function POST(req: NextRequest) {
     // 7. Generate smart actions
     const actions = generateModalActions({
       question,
-      projectSlug,
+      projectSlug: effectiveProjectSlug,
       pagePath,
       topicLabel,
       caseStudy,
