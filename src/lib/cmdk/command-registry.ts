@@ -93,9 +93,9 @@ export const commandRegistry: Command[] = [
     keywords: ["summarize", "summary", "brief", "explain", "selected", "selection"],
     visible: (ctx) => !!ctx.selectionText && ctx.selectionText.trim().length > 0,
     run: (ctx) => {
-      if (!ctx.selectionText) return;
+      console.log("[command-registry] ai-quick-summarize-selection executing with ctx.input:", ctx.input);
       ctx.openInlineChat({
-        question: `Summarize this: ${ctx.selectionText}`,
+        question: ctx.input || "Summarize this selection in plain language.",
         selectionText: ctx.selectionText,
       });
     },
@@ -107,8 +107,9 @@ export const commandRegistry: Command[] = [
     description: "Get a quick summary of the current page",
     keywords: ["summarize", "summary", "page", "overview", "brief"],
     run: (ctx) => {
+      console.log("[command-registry] ai-quick-summarize-page executing with ctx.input:", ctx.input);
       ctx.openInlineChat({
-        question: "Summarize this page",
+        question: ctx.input || "Give me a short summary of this page.",
         sectionText: ctx.sectionText,
       });
     },
@@ -121,9 +122,9 @@ export const commandRegistry: Command[] = [
     keywords: ["rewrite", "clarify", "clean", "simplify", "improve", "selected", "selection"],
     visible: (ctx) => !!ctx.selectionText && ctx.selectionText.trim().length > 0,
     run: (ctx) => {
-      if (!ctx.selectionText) return;
+      console.log("[command-registry] ai-quick-rewrite-selection executing with ctx.input:", ctx.input);
       ctx.openInlineChat({
-        question: `Rewrite this to be clearer: ${ctx.selectionText}`,
+        question: ctx.input || "Rewrite this to be clearer and less technical, but keep the meaning.",
         selectionText: ctx.selectionText,
       });
     },

@@ -3,6 +3,7 @@ import { BaseMessage, SystemMessage, HumanMessage } from "@langchain/core/messag
 import { langsmithClient } from "./client";
 
 const PROMPT_NAME = "pfaff-copywriter-answer-blocks-v3";
+const MODAL_GRAPH_PROMPT_NAME = "pfaff-modal-graph-generate-answer";
 const LANGSMITH_PROMPT_ID = PROMPT_NAME; // Keep for backward compatibility
 
 /**
@@ -354,4 +355,178 @@ Remember:
     ["system", system],
     ["human", human],
   ]);
+}
+
+/**
+ * Pull modal graph system prompt from LangSmith
+ * Returns the system prompt text as a string
+ * 
+ * Falls back to hardcoded prompt if LangSmith is unavailable
+ */
+export async function getModalGraphSystemPrompt(): Promise<string> {
+  // Check if LangSmith is configured
+  if (!langsmithClient || !process.env.LANGSMITH_API_KEY) {
+    console.warn("[PromptLoader] LangSmith not configured, using fallback modal graph prompt");
+    return getFallbackModalGraphSystemPrompt();
+  }
+
+  try {
+    console.log(`[PromptLoader] Attempting to load modal graph prompt: ${MODAL_GRAPH_PROMPT_NAME}`);
+    
+    // Use pullPromptCommit (TypeScript SDK equivalent of Python's pull_prompt)
+    const promptCommit = await langsmithClient.pullPromptCommit(MODAL_GRAPH_PROMPT_NAME, {
+      includeModel: false,
+    });
+    
+    // The prompt data is in the manifest
+    const manifest = promptCommit?.manifest;
+    const promptData = manifest || promptCommit;
+
+    if (!promptData) {
+      console.warn(`[PromptLoader] No prompt data returned for ${MODAL_GRAPH_PROMPT_NAME}, using fallback`);
+      return getFallbackModalGraphSystemPrompt();
+    }
+
+    // Try to extract system message from prompt template
+    let messages: any[] | undefined;
+    
+    // Format 1: LangChain serialized format
+    if (promptData.lc === 1 && 
+        promptData.type === "constructor" && 
+        Array.isArray(promptData.id) &&
+        promptData.id[0] === "langchain" &&
+        promptData.id[1] === "prompts" &&
+        promptData.id[2] === "chat" &&
+        promptData.id[3] === "ChatPromptTemplate" &&
+        promptData.kwargs?.messages &&
+        Array.isArray(promptData.kwargs.messages)) {
+      messages = promptData.kwargs.messages;
+    }
+    // Format 2: Direct messages array
+    else if (Array.isArray(promptData.messages)) {
+      messages = promptData.messages;
+    }
+    // Format 3: Nested in manifest
+    else if (promptData.manifest?.messages && Array.isArray(promptData.manifest.messages)) {
+      messages = promptData.manifest.messages;
+    }
+    
+    if (messages && messages.length > 0) {
+      // Find the system message
+      for (const msg of messages) {
+        // Check if it's a SystemMessage
+        if (msg.id && Array.isArray(msg.id) && msg.id[msg.id.length - 1] === "SystemMessage") {
+          const content = msg.kwargs?.content || "";
+          if (content) {
+            console.log(`[PromptLoader] ✅ Successfully loaded modal graph prompt from LangSmith: ${MODAL_GRAPH_PROMPT_NAME}`);
+            return content;
+          }
+        }
+        // Check if it's already a SystemMessage object
+        else if (msg instanceof SystemMessage || (msg._getType && msg._getType() === "system")) {
+          const content = msg.content || "";
+          if (content) {
+            console.log(`[PromptLoader] ✅ Successfully loaded modal graph prompt from LangSmith: ${MODAL_GRAPH_PROMPT_NAME}`);
+            return typeof content === "string" ? content : String(content);
+          }
+        }
+        // Check if it's a simple system message format
+        else if (msg.role === "system" || msg.type === "system") {
+          const content = msg.content || "";
+          if (content) {
+            console.log(`[PromptLoader] ✅ Successfully loaded modal graph prompt from LangSmith: ${MODAL_GRAPH_PROMPT_NAME}`);
+            return typeof content === "string" ? content : String(content);
+          }
+        }
+      }
+    }
+
+    console.warn(`[PromptLoader] Could not extract system message from prompt ${MODAL_GRAPH_PROMPT_NAME}, using fallback`);
+    return getFallbackModalGraphSystemPrompt();
+  } catch (error) {
+    const originalError = error instanceof Error ? error.message : String(error);
+    console.warn(`[PromptLoader] Failed to load modal graph prompt from LangSmith, using fallback: ${originalError}`);
+    return getFallbackModalGraphSystemPrompt();
+  }
+}
+
+/**
+ * Fallback modal graph system prompt (used when LangSmith prompt is unavailable)
+ */
+export function getFallbackModalGraphSystemPrompt(): string {
+  return `You are Charles's portfolio guide. You answer questions about his work as an applied AI engineer and front‑end technologist.
+
+Your task is to generate warm, clear, grounded responses based on:
+- the user's QUESTION
+- the selected MODE ("answer_direct", "clarify_then_answer", "low_context_fallback")
+- the page and section context
+- the stitched CONTEXT_BLOB from RAG
+
+Follow these rules exactly:
+
+----------------------------------------
+MODE: answer_direct
+----------------------------------------
+Use this when the question is clear and grounded.
+
+Behavior:
+- Answer immediately and directly.
+- Keep it concise (1–3 short paragraphs).
+- Use sectionHeadline and sectionText when relevant.
+- Stay anchored in the current project unless the question explicitly asks otherwise.
+- No clarifying question.
+- No hedging ("likely", "probably").
+- Prefer concrete, factual details from the KB.
+
+----------------------------------------
+MODE: clarify_then_answer
+----------------------------------------
+Use this when the question is broad, ambiguous, cross‑project, or multi‑intent.
+
+Behavior:
+- First, give a helpful partial answer based on what you DO know.
+- Then ask ONE (and only one) clarifying follow-up question.
+- The follow-up should be warm and simple, e.g.:
+  - "Are you more interested in tools, process, or outcomes?"
+  - "Would you like an overview or something more detailed?"
+  - "Do you want examples from one project or across several?"
+- Never ask for clarification before giving an initial answer.
+
+----------------------------------------
+MODE: low_context_fallback
+----------------------------------------
+Use this when there is no section context or very weak retrieval.
+
+Behavior:
+- Provide a short overview of Charles's professional identity.
+- Mention 2–3 representative projects by name only.
+- Keep it general but concrete.
+- End with ONE warm follow-up question guiding the user:
+  - e.g. "Would you like to explore a specific project, or dive into tools or process?"
+
+----------------------------------------
+GLOBAL RULES (Apply to Every Mode)
+----------------------------------------
+Tone:
+- Warm, conversational, human.
+- Professional but approachable.
+- No AI-speak ("As an AI…", "leveraging cutting-edge technologies…").
+
+Style:
+- Short paragraphs, no filler.
+- No made-up facts; rely only on KB material.
+- If information is missing, stay general rather than inventing.
+
+Content:
+- You may reference ANY project from the KB when relevant.
+- Use visible context when present (sectionHeadline, sectionText) but do not become trapped by it.
+- Prefer concrete details over abstractions.
+- Keep the output scannable and recruiter-friendly.
+
+Tools & Technologies:
+- Do not invent tools or frameworks that are not in the KB.
+- Do not mention Vue.js, TensorFlow, PyTorch, or cloud platforms unless explicitly present in context.
+- If tools are missing, stay high-level about process and outcomes rather than guessing.
+
+Your output should ONLY be the final answer text. No metadata, no reasoning traces.`;
 }

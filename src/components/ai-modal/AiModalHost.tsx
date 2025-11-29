@@ -172,17 +172,25 @@ export function AiModalHost() {
           console.log("[AiModalHost] Calling /api/ai/modal", requestBody);
         }
 
-        const res = await fetch("/api/ai/modal", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        });
+        // Add timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-        if (!res.ok) {
-          throw new Error(`Modal API failed with status ${res.status}`);
-        }
+        try {
+          const res = await fetch("/api/ai/modal", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestBody),
+            signal: controller.signal,
+          });
 
-        const data: ModalResponseBody = await res.json();
+          clearTimeout(timeoutId);
+
+          if (!res.ok) {
+            throw new Error(`Modal API failed with status ${res.status}`);
+          }
+
+          const data: ModalResponseBody = await res.json();
         
         if (process.env.NODE_ENV !== "production") {
           console.log("[AiModalHost] API response received", {
@@ -216,23 +224,41 @@ export function AiModalHost() {
 
         // 8. Notify the state machine that an answer has been received
         markAnswerReceived();
+        } finally {
+          // Always clear timeout
+          clearTimeout(timeoutId);
+        }
       } catch (error) {
         if (process.env.NODE_ENV !== "production") {
           console.error("[AiModalHost] Error calling API:", error);
         }
         
         const errorMessage =
-          error instanceof Error
+          error instanceof Error && error.name === "AbortError"
+            ? "Request timed out. Please try again."
+            : error instanceof Error
             ? error.message
             : "Sorry, something went wrong answering that question.";
         
+        // Ensure we transition out of thinking state on error
         setError(errorMessage);
+        // Remove the user message if it was added but the API failed
+        setMessages((currentMessages) => {
+          // Remove the last user message if it matches the question that failed
+          const lastMessage = currentMessages[currentMessages.length - 1];
+          if (lastMessage?.role === "user" && lastMessage.body === trimmed) {
+            return currentMessages.slice(0, -1);
+          }
+          return currentMessages;
+        });
       }
     },
     [
       submitQuestion,
       markAnswerReceived,
       setError,
+      isThinking,
+      hasError,
       state.topicLabel,
       state.topicId,
       state.source,
@@ -404,59 +430,83 @@ export function AiModalHost() {
             console.log("[AiModalHost] Calling /api/ai/modal (from openAiModal)", requestBody);
           }
 
-          const res = await fetch("/api/ai/modal", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestBody),
-          });
+          // Add timeout to prevent hanging
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-          if (!res.ok) {
-            throw new Error(`Modal API failed with status ${res.status}`);
-          }
-
-          const data: ModalResponseBody = await res.json();
-          
-          if (process.env.NODE_ENV !== "production") {
-            console.log("[AiModalHost] API response received (from openAiModal)", {
-              answerLength: data.answer?.length || 0,
-              actionsCount: data.actions?.length || 0,
-              mode: data.mode,
-              debugNotes: data.debugNotes,
+          try {
+            const res = await fetch("/api/ai/modal", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(requestBody),
+              signal: controller.signal,
             });
+
+            clearTimeout(timeoutId);
+
+            if (!res.ok) {
+              throw new Error(`Modal API failed with status ${res.status}`);
+            }
+
+            const data: ModalResponseBody = await res.json();
+            
+            if (process.env.NODE_ENV !== "production") {
+              console.log("[AiModalHost] API response received (from openAiModal)", {
+                answerLength: data.answer?.length || 0,
+                actionsCount: data.actions?.length || 0,
+                mode: data.mode,
+                debugNotes: data.debugNotes,
+              });
+            }
+
+            const answerText =
+              data.answer?.trim() ||
+              "I couldn't generate an answer for that question.";
+
+            // Append AI message with mode
+            setMessages((currentMessages) => [
+              ...currentMessages,
+              {
+                role: "ai" as const,
+                body: answerText,
+                mode: data.mode,
+              },
+            ]);
+
+            // Update actions if any
+            if (data.actions && data.actions.length > 0) {
+              setActions(data.actions);
+            }
+
+            // Notify the state machine that an answer has been received
+            markAnswerReceived();
+          } finally {
+            // Always clear timeout
+            clearTimeout(timeoutId);
           }
-
-          const answerText =
-            data.answer?.trim() ||
-            "I couldn't generate an answer for that question.";
-
-          // Append AI message with mode
-          setMessages((currentMessages) => [
-            ...currentMessages,
-            {
-              role: "ai" as const,
-              body: answerText,
-              mode: data.mode,
-            },
-          ]);
-
-          // Update actions if any
-          if (data.actions && data.actions.length > 0) {
-            setActions(data.actions);
-          }
-
-          // Notify the state machine that an answer has been received
-          markAnswerReceived();
         } catch (error) {
           if (process.env.NODE_ENV !== "production") {
             console.error("[AiModalHost] Error calling API (from openAiModal):", error);
           }
           
           const errorMessage =
-            error instanceof Error
+            error instanceof Error && error.name === "AbortError"
+              ? "Request timed out. Please try again."
+              : error instanceof Error
               ? error.message
               : "Sorry, something went wrong answering that question.";
           
+          // Ensure we transition out of thinking state on error
           setError(errorMessage);
+          // Remove the user message if it was added but the API failed
+          setMessages((currentMessages) => {
+            // Remove the last user message if it matches the question that failed
+            const lastMessage = currentMessages[currentMessages.length - 1];
+            if (lastMessage?.role === "user" && lastMessage.body === question) {
+              return currentMessages.slice(0, -1);
+            }
+            return currentMessages;
+          });
         }
       };
 

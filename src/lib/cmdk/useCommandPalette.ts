@@ -4,12 +4,13 @@ import * as React from "react";
 
 export interface UseCommandPaletteReturn {
   isOpen: boolean;
-  palettePosition: { x: number; y: number } | null; // frozen when opened
+  palettePosition: { x: number; y: number } | null; // can be updated via drag
   input: string;
   openPalette: (opts?: { x?: number; y?: number; initialInput?: string }) => void;
   closePalette: () => void;
   togglePalette: () => void;
   setInput: (value: string) => void;
+  setPalettePosition: (position: { x: number; y: number } | null) => void;
 }
 
 /**
@@ -74,35 +75,8 @@ export function useCommandPalette(): UseCommandPaletteReturn {
     }
   }, [isOpen, openPalette, closePalette]);
 
-  // Global Cmd+K / Ctrl+K listener
-  React.useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Cmd+K on Mac, Ctrl+K on Windows/Linux
-      const isModKey = event.metaKey || event.ctrlKey;
-      const isK = event.key === "k" || event.key === "K";
-
-      if (isModKey && isK) {
-        // Prevent browser default (e.g., Chrome's address bar search)
-        event.preventDefault();
-        event.stopPropagation();
-
-        // Don't trigger if user is typing in an input/textarea
-        const target = event.target as HTMLElement;
-        if (
-          target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.isContentEditable
-        ) {
-          return;
-        }
-
-        togglePalette();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [togglePalette]);
+  // Note: Cmd+K / Ctrl+K handler is moved to CommandPaletteProvider
+  // to allow checking for selected text and opening inline chat when appropriate
 
   return {
     isOpen,
@@ -112,6 +86,7 @@ export function useCommandPalette(): UseCommandPaletteReturn {
     closePalette,
     togglePalette,
     setInput,
+    setPalettePosition,
   };
 }
 
