@@ -51,6 +51,11 @@ export function createCommandContext(
     selectionText?: string;
     sectionHeadline?: string;
     sectionText?: string;
+    openInlineChat?: (args: {
+      question: string;
+      selectionText?: string;
+      sectionText?: string;
+    }) => void;
   }
 ): CommandContext {
   return {
@@ -66,9 +71,10 @@ export function createCommandContext(
       console.log("[CommandContext] openAiModal", args);
     },
 
-    openInlineChat: (args) => {
+    // Use provided openInlineChat or stub
+    openInlineChat: options?.openInlineChat ?? ((args) => {
       console.log("[CommandContext] openInlineChat", args);
-    },
+    }),
 
     navigate: (path) => {
       console.log("[CommandContext] navigate", path);
