@@ -1,248 +1,173 @@
-# Phase 10.1 — Implement Command Model, Registry & Context Object (No UI)
+# Phase 10.2 — CommandPalette Shell (Minimal UI)
+Updated to Deprecate Cmd+K → Modal and Use Existing Input Styles
 
 ## 🎯 Goal
-Implement the underlying "brain" of the Cmd+K Atlas-style command palette. This task does **not** include any UI. You are building the deterministic command engine that the UI will call into during Phases 10.2–10.5.
+Build the **first functional UI** for the Cmd+K Atlas-style command palette.
+
+This phase:
+- Replaces the old behavior where **Cmd+K opens the AI modal**.
+- Introduces a **pill-shaped floating input** near the cursor using the **existing input styling patterns** from the site.
+- Wires the palette to the **Phase 10.1 command engine** (`Command`, `CommandContext`, `commandRegistry`, `filterCommands`).
+- Does **not** implement inline chat or modal wiring yet (that’s 10.3–10.4).
 
 ---
 
-## ✅ What You Must Build
+## 0. Deprecate Old Cmd+K → Modal Behavior
 
-### 1. `CommandKind` + `Command` Interface
-Create a strongly typed command schema in `src/lib/cmdk/command-types.ts`:
+### Requirements
+1. Find wherever **Cmd+K currently opens the AI modal** (e.g. a global keydown handler or shortcut hook).
+2. Remove / disable that behavior.
+3. Ensure **Cmd+K now exclusively opens the new CommandPalette** (defined in this phase).
 
-```ts
-export type CommandKind =
-  | "nav"
-  | "ai_quick"
-  | "ai_deep"
-  | "download"
-  | "help";
+> After this phase, the only thing Cmd+K should do is open the command palette.
 
-export interface Command {
-  id: string;
-  kind: CommandKind;
-  label: string;
-  description?: string;
-  keywords: string[];
-  visible?: (ctx: CommandContext) => boolean;
-  run: (ctx: CommandContext) => void | Promise<void>;
+---
+
+## 1. Global Command Palette State & Hook
+
+Create a hook to manage palette state and keyboard shortcut handling.
+
+### File
+`src/lib/cmdk/useCommandPalette.ts`
+
+### Responsibilities
+- Track:
+  - `isOpen: boolean`
+  - `cursorPosition: { x: number; y: number } | null`
+  - `input: string`
+- Provide:
+  - `openPalette(opts?: { x?: number; y?: number; initialInput?: string })`
+  - `closePalette()`
+  - `togglePalette()`
+  - `setInput(value: string)`
+- Install a **global keydown listener** for Cmd+K / Ctrl+K:
+  - Prevent default browser behavior.
+  - Use the **last known mouse position** as the default spawn point.
+
+### Implementation Notes
+- Track the last mouse position with a `mousemove` listener attached once at app level (or inside the hook with a layout effect).
+- If no cursor position is known, default to a reasonable center-of-screen position.
+
+---
+
+## 2. `CommandPalette` React Component
+
+### File
+`src/components/cmdk/CommandPalette.tsx`
+
+### Responsibilities
+- Render **nothing** when `isOpen === false`.
+- When open:
+  - Render a **portal** overlay (top layer) containing the pill-shaped input + command list.
+  - Position the input near `cursorPosition` (`style={{ top, left }}`) with some safety clamps so it doesn’t go off-screen.
+  - Render:
+    - An input field
+    - A scrollable list of matching commands from `filterCommands(input, ctx)`
+    - A highlighted “active” command (for keyboard navigation)
+
+### Styling Requirements
+- Reuse existing input styles for visual consistency:
+  - Use the same Tailwind/shadcn patterns as your current text inputs (border radius, font, padding, colors).
+- Wrap the input in a pill-like container by adjusting radius & padding:
+  - e.g. `rounded-full`, `shadow-md`, `border` consistent with current design system.
+- Support dark mode if already present in the app.
+
+> The pill should visually feel like a sibling of your current inputs, not a brand new visual style.
+
+---
+
+## 3. Wiring to the Command Engine
+
+Use the **Phase 10.1** pieces:
+- `Command`
+- `CommandContext`
+- `commandRegistry`
+- `filterCommands(input, ctx)`
+
+### Steps
+1. Construct a `CommandContext` instance inside `CommandPalette` using:
+   - `path` from Next.js router (`usePathname()`)
+   - `projectSlug` if available from your existing context/route
+   - `selectionText`, `sectionHeadline`, `sectionText` can be stubbed as `undefined` for now
+   - `openAiModal`, `openInlineChat`, `navigate`, `download` should call through to the stubbed implementations in 10.1 (for now they can still `console.log`)
+2. Call `filterCommands(input, ctx)` whenever the input text changes.
+3. Render the returned commands as a vertical list.
+
+---
+
+## 4. Keyboard & Interaction Behavior
+
+Inside `CommandPalette`:
+
+- Maintain `activeIndex` state.
+- Keyboard handling when the palette is open:
+  - **ArrowDown** → move `activeIndex` down (clamp to list length)
+  - **ArrowUp** → move `activeIndex` up (clamp to 0)
+  - **Enter** → execute `commands[activeIndex].run(ctx)`
+  - **Escape** → `closePalette()`
+
+### Click Behavior
+- Clicking on a command row should:
+  - Execute `command.run(ctx)`
+  - Close the palette
+
+### Closing Rules
+- Palette closes on:
+  - ESC key
+  - Clicking outside the palette
+  - Successful command execution
+
+---
+
+## 5. Integration in the App Shell
+
+Render the `CommandPalette` **once** at a high level (e.g. in `layout.tsx` or a root provider component), using the hook.
+
+Example pattern:
+
+```tsx
+export function AppShell({ children }: { children: React.ReactNode }) {
+  const palette = useCommandPalette();
+
+  return (
+    <>
+      {children}
+      <CommandPalette palette={palette} />
+    </>
+  );
 }
 ```
 
----
-
-### 2. `CommandContext` Implementation
-Create `src/lib/cmdk/command-context.ts`.
-
-This object represents the environment in which commands run.
-
-```ts
-export interface CommandContext {
-  input: string; // raw Cmd+K query
-  path: string; // current page path
-  projectSlug?: string | null;
-  selectionText?: string;
-  sectionHeadline?: string;
-  sectionText?: string;
-
-  openAiModal: (args: {
-    question: string;
-    pagePath?: string;
-    projectSlug?: string | null;
-    sectionHeadline?: string;
-    sectionText?: string;
-  }) => void;
-
-  openInlineChat: (args: {
-    question: string;
-    selectionText?: string;
-    sectionText?: string;
-  }) => void;
-
-  navigate: (path: string) => void;
-  download: (path: string) => void;
-}
-```
-
-During Phase 10.1, all actions can be **stubbed with console.log**. Actual wiring happens in Phase 10.2–10.4.
+Alternatively, if you already have a global provider or layout for the AI modal, colocate the palette there.
 
 ---
 
-### 3. Build the `commandRegistry`
-Create `src/lib/cmdk/command-registry.ts` with a complete list of commands.
+## 6. Behavior Expectations (Post-10.2)
 
-Include:
+After this phase:
 
-#### 🔹 Navigation Commands
-- Home → `/`
-- Work → `/work`
-- Each project route:
-  - Capital One → `/work/capital-one-travel`
-  - PMI → `/work/pmi`
-  - Tanger → `/work/tanger`
-  - Coke → `/work/coke`
-  - Portfolio → `/work/pfaff-designs-portfolio`
-
-#### 🔹 Quick AI Commands (`ai_quick`)
-Use `ctx.openInlineChat()` for:
-- “Summarize selected text” (visible only when `selectionText` exists)
-- “Summarize this page”
-- “Rewrite to be clearer” (only when selection exists)
-
-#### 🔹 Deep AI Commands (`ai_deep`)
-Use `ctx.openAiModal()` for:
-- "Ask about this project"
-- "Cross-project question"
-- "Deep explanation"
-
-#### 🔹 Download Commands
-- Download resume → `/charles-pfaff-resume.pdf`
-
-#### 🔹 Help Command
-Shown when no command matches.
+- Pressing **Cmd+K** (or Ctrl+K on Windows) should:
+  - Open the command palette pill near the cursor.
+  - Focus the input.
+- Typing should filter commands in real time.
+- Arrow keys and Enter should let you select and execute commands.
+- Executing a command should log to the console (for now) via the `run(ctx)` implementations from Phase 10.1.
+- The old behavior where Cmd+K opens the AI modal should be **fully removed**.
 
 ---
 
-### 4. Implement Deterministic `filterCommands()`
-Create `src/lib/cmdk/command-filter.ts`:
+## ✅ Acceptance Checklist
 
-```ts
-export function filterCommands(input: string, ctx: CommandContext): Command[] {
-  const q = input.toLowerCase().trim();
+Before stopping, verify:
 
-  const matches = commandRegistry.filter(cmd => {
-    const visible = cmd.visible ? cmd.visible(ctx) : true;
-    if (!visible) return false;
+- [ ] Old Cmd+K → AI modal shortcut is fully removed.
+- [ ] Cmd+K now opens the new CommandPalette.
+- [ ] The pill input visually matches existing input styles (same border, radius, typography, colors).
+- [ ] The palette appears near the cursor and never renders off-screen.
+- [ ] Commands are filtered via `filterCommands(input, ctx)`.
+- [ ] Arrow keys move the active selection; Enter executes.
+- [ ] ESC and outside clicks close the palette.
+- [ ] No TypeScript errors.
+- [ ] No regressions in existing AI modal behavior when opened via its own UI.
 
-    const haystack = `${cmd.label} ${cmd.keywords.join(" ")}`.toLowerCase();
-    return haystack.includes(q);
-  });
-
-  if (matches.length > 0) return matches;
-
-  // fallback: return only the help command
-  return commandRegistry.filter(cmd => cmd.kind === "help");
-}
-```
-
----
-
-## 📁 File Structure
-
-Place files here:
-
-```
-src/lib/cmdk/
-  command-types.ts
-  command-context.ts
-  command-registry.ts
-  command-filter.ts
-  index.ts
-```
-
-`index.ts` should export everything.
-
----
-
-## 📌 Acceptance Criteria
-- All TypeScript compiles
-- No UI changes
-- Commands log execution correctly
-- filterCommands works deterministically
-- Registry is complete and grouped properly
-- Context object is correctly shaped
-
----
-
-## 🚀 After Completion
-Phase 10.2 will implement:
-- Cmd+K listener
-- Pill-shaped floating input
-- Rendering of filtered commands
-- Keyboard navigation
-- Executing the `run(ctx)` handler
-
----
-
-## 📝 Clarifying Questions
-
-**Date:** 2024-12-19
-
-### 1. Project Slug Discrepancies
-
-The prompt lists these routes:
-- Tanger → `/work/tanger` 
-- Coke → `/work/coke`
-- Portfolio → `/work/pfaff-designs-portfolio`
-
-But the actual slugs in the codebase are:
-- Tanger → `/work/tanger-outlets`
-- Coke → `/work/coca-cola-creative-technology`
-- Portfolio → `/work/pfaff-designs`
-
-**Question:** Should I use the actual slugs from the codebase, or create aliases/multiple commands for both variants?
-
----
-
-### 2. Resume Download Path
-
-The prompt references `/charles-pfaff-resume.pdf`, but this file doesn't exist in the codebase.
-
-**Question:** Should I:
-- Stub it with `console.log` for now?
-- Use a placeholder path?
-- Skip the download command entirely?
-
----
-
-### 3. `openInlineChat` Implementation
-
-The `CommandContext` interface includes `openInlineChat()`, but this function doesn't exist in the codebase yet.
-
-**Question:** Should I:
-- Stub it with `console.log` for now (as mentioned in the prompt)?
-- Leave it as a placeholder in the interface?
-
----
-
-### 4. Command ID Format
-
-The prompt doesn't specify a format for command IDs.
-
-**Question:** What format should I use? For example:
-- `nav-home`, `nav-work`, `ai-quick-summarize-selection`
-- Or something else?
-
----
-
-### 5. Command Keywords
-
-The prompt doesn't specify keywords for each command.
-
-**Question:** Should I infer reasonable keywords based on the command purpose, or do you have specific keywords in mind?
-
-**Example keywords I'm considering:**
-- Navigation: `["home", "index", "main"]` for Home command
-- AI Quick: `["summarize", "summary", "brief"]` for summarize commands
-- AI Deep: `["ask", "question", "explain", "tell me"]` for deep AI commands
-
----
-
-### 6. Additional Projects
-
-I found `real-estate-platform` in the case studies data, but it's not mentioned in the prompt.
-
-**Question:** Should I include it in the navigation commands, or only include the projects listed in the prompt?
-
----
-
-### 7. Help Command Details
-
-The prompt mentions a help command shown when no matches are found, but doesn't specify:
-- What the help command should do
-- What its label/description should be
-- What keywords it should have
-
-**Question:** Should I create a generic help command that explains how to use the command palette, or something more specific?
-
-```
+Make these changes now.
