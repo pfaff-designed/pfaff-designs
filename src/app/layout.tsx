@@ -5,6 +5,7 @@ import { Footer } from "@/components/page-components/Footer";
 import { AIAnswerProvider } from "@/components/ai/AIAnswerContext";
 import { SectionProvider } from "@/components/ai/SectionContext";
 import { AiModalProvider, AiModalHost, AiHoverPillHost, FloatingAiButton, AiKeyboardShortcut } from "@/components/ai-modal";
+import { CommandPaletteProvider } from "@/components/cmdk/CommandPaletteProvider";
 
 export const metadata: Metadata = {
   title: "pfaff-designs",
@@ -39,8 +40,10 @@ export default function RootLayout({
           <AiHoverPillHost />
           {/* Global floating AI button - mobile-only FAB in bottom-right */}
           <FloatingAiButton />
-          {/* Global keyboard shortcut handler - Cmd+K / Ctrl+K */}
+          {/* Global keyboard shortcut handler - Cmd+K / Ctrl+K (deprecated, now handled by CommandPalette) */}
           <AiKeyboardShortcut />
+          {/* Global command palette - Cmd+K / Ctrl+K */}
+          <CommandPaletteProvider />
         </AiModalProvider>
       </body>
     </html>
