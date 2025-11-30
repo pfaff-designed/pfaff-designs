@@ -325,17 +325,6 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as ModalRequestBody;
     const { question, topicLabel, topicId, source, pagePath, history } = body;
 
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[API /ai/modal] Request received", {
-        question: question?.substring(0, 100),
-        topicLabel,
-        topicId,
-        source,
-        pagePath,
-        historyLength: history?.length || 0,
-      });
-    }
-
     // Validate required field
     if (!question || typeof question !== "string" || question.trim().length === 0) {
       return NextResponse.json(
@@ -346,15 +335,6 @@ export async function POST(req: NextRequest) {
 
     // 1. Derive project context from pagePath (use provided projectSlug if available)
     const effectiveProjectSlug = body.projectSlug ?? deriveProjectSlugFromPath(pagePath);
-    
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[API /ai/modal] Context derived", {
-        projectSlug: effectiveProjectSlug,
-        hasTopicLabel: !!topicLabel,
-        providedProjectSlug: !!body.projectSlug,
-        providedSectionHeadline: !!body.sectionHeadline,
-      });
-    }
 
     // 2. Get case study data (used for section context and action generation)
     const caseStudy = effectiveProjectSlug ? getCaseStudyBySlug(effectiveProjectSlug) : null;
@@ -371,13 +351,6 @@ export async function POST(req: NextRequest) {
     const sectionHeadline = providedSectionHeadline ?? derivedSection.sectionHeadline ?? null;
     const sectionText = providedSectionText ?? derivedSection.sectionText ?? null;
 
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[API /ai/modal] Section context derived", {
-        sectionHeadline,
-        hasSectionText: !!sectionText,
-      });
-    }
-
     // 4. Build initial state for modal graph
     const initialState = buildModalGraphStateFromRequest(
       body,
@@ -386,31 +359,13 @@ export async function POST(req: NextRequest) {
       sectionText ?? null
     );
 
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[API /ai/modal] Invoking modal graph", {
-        question: initialState.question?.substring(0, 100),
-        projectSlug: initialState.projectSlug,
-        hasSectionText: !!initialState.sectionText,
-        historyLength: initialState.history?.length || 0,
-      });
-    }
-
     // 5. Invoke the modal graph
     let finalState: ModalGraphState;
     try {
       finalState = await modalGraphApp.invoke(initialState);
     } catch (graphError) {
-      console.error("[API /ai/modal] Modal graph threw error:", graphError);
       // Re-throw to be caught by outer catch block
       throw graphError;
-    }
-
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[API /ai/modal] Modal graph completed", {
-        answerLength: finalState.answerText?.length || 0,
-        mode: (finalState as any).mode,
-        debugNotesCount: finalState.debugNotes?.length || 0,
-      });
     }
 
     // 6. Extract answer, mode, and debugNotes from final state
@@ -436,15 +391,7 @@ export async function POST(req: NextRequest) {
       caseStudy,
     });
 
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[API /ai/modal] Actions generated", {
-        actionsCount: actions.length,
-        actionTypes: actions.map((a) => a.type),
-      });
-    }
-
     // 8. Build response
-    console.log("[API /ai/modal] Building response");
     const responseBody: ModalResponseBody = {
       answer,
       mode,
@@ -452,19 +399,8 @@ export async function POST(req: NextRequest) {
       actions,
     };
 
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[API /ai/modal] FULL RESPONSE BODY:", JSON.stringify(responseBody, null, 2));
-    }
-
     return NextResponse.json(responseBody);
   } catch (error) {
-    // Always log errors in development, and include error message in response
-    console.error("[API /ai/modal] Error:", error);
-    console.error("[API /ai/modal] Error details:", {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-
     const errorMessage = error instanceof Error ? error.message : String(error);
     
     return NextResponse.json(

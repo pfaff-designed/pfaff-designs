@@ -209,8 +209,11 @@ export function InlineChatWindow({ state, onClose, setAnchorPosition, onBack, on
     <div
       ref={containerRef}
       className={cn(
-        "fixed z-[60] flex flex-col bg-[color:var(--bg-default)] border border-[color:var(--border-subtle)] rounded-lg shadow-lg w-[360px] max-h-[500px] overflow-hidden",
-        "transition-all duration-200 transform",
+        "fixed z-[60] flex flex-col w-[360px] max-h-[400px]",
+        "rounded-2xl border border-[color:var(--border-subtle)] bg-background/80",
+        "backdrop-blur-md shadow-lg",
+        "overflow-hidden",
+        "transition-all duration-[180ms] ease-[cubic-bezier(0.33,1,0.68,1)]",
         isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
       )}
       style={{ ...position, cursor: isDragging ? "grabbing" : "default" }}

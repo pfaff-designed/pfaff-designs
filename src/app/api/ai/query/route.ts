@@ -16,15 +16,6 @@ export async function POST(req: NextRequest) {
     // Validate request
     const parsed = QueryRequestSchema.safeParse(json);
     if (!parsed.success) {
-      console.error("[API /ai/query] Validation error:", {
-        errors: parsed.error.issues,
-        receivedData: {
-          message: json.message,
-          pageContext: json.pageContext,
-          history: json.history,
-          forceGenerate: json.forceGenerate,
-        },
-      });
       return NextResponse.json(
         { error: "Invalid request", details: parsed.error.issues },
         { status: 400 }
@@ -37,20 +28,6 @@ export async function POST(req: NextRequest) {
       message,
       pageContext,
       history: history ?? [],
-    });
-
-    console.log("[API /ai/query] Intent router completed", {
-      message,
-      forceGenerate,
-      intent: {
-        answerMode: intent.answerMode,
-        primaryTopicType: intent.primaryTopicType,
-        primaryProjectSlug: intent.primaryProjectSlug,
-        bestProjectSlug: intent.bestProjectSlug,
-        bestSectionId: intent.bestSectionId,
-        scrollRelevance: intent.scrollRelevance,
-        navigationRelevance: intent.navigationRelevance,
-      },
     });
 
     // Build suggestions
@@ -70,17 +47,6 @@ export async function POST(req: NextRequest) {
     let answerLayout: PageJSON | null = null;
     
     if (shouldGenerate) {
-      console.log("[API /ai/query] Generating answer", {
-        message,
-        forceGenerate,
-        currentSectionId: pageContext.currentSectionId,
-        pageId: pageContext.pageId,
-        intentAnswerMode: intent.answerMode,
-        intentBestSectionId: intent.bestSectionId,
-        intentScrollRelevance: intent.scrollRelevance,
-        shouldGenerateReason: forceGenerate ? "forceGenerate=true" : pageContext.currentSectionId ? "currentSectionId exists" : "case-study page",
-      });
-
       // Override answerMode to "full" when generating
       const intentWithOverride = { ...intent, answerMode: "full" as const };
 
@@ -89,30 +55,7 @@ export async function POST(req: NextRequest) {
         intentWithOverride,
         pageContext,
       );
-    } else {
-      console.log("[API /ai/query] Skipping pipeline - only returning suggestions", {
-        forceGenerate,
-        currentSectionId: pageContext.currentSectionId,
-        pageId: pageContext.pageId,
-        answerMode: intent.answerMode,
-      });
     }
-
-    console.log("[API /ai/query] Pipeline completed", {
-      hasAnswerLayout: !!answerLayout,
-      answerLayoutType: answerLayout ? typeof answerLayout : null,
-      answerLayoutKeys: answerLayout && typeof answerLayout === 'object' ? Object.keys(answerLayout) : null,
-    });
-
-    console.log("[AI QUERY DEBUG]", {
-      message,
-      pageContext,
-      intent,
-      hasAnswerLayout: !!answerLayout,
-      answerLayoutPreview: answerLayout ? JSON.stringify(answerLayout).substring(0, 300) : null,
-      suggestions,
-      suggestionsCount: suggestions.length,
-    });
 
     const responseBody: QueryResponse = {
       answerLayout,
@@ -121,7 +64,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(responseBody);
   } catch (error) {
-    console.error("[/api/ai/query] Error:", error);
     return NextResponse.json(
       { error: "Failed to process AI query" },
       { status: 400 },

@@ -70,17 +70,8 @@ export async function runCopywriterPipeline(
   layoutStrategy?: LayoutStrategy
 ): Promise<PageJSON | null> {
   try {
-    console.log("[Pipeline] Starting", {
-      message,
-      answerMode: routedIntent.answerMode,
-      primaryProjectSlug: routedIntent.primaryProjectSlug,
-      bestProjectSlug: routedIntent.bestProjectSlug,
-      bestSectionId: routedIntent.bestSectionId,
-    });
-
     // If we explicitly don't want copy, bail out early.
     if (routedIntent.answerMode === "none") {
-      console.log("[Pipeline] answerMode is 'none', skipping generation");
       return null;
     }
 
@@ -108,12 +99,6 @@ export async function runCopywriterPipeline(
     });
     let context = buildContextFromChunks(retrievedChunks);
 
-    console.log("[Pipeline] Context retrieved from RAG", {
-      contextLength: context?.length || 0,
-      chunksCount: retrievedChunks.length,
-      hasContext: !!context && context.trim().length > 0,
-    });
-
     // 3. Add comprehensive project context when on a case-study page
     // This ensures the AI has access to ALL project information, not just semantic chunks
     if (projectId && pageContext.pageId === "case-study") {
@@ -123,26 +108,12 @@ export async function runCopywriterPipeline(
         context = context 
           ? `${context}\n\n---\n\n## FULL PROJECT CONTEXT\n\n${projectContext}`
           : projectContext;
-        
-        console.log("[Pipeline] Added comprehensive project context", {
-          hasHeroSummary: !!caseStudyData.heroSummary,
-          hasRoleSummary: !!caseStudyData.roleSummary,
-          sectionsCount: caseStudyData.sections?.length || 0,
-          totalContextLength: context.length,
-        });
       }
     }
-
-    console.log("[Pipeline] Final context", {
-      contextLength: context?.length || 0,
-      hasContext: !!context && context.trim().length > 0,
-      contextPreview: context ? context.substring(0, 300) : null,
-    });
 
     // If no context retrieved, use a minimal fallback context instead of returning null
     // User asked a question - we should ALWAYS try to generate an answer
     if (!context || context.trim().length === 0) {
-      console.warn("[Pipeline] No context retrieved, using fallback minimal context");
       context = `User question: ${message}\n\nContext: No specific project context found. Please provide a helpful answer based on general knowledge about portfolio work.`;
     }
 
@@ -185,24 +156,7 @@ export async function runCopywriterPipeline(
     };
 
     // 5. Call copywriter
-    console.log("[Pipeline] Calling copywriter", {
-      question: copywriterInput.question,
-      projectId: copywriterInput.projectId,
-      sectionTitle: copywriterInput.sectionTitle,
-    });
-
     const copywriterOutput = await runCopywriter(copywriterInput);
-
-    console.log("[Pipeline] Copywriter completed", {
-      hasAnswerBlocks: !!copywriterOutput.answer_blocks,
-      answerBlocksCount: copywriterOutput.answer_blocks?.length || 0,
-      firstBlockPreview: copywriterOutput.answer_blocks?.[0] ? {
-        type: copywriterOutput.answer_blocks[0].type,
-        eyebrow: copywriterOutput.answer_blocks[0].eyebrow,
-        heading: copywriterOutput.answer_blocks[0].heading,
-        bodyLength: copywriterOutput.answer_blocks[0].body?.length || 0,
-      } : null,
-    });
 
     // 6. Call orchestrator to generate PageJSON
     const registrySummary = {
@@ -214,8 +168,6 @@ export async function runCopywriterPipeline(
       ),
     };
 
-    console.log("[Pipeline] Calling orchestrator");
-
     let pageJSON = await generateOrchestratorJSON({
       copywriterOutput,
       intent: fullIntent,
@@ -226,20 +178,9 @@ export async function runCopywriterPipeline(
       preferredComponents: layoutStrategy?.preferredComponents,
     });
 
-    console.log("[Pipeline] Orchestrator completed", {
-      hasPageJSON: !!pageJSON,
-      pageJSONKeys: pageJSON ? Object.keys(pageJSON) : null,
-      pagePreview: pageJSON?.page ? {
-        id: pageJSON.page.id,
-        blocksCount: pageJSON.page.blocks?.length || 0,
-      } : null,
-    });
-
     // If orchestrator returned null or empty, create a minimal fallback PageJSON
     // User asked a question - we should ALWAYS return something
     if (!pageJSON || !pageJSON.page || !pageJSON.page.blocks || pageJSON.page.blocks.length === 0) {
-      console.warn("[Pipeline] Orchestrator returned empty/null PageJSON, creating fallback");
-      
       // Create a minimal fallback answer
       pageJSON = {
         version: "1.0",
@@ -263,11 +204,6 @@ export async function runCopywriterPipeline(
 
     return pageJSON;
   } catch (error) {
-    console.error("[Pipeline] Error:", error);
-    console.error("[Pipeline] Error details:", {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-    });
     
     // Even on error, if answerMode is "full" or "brief", return a fallback answer
     // User asked a question - we should ALWAYS try to provide something

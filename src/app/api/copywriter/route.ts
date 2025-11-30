@@ -12,8 +12,6 @@ export async function POST(req: Request) {
     // because generateCopywriterOutputInternal now handles its own fallbacks.
     return NextResponse.json(output);
   } catch (error) {
-    console.error("Error in copywriter API route:", error);
-
     // As a last-resort safety net, return a simple fallback
     return NextResponse.json(
       {

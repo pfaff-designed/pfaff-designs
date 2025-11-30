@@ -102,8 +102,6 @@ export function useInlineChat(): UseInlineChatReturn {
           isLoading: false,
         }));
       } catch (error) {
-        console.error("[useInlineChat] Error fetching quick answer:", error);
-
         setState((prev) => ({
           ...prev,
           messages: [
@@ -122,7 +120,6 @@ export function useInlineChat(): UseInlineChatReturn {
 
   const openInlineChat = React.useCallback(
     async (args: OpenInlineChatArgs) => {
-      console.log("[useInlineChat] openInlineChat called with:", args);
       // Set initial state
       const anchorPosition = args.position ?? {
         x: window.innerWidth / 2,
@@ -136,7 +133,6 @@ export function useInlineChat(): UseInlineChatReturn {
         projectSlug: args.projectSlug,
       };
 
-      console.log("[useInlineChat] Setting state to open with position:", anchorPosition);
       setState({
         isOpen: true,
         messages: [],

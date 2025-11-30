@@ -62,19 +62,6 @@ export async function POST(req: NextRequest) {
 
     // Debug logging (dev mode)
     const isDev = process.env.NODE_ENV === "development";
-    if (isDev) {
-      console.log("[INTENT-DRIVEN GENERATION DEBUG]", {
-        message,
-        intentProfile,
-        contentStrategy,
-        layoutStrategy: {
-          preferredComponents: layoutStrategy.preferredComponents,
-        },
-        routedIntent,
-        hasAnswerLayout: !!answerLayout,
-        suggestions,
-      });
-    }
 
     const responseBody: QueryResponse & { debug?: any } = {
       answerLayout,
@@ -93,7 +80,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(responseBody);
   } catch (error) {
-    console.error("[/api/generate] Error:", error);
     return NextResponse.json(
       { error: "Failed to process generation request" },
       { status: 500 },

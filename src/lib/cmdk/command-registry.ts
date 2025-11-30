@@ -9,6 +9,20 @@ import type { CommandContext } from "./command-context";
  */
 export const commandRegistry: Command[] = [
   // ============================================================
+  // CTA Commands (appear first)
+  // ============================================================
+  {
+    id: "nav-contact",
+    kind: "nav",
+    label: "Contact",
+    description: "Navigate to the contact page",
+    keywords: ["contact", "reach", "get in touch", "email", "message"],
+    run: (ctx) => {
+      ctx.navigate("/contact");
+    },
+  },
+
+  // ============================================================
   // Navigation Commands
   // ============================================================
   {
@@ -44,8 +58,8 @@ export const commandRegistry: Command[] = [
   {
     id: "nav-pmi",
     kind: "nav",
-    label: "PMI Agile Certification",
-    description: "View the PMI Agile Certification case study",
+    label: "PMI",
+    description: "View the PMI case study",
     keywords: ["pmi", "agile", "certification", "acp", "project management"],
     run: (ctx) => {
       ctx.navigate("/work/pmi");
@@ -64,19 +78,19 @@ export const commandRegistry: Command[] = [
   {
     id: "nav-coke",
     kind: "nav",
-    label: "Coca-Cola Creative Technology",
-    description: "View the Coca-Cola Creative Technology case study",
+    label: "Coke",
+    description: "View the Coke case study",
     keywords: ["coca cola", "coke", "coca-cola", "creative", "technology", "ai", "vending"],
     run: (ctx) => {
-      ctx.navigate("/work/coca-cola-creative-technology");
+      ctx.navigate("/work/coke");
     },
   },
   {
     id: "nav-pfaff-designs",
     kind: "nav",
-    label: "Pfaff Designs Portfolio",
-    description: "View the Pfaff Designs Portfolio case study",
-    keywords: ["pfaff", "designs", "portfolio", "generative", "ai portfolio"],
+    label: "pfaff.design",
+    description: "View the pfaff.design case study",
+    keywords: ["pfaff", "designs", "portfolio", "generative", "ai portfolio", "pfaff.design"],
     run: (ctx) => {
       ctx.navigate("/work/pfaff-designs");
     },
@@ -93,24 +107,9 @@ export const commandRegistry: Command[] = [
     keywords: ["summarize", "summary", "brief", "explain", "selected", "selection"],
     visible: (ctx) => !!ctx.selectionText && ctx.selectionText.trim().length > 0,
     run: (ctx) => {
-      console.log("[command-registry] ai-quick-summarize-selection executing with ctx.input:", ctx.input);
       ctx.openInlineChat({
         question: ctx.input || "Summarize this selection in plain language.",
         selectionText: ctx.selectionText,
-      });
-    },
-  },
-  {
-    id: "ai-quick-summarize-page",
-    kind: "ai_quick",
-    label: "Summarize this page",
-    description: "Get a quick summary of the current page",
-    keywords: ["summarize", "summary", "page", "overview", "brief"],
-    run: (ctx) => {
-      console.log("[command-registry] ai-quick-summarize-page executing with ctx.input:", ctx.input);
-      ctx.openInlineChat({
-        question: ctx.input || "Give me a short summary of this page.",
-        sectionText: ctx.sectionText,
       });
     },
   },
@@ -122,7 +121,6 @@ export const commandRegistry: Command[] = [
     keywords: ["rewrite", "clarify", "clean", "simplify", "improve", "selected", "selection"],
     visible: (ctx) => !!ctx.selectionText && ctx.selectionText.trim().length > 0,
     run: (ctx) => {
-      console.log("[command-registry] ai-quick-rewrite-selection executing with ctx.input:", ctx.input);
       ctx.openInlineChat({
         question: ctx.input || "Rewrite this to be clearer and less technical, but keep the meaning.",
         selectionText: ctx.selectionText,
@@ -134,49 +132,38 @@ export const commandRegistry: Command[] = [
   // Deep AI Commands (full modal)
   // ============================================================
   {
-    id: "ai-deep-project",
+    id: "ai-deep-project-walkthrough",
     kind: "ai_deep",
-    label: "Ask about this project",
-    description: "Open the AI modal to ask questions about the current project",
-    keywords: ["ask", "question", "project", "explain", "tell me", "about"],
+    label: "Walk me through this project",
+    description: "Get a comprehensive walkthrough of the current project",
+    keywords: ["walkthrough", "walk through", "guide", "overview", "project", "full", "complete"],
     visible: (ctx) => !!ctx.projectSlug,
     run: (ctx) => {
+      const baseQuestion =
+        ctx.input?.trim() ||
+        "Give me a deep walkthrough of this project: context, solution, and impact.";
+      
       ctx.openAiModal({
-        question: "What can you tell me about this project?",
-        pagePath: ctx.path,
-        projectSlug: ctx.projectSlug ?? null,
-        sectionHeadline: ctx.sectionHeadline,
-        sectionText: ctx.sectionText,
+        question: baseQuestion,
+        // pagePath, projectSlug, etc. are filled in by CommandContext
       });
     },
   },
   {
     id: "ai-deep-cross-project",
     kind: "ai_deep",
-    label: "Ask cross-project question",
-    description: "Open the AI modal to ask questions across multiple projects",
-    keywords: ["cross", "compare", "projects", "multiple", "all projects"],
+    label: "Compare with other projects",
+    description: "Compare this project with other work and identify patterns",
+    keywords: ["compare", "comparison", "other", "projects", "similar", "patterns", "cross"],
+    visible: (ctx) => !!ctx.projectSlug,
     run: (ctx) => {
+      const baseQuestion =
+        ctx.input?.trim() ||
+        "Compare this project with other work Charles has done and note any patterns.";
+      
       ctx.openAiModal({
-        question: "Compare projects or ask about multiple projects",
-        pagePath: ctx.path,
-        projectSlug: ctx.projectSlug ?? null,
-      });
-    },
-  },
-  {
-    id: "ai-deep-explanation",
-    kind: "ai_deep",
-    label: "Deep explanation",
-    description: "Get a detailed explanation about a topic",
-    keywords: ["explain", "deep", "detailed", "elaborate", "more", "details"],
-    run: (ctx) => {
-      ctx.openAiModal({
-        question: "Can you provide a detailed explanation?",
-        pagePath: ctx.path,
-        projectSlug: ctx.projectSlug ?? null,
-        sectionHeadline: ctx.sectionHeadline,
-        sectionText: ctx.sectionText,
+        question: baseQuestion,
+        // pagePath, projectSlug, etc. are filled in by CommandContext
       });
     },
   },
@@ -187,27 +174,13 @@ export const commandRegistry: Command[] = [
   {
     id: "download-resume",
     kind: "download",
-    label: "Download Charles' resume",
-    description: "Download Charles Pfaff's resume (PDF)",
+    label: "Resume",
+    description: "Download Charles Pfaff's resume",
     keywords: ["resume", "cv", "pdf", "download", "charles", "pfaff"],
     run: (ctx) => {
-      ctx.download("/downloads/charles-pfaff-resume.pdf");
+      ctx.download("https://ijwldoqqihdtwegdjjwf.supabase.co/storage/v1/object/sign/Resume/Resume.pages?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9kNmUwN2M2ZS0zYTdlLTQxNzItYjRhOC02Y2FkM2I0ZTA3NmYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJSZXN1bWUvUmVzdW1lLnBhZ2VzIiwiaWF0IjoxNzY0NDY2ODE1LCJleHAiOjE3OTYwMDI4MTV9.VtraXDZwuJfoMUXrAiyJTf78STHs-P-f4f06PMhoCMg");
     },
   },
 
-  // ============================================================
-  // Help Command
-  // ============================================================
-  {
-    id: "help",
-    kind: "help",
-    label: "Show available actions",
-    description: "Suggestions for navigation, AI actions, and downloads",
-    keywords: ["help", "options", "commands", "what", "can", "do"],
-    run: (ctx) => {
-      console.log("[Command] Help: showing available actions");
-      console.log("[Command] Available commands:", commandRegistry.length);
-    },
-  },
 ];
 

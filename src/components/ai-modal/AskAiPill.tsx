@@ -34,7 +34,7 @@ export function AskAiPill({ x, y, onClick, isVisible = true, isMobile = false }:
       }}
       style={{ left: x, top: y }}
       className={cn(
-        "fixed z-[70] px-3 py-1.5",
+        "fixed z-[10000] px-3 py-1.5",
         "text-[10px] leading-tight tracking-[0.16em] uppercase",
         "bg-[color:var(--accent-primary)] text-[color:var(--bg-default)]",
         "rounded-full whitespace-nowrap pointer-events-auto",
@@ -46,7 +46,7 @@ export function AskAiPill({ x, y, onClick, isVisible = true, isMobile = false }:
         isMobile && (isVisible ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-[0.98] -translate-y-1")
       )}
     >
-      Ask AI about this
+      Ask AI
     </button>
   );
 }

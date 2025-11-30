@@ -56,6 +56,15 @@ export function createCommandContext(
       selectionText?: string;
       sectionText?: string;
     }) => void;
+    openAiModal?: (args: {
+      question: string;
+      pagePath?: string;
+      projectSlug?: string | null;
+      sectionHeadline?: string;
+      sectionText?: string;
+    }) => void;
+    navigate?: (path: string) => void;
+    download?: (path: string) => void;
   }
 ): CommandContext {
   return {
@@ -66,23 +75,25 @@ export function createCommandContext(
     sectionHeadline: options?.sectionHeadline,
     sectionText: options?.sectionText,
 
-    // Stubbed actions (Phase 10.1)
-    openAiModal: (args) => {
-      console.log("[CommandContext] openAiModal", args);
-    },
-
-    // Use provided openInlineChat or stub
-    openInlineChat: options?.openInlineChat ?? ((args) => {
-      console.log("[CommandContext] openInlineChat", args);
+    // Use provided openAiModal or stub
+    openAiModal: options?.openAiModal ?? (() => {
+      // Stub implementation
     }),
 
-    navigate: (path) => {
-      console.log("[CommandContext] navigate", path);
-    },
+    // Use provided openInlineChat or stub
+    openInlineChat: options?.openInlineChat ?? (() => {
+      // Stub implementation
+    }),
 
-    download: (path) => {
-      console.log("[CommandContext] download", path);
-    },
+    // Use provided navigate or stub
+    navigate: options?.navigate ?? (() => {
+      // Stub implementation
+    }),
+
+    // Use provided download or stub
+    download: options?.download ?? (() => {
+      // Stub implementation
+    }),
   };
 }
 
