@@ -7,6 +7,7 @@ import { SectionProvider } from "@/components/ai/SectionContext";
 import { AiModalProvider, AiModalHost, AiHoverPillHost, FloatingAiButton } from "@/components/ai-modal";
 import { CommandPaletteProvider } from "@/components/cmdk/CommandPaletteProvider";
 import { CursorIndicator } from "@/components/utility/CursorIndicator";
+import { ToastProvider } from "@/components/molecules/Toast";
 
 export const metadata: Metadata = {
   title: "pfaff-designs",
@@ -27,25 +28,27 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AiModalProvider>
-        <AIAnswerProvider>
-          <SectionProvider>
-            <Header />
-            {children}
-            <Footer />
-          </SectionProvider>
-        </AIAnswerProvider>
-          {/* Global AI modal host - rendered once at root */}
-          <AiModalHost />
-          {/* Global AI hover pill host - tracks cursor/touch on AI-interactive regions */}
-          <AiHoverPillHost />
-          {/* Global floating AI button - mobile-only FAB in bottom-right */}
-          <FloatingAiButton />
-          {/* Global command palette - Cmd+K / Ctrl+K */}
-          <CommandPaletteProvider />
-          {/* Global cursor indicator - ⌘K follows cursor */}
-          <CursorIndicator />
-        </AiModalProvider>
+        <ToastProvider>
+          <AiModalProvider>
+          <AIAnswerProvider>
+            <SectionProvider>
+              <Header />
+              {children}
+              <Footer />
+            </SectionProvider>
+          </AIAnswerProvider>
+            {/* Global AI modal host - rendered once at root */}
+            <AiModalHost />
+            {/* Global AI hover pill host - tracks cursor/touch on AI-interactive regions */}
+            <AiHoverPillHost />
+            {/* Global floating AI button - mobile-only FAB in bottom-right */}
+            <FloatingAiButton />
+            {/* Global command palette - Cmd+K / Ctrl+K */}
+            <CommandPaletteProvider />
+            {/* Global cursor indicator - ⌘K follows cursor */}
+            <CursorIndicator />
+          </AiModalProvider>
+        </ToastProvider>
       </body>
     </html>
   );
