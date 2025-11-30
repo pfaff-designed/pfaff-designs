@@ -8,6 +8,7 @@ import { Heading } from "@/components/atoms/Heading";
 import { FormFieldInput, FormFieldTextarea } from "@/components/molecules/FormField";
 import { Button } from "@/components/atoms/Button";
 import { useToast } from "@/components/molecules/Toast";
+import { CalendlyEmbed } from "@/components/utility/CalendlyEmbed";
 
 // Disallowed words for message validation
 const DISALLOWED_WORDS = ["spam", "advertisement"];
@@ -190,11 +191,11 @@ export default function Contact() {
         </Container>
       </Section>
 
-      <Section className="pt-[2rem] md:pt-[3rem] pb-[4rem] md:pb-[6rem]">
-        <Container>
-          <div className="flex flex-col lg:flex-row lg:gap-16 lg:items-start max-w-7xl mx-auto">
-            {/* Contact Form Section */}
-            <div className="flex-1 mb-12 lg:mb-0">
+              <Section className="pt-[2rem] md:pt-[3rem] pb-[4rem] md:pb-[6rem]">
+                <Container>
+                  <div className="flex flex-col gap-12 max-w-7xl mx-auto">
+                    {/* Contact Form Section */}
+                    <div className="w-full">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1">
                   <label htmlFor="name" className="text-sm font-medium text-[var(--text-default)]">
@@ -315,8 +316,8 @@ export default function Contact() {
               </form>
             </div>
 
-            {/* Scheduling CTA Section */}
-            <div className="flex-1">
+            {/* Calendly Section */}
+            <div className="w-full">
               <div className="space-y-3">
                 <Heading
                   variant="headline"
@@ -324,12 +325,23 @@ export default function Contact() {
                   className="text-base font-semibold"
                 />
                 <p className="text-sm text-[var(--text-muted)]">
-                  Soon you'll be able to grab a slot on my calendar for portfolio reviews,
+                  Grab a slot on my calendar for portfolio reviews,
                   collaboration chats, or role discussions.
                 </p>
-                <Button type="button" variant="primary" disabled>
-                  Schedule time (coming soon)
-                </Button>
+                {process.env.NEXT_PUBLIC_CALENDLY_URL ? (
+                  <CalendlyEmbed
+                    url={process.env.NEXT_PUBLIC_CALENDLY_URL}
+                  />
+                ) : (
+                  <div className="p-8 border border-[color:var(--border-subtle)] rounded-lg bg-[color:var(--bg-surface)] text-center">
+                    <p className="text-sm text-[color:var(--text-muted)]">
+                      Please set <code className="text-xs bg-[color:var(--bg-default)] px-2 py-1 rounded">NEXT_PUBLIC_CALENDLY_URL</code> in your environment variables.
+                    </p>
+                    <p className="text-xs text-[color:var(--text-muted)] mt-2">
+                      Get your URL from Calendly: Event Type → Settings → Add to Website
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

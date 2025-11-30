@@ -1,46 +1,56 @@
-# V1 Roadmap — Generative‑UI Portfolio  
-*A fully conversational, AI‑enhanced, editorial portfolio experience.*
-
-This roadmap reflects **actual development from Nov 8 → Nov 26, 2025**, including:
-- Phases that existed before the roadmap was formalized  
-- Phases that were deleted, merged, or re‑scoped  
-- Accurate time estimates and real time spent  
-- A clean forward‑looking plan  
-- Embedded **Phase History** sections at the bottom of each phase  
-
-This document is a **living artifact** intended to guide future projects and establish realistic expectations for similar builds.
-
----
-
 # Phase 1 — Foundations & Early Architecture  
+### Phase Steps
+1. Initialize Next.js project with TypeScript.
+2. Install Tailwind, PostCSS, and Autoprefixer.
+3. Set up shadcn/ui and Radix dependencies.
+4. Create initial file structure (`app/`, `components/`, `lib/`).
+5. Build first version of Copywriter → Orchestrator → Renderer pipeline.
+6. Validate early UI with Storybook.
+
 **Status: Complete**  
 **Time: ~18–22 hrs (Nov 8–12)**
 
-### 1.1 Framework & Runtime Setup
-- Next.js 14 (App Router)
-- React 18
-- TypeScript 5
-- Tailwind 4 + PostCSS + Autoprefixer
-- shadcn/ui (Radix Primitives)
-- Storybook for local component development
+## 1.1 Framework & Runtime Setup  
+**Estimated Time: 6–8 hrs**
 
-### 1.2 Initial Generative‑UI Architecture
-- Sketch the “two‑agent pipeline”:  
-  Copywriter (YAML) → Orchestrator (JSON) → Renderer (deterministic UI)
-- Defined schemas for:
+**Goal**  
+Get a modern, stable React/Next.js baseline with TypeScript and styling so all later work has a solid foundation.
+
+**Deliverables**
+- Next.js 14 (App Router) project initialized
+- React 18 + TypeScript 5 configured
+- Tailwind 4 + PostCSS + Autoprefixer wired up
+- Base layout and `_app` / root config working
+
+## 1.2 Initial Generative‑UI Architecture  
+**Estimated Time: 6–7 hrs**
+
+**Goal**  
+Define the core generative-UI pipeline so every later phase can plug into a predictable Copywriter → Orchestrator → Renderer flow.
+
+**Deliverables**
+- Two‑agent pipeline sketched:
+  - Copywriter (YAML) → Orchestrator (JSON) → Renderer (deterministic UI)
+- Draft schemas for:
   - Components  
   - Blocks  
   - Pages  
-- Designed strict JSON → React mapping rules
+- Strict JSON → React mapping rules (no arbitrary HTML)
 
-### 1.3 First Modal Assistant Prototype (Non‑LangGraph)
+## 1.3 First Modal Assistant Prototype (Non‑LangGraph)  
+**Estimated Time: 6–7 hrs**
+
+**Goal**  
+Experiment with a basic conversational assistant to understand UX constraints before introducing LangGraph.
+
+**Deliverables**
 - Early conversational assistant using Anthropic Haiku
-- Direct LLM → UI pipeline
-- Useful prototype, but:
+- Direct LLM → UI pipeline (no graph)
+- Working prototype showing key limitations:
   - No determinism  
   - No mode routing  
   - No evaluation or debugging surface  
-  - Unstable behavior
+  - Unstable behavior across runs
 
 ---
 
@@ -53,26 +63,54 @@ This document is a **living artifact** intended to guide future projects and est
 ---
 
 # Phase 2 — RAG & Knowledge Base Setup  
+### Phase Steps
+1. Import all project longform + shortform KB.
+2. Normalize formats and folder structure.
+3. Build Supabase embedding loader.
+4. Chunk longform text into RAG-ready units.
+5. Implement first pass of retrieval helper.
+6. Connect retrieval output to Copywriter.
+
 **Status: Complete**  
 **Time: ~10–12 hrs (Nov 10–13)**
 
-### 2.1 KB Import & Formatting
+## 2.1 KB Import & Formatting  
+**Estimated Time: 3–4 hrs**
+
+**Goal**  
+Centralize all portfolio content into a structured, model-ready knowledge base.
+
+**Deliverables**
 - Imported longform + shortform project KB:
   - Capital One  
   - PMI  
   - Tanger  
   - Coke  
   - Portfolio metadata  
-- Standardized formats: `.yaml`, `.json`, `.md`.
+- Standardized formats: `.yaml`, `.json`, `.md`
+- Logical folder structure for KB assets
 
-### 2.2 RAG Stubbed Implementation
-- Implemented vector store loader (Supabase embeddings)
-- Added chunk retrieval helper
-- Early retrieval → Copywriter prompt wiring
+## 2.2 RAG Stubbed Implementation  
+**Estimated Time: 3–4 hrs**
 
-### 2.3 Copywriter Agent Structure (Pre‑LangGraph)
-- Non‑deterministic but functional YAML generator  
-- Used for early page composition
+**Goal**  
+Stand up the first retrieval layer to prove that KB → embeddings → query → chunks works.
+
+**Deliverables**
+- Vector store loader using Supabase embeddings
+- Initial chunking strategy for longform content
+- Retrieval helper that returns top‑N chunks for a query
+
+## 2.3 Copywriter Agent Structure (Pre‑LangGraph)  
+**Estimated Time: 3–4 hrs**
+
+**Goal**  
+Wire retrieval into the Copywriter agent to generate structured YAML answers from KB context.
+
+**Deliverables**
+- Non‑deterministic but functional YAML generator
+- Copywriter prompt that consumes retrieved chunks
+- Early page composition via RAG → Copywriter
 
 ---
 
@@ -83,22 +121,49 @@ This document is a **living artifact** intended to guide future projects and est
 ---
 
 # Phase 3 — Renderer & Component Registry  
+### Phase Steps
+1. Create component whitelist and schemas.
+2. Implement Page → LayoutTree → React rendering pipeline.
+3. Build Section/Hero/AnswerBlock base components.
+4. Implement deterministic JSON renderer.
+5. Add animation layer (typewriter + in-view animations).
+6. Validate rendering through Storybook.
+
 **Status: Complete**  
 **Time: ~8–10 hrs (Nov 11–14)**
 
-### 3.1 Component Whitelist
-- Hero, Section, AnswerBlocks, CaseStudyBlocks  
-- Strict zod schemas  
-- Deterministic UI rendering
+## 3.1 Component Whitelist  
+**Estimated Time: 2–3 hrs**
 
-### 3.2 Layout Tree Rendering
-- JSON → React mapping  
-- Guaranteed structural safety  
-- No arbitrary HTML injection
+**Goal**  
+Define the strict set of components the Orchestrator is allowed to use.
 
-### 3.3 Animation Layer (Initial)
-- Typewriter / entrance animations  
-- Smooth scroll anchoring
+**Deliverables**
+- Component whitelist: Hero, Section, AnswerBlocks, CaseStudyBlocks
+- Zod schemas for each component type
+- Mapping from component type → React implementation
+
+## 3.2 Layout Tree Rendering  
+**Estimated Time: 3–4 hrs**
+
+**Goal**  
+Turn orchestrator JSON into deterministic React trees.
+
+**Deliverables**
+- JSON → React mapping pipeline
+- Layout tree structure with predictable nesting
+- Guard rails to prevent arbitrary HTML injection
+
+## 3.3 Animation Layer (Initial)  
+**Estimated Time: 3–4 hrs**
+
+**Goal**  
+Add just enough motion to make generative content feel alive and intentional.
+
+**Deliverables**
+- Typewriter / entrance animations for generated blocks
+- Smooth scroll anchoring to sections
+- Basic intersection observer or in‑view logic
 
 ---
 
@@ -109,25 +174,54 @@ This document is a **living artifact** intended to guide future projects and est
 ---
 
 # Phase 4 — Early Modal UX & Interaction Model  
+### Phase Steps
+1. Build modal shell with input and message list.
+2. Add typing indicator + transitions.
+3. Connect modal to early LLM endpoint.
+4. Build page context extraction (pagePath, sectionText).
+5. Add message normalization and metadata.
+6. Test multi-turn behaviors.
+
 **Status: Complete**  
 **Time: ~12–14 hrs (Nov 12–16)**
 
-### 4.1 Modal UI Shell
-- Message list + input  
-- Typing indicator  
-- Smooth transitions
+## 4.1 Modal UI Shell  
+**Estimated Time: 4–5 hrs**
 
-### 4.2 Integration With Non‑LangGraph Agent
-- Modal responses from direct LLM calls  
-- Worked but lacked:
-  - Memory  
-  - Mode routing  
-  - Debug visibility
+**Goal**  
+Create a focused, pleasant conversational surface that fits the site’s editorial style.
 
-### 4.3 Input Normalization
-- PagePath  
-- Section context  
-- Topic metadata
+**Deliverables**
+- Modal layout with message list + input
+- Typing indicator component
+- Open/close transitions and overlay behavior
+
+## 4.2 Integration With Non‑LangGraph Agent  
+**Estimated Time: 4–5 hrs**
+
+**Goal**  
+Hook the modal to the early LLM endpoint to support real conversations.
+
+**Deliverables**
+- API call from modal to direct LLM
+- Response rendering in message list
+- Basic error handling and loading states
+- Documented limitations:
+  - No memory  
+  - No mode routing  
+  - No debug visibility
+
+## 4.3 Input Normalization & Context  
+**Estimated Time: 4–5 hrs**
+
+**Goal**  
+Attach enough context to each message so future agents can reason about where the user is in the site.
+
+**Deliverables**
+- Extraction of `pagePath`
+- Capture of section context (headline, text)
+- Topic metadata on messages
+- Multi-turn behavior smoke tests
 
 ---
 
@@ -138,21 +232,45 @@ This document is a **living artifact** intended to guide future projects and est
 ---
 
 # Phase 5 — Intent Routing (Pre‑LangGraph)  
+### Phase Steps
+1. Create intent schema (nav, scroll, QA, project lookup).
+2. Build intent router prototype.
+3. Test navigation vs QA intent separation.
+4. Integrate router with early modal.
+5. Evaluate limitations.
+6. Mark components for replacement by LangGraph.
+
 **Status: Partially Replaced**  
 **Time: ~6–8 hrs (Nov 14–15)**
 
-### 5.1 Intent Schema
-- Navigation  
-- Scrolling  
-- QA  
-- Project lookups
+## 5.1 Intent Schema & Router Prototype  
+**Estimated Time: 3–4 hrs**
 
-### 5.2 Limitations
-- Too coarse  
-- No rebuilding of conversation context  
-- No evaluation surface
+**Goal**  
+Give the assistant a first-pass way to distinguish between navigation and Q&A.
 
-This phase became unnecessary after introducing LangGraph in Phase 8.
+**Deliverables**
+- Intent schema with:
+  - Navigation  
+  - Scrolling  
+  - QA  
+  - Project lookups
+- Router prototype that picks an intent per user message
+- Wiring from router → early modal behaviors
+
+## 5.2 Limitations & Lessons  
+**Estimated Time: 3–4 hrs**
+
+**Goal**  
+Evaluate the shortcomings of a simple intent router to inform the later LangGraph design.
+
+**Deliverables**
+- Documented limitations:
+  - Too coarse  
+  - No rebuilding of conversation context  
+  - No evaluation surface
+- Notes that later informed LangGraph conversation policy design
+- Components marked for replacement by LangGraph
 
 ---
 
@@ -162,18 +280,40 @@ This phase became unnecessary after introducing LangGraph in Phase 8.
 ---
 
 # Phase 6 — Copywriter & Orchestrator Refinement  
+### Phase Steps
+1. Rewrite Copywriter prompt (structured YAML).
+2. Add stricter output rules.
+3. Improve orchestrator merging logic.
+4. Add block-level validation.
+5. Strengthen error printing & fallback.
+6. Validate JSON → React stability.
+
 **Status: Complete**  
 **Time: ~10–12 hrs (Nov 15–18)**
 
-### 6.1 Copywriter Improvements
-- More structured YAML  
-- Error‑resistant output rules  
-- Warm, recruiter‑friendly tone
+## 6.1 Copywriter Improvements  
+**Estimated Time: 5–6 hrs**
 
-### 6.2 Orchestrator JSON Stability
-- Stricter Zod validation  
-- Better merging of YAML sections  
-- Fine‑grained block composition
+**Goal**  
+Make the Copywriter’s YAML structured, reliable, and aligned with recruiter-facing tone.
+
+**Deliverables**
+- Rewritten Copywriter prompt with structured YAML sections
+- Clear output rules (no markdown, fenced code, or prose)
+- Warm, recruiter‑friendly tone
+- Better handling of missing KB fields
+
+## 6.2 Orchestrator JSON Stability  
+**Estimated Time: 5–6 hrs**
+
+**Goal**  
+Harden the orchestrator so that it reliably converts YAML into valid page JSON.
+
+**Deliverables**
+- Stricter Zod validation for page/blocks
+- Improved merging of YAML sections into a single layout
+- Error printing & fallback paths for invalid blocks
+- JSON → React stability validated in Storybook
 
 ---
 
@@ -183,12 +323,28 @@ This phase became unnecessary after introducing LangGraph in Phase 8.
 ---
 
 # Phase 7 — Evaluation Prep (Pre‑LangGraph)  
+### Phase Steps
+1. Draft early evaluation heuristics.
+2. Attempt rule-based scoring.
+3. Identify major issues.
+4. Scrap heuristics approach.
+5. Replace with LangSmith directional plan.
+6. Archive phase as deprecated.
+
 **Status: Deleted**  
 **Time: ~4 hrs (Nov 17)**
 
-### Why Deleted
-- Planned heuristics were insufficient  
-- Replaced by LangSmith‑driven evaluation in Phase 8.4+
+## 7.1 Heuristics Attempt & Pivot  
+**Estimated Time: 4 hrs**
+
+**Goal**  
+Explore naive evaluation heuristics and decide whether they’re viable.
+
+**Deliverables**
+- Drafted early evaluation heuristics (rule-based)
+- Attempted scoring on a small set of examples
+- Identified major issues with heuristic-only evaluation
+- Decision to move to LangSmith dataset + judge approach
 
 ---
 
@@ -198,6 +354,19 @@ This phase became unnecessary after introducing LangGraph in Phase 8.
 ---
 
 # Phase 8 — LangGraph Dev Harness & Evaluation  
+### Phase Steps
+1. Scaffold modalGraphApp + ModalGraphState.
+2. Implement derive_context node.
+3. Add retrieve_chunks node.
+4. Build context_blob merger.
+5. Create conversation_policy logic.
+6. Add generate_answer prompt + mode routing.
+7. Build /api/dev/modal-graph dev route.
+8. Add debugNotes + deterministic traversal.
+9. Build LangSmith datasets A/B/C.
+10. Create custom LLM judge.
+11. Build target function runModalGraphEval.
+
 **Status: Complete**  
 **Time: ~28–32 hrs (Nov 17–25)**
 
@@ -248,6 +417,14 @@ This phase became unnecessary after introducing LangGraph in Phase 8.
 ---
 
 # Phase 9 — Modal Integration & Interaction Polish  
+### Phase Steps
+1. Replace direct Copywriter call with modalGraphApp.
+2. Add mode-carrying through API and UI.
+3. Update modal renderer to show mode hints.
+4. Unify modal triggers (buttons, inline prompts, hover chips).
+5. Stabilize UI interaction model.
+6. Validate modal behavior end-to-end.
+
 **Status: In Progress**  
 **Time Estimate: ~12–16 hrs**  
 **Time Spent (so far): ~8 hrs**
@@ -282,6 +459,16 @@ This phase became unnecessary after introducing LangGraph in Phase 8.
 ---
 
 # Phase 10 — Cmd+K Command Palette (Atlas-Style)
+### Phase Steps
+1. Define Command schema + registry.
+2. Build CommandContext object.
+3. Implement deterministic command filtering.
+4. Implement Cmd+K listener.
+5. Build command palette UI shell.
+6. Add quick AI actions + inline chat.
+7. Add deep AI actions (modalGraph).
+8. Add unsupported query handler.
+
 **Status: Not Started**  
 **Estimated Time: 22–30 hrs**
 
@@ -391,7 +578,15 @@ Provide helpful suggestions when users attempt unsupported actions.
 ---
 
 # Phase 11 — Contact Flow & Scheduling  
-**Status: Not Started**  
+### Phase Steps
+1. Build contact page UI shell.
+2. Implement form state + zod validation.
+3. Build Postmark email route.
+4. Add scheduling CTA section.
+5. Integrate Calendly via env var.
+6. Add Cmd+K "Contact Charles" command.
+
+**Status: In Progress**  
 **Estimate: 10–14 hrs**
 
 Unified contact + scheduling:
@@ -402,58 +597,274 @@ Unified contact + scheduling:
 
 ---
 
+## 11.1 Contact Page UI Shell  
+**Estimated Time: 2–3 hrs**
+
+**Goal**  
+Create a visually consistent `/contact` page that fits the editorial portfolio aesthetic and provides a clear place for people to reach out.
+
+**Deliverables**
+- Page at `/contact` wired into existing navigation
+- Simple layout: heading, description, form section, scheduling CTA section
+- Uses existing layout primitives and typography tokens
+- No AI logic, no API calls yet
+
+---
+
+## 11.2 Form Behavior & Validation (zod)  
+**Estimated Time: 3–4 hrs**
+
+**Goal**  
+Turn the contact form into a fully validated, accessible form using zod on the client.
+
+**Deliverables**
+- `contactFormSchema` with fields: `name`, `email`, `subject` (optional), `message`
+- Client-side validation using `safeParse`
+- Controlled inputs with `useState` (or existing form helper)
+- Field-level error messages and `aria-invalid` / `aria-describedby`
+- Basic status state: `idle`, `submitting`, `success`, `error`
+- Inline success + error messages
+
+---
+
+## 11.3 Postmark Email Integration  
+**Estimated Time: 3–4 hrs**
+
+**Goal**  
+Wire the validated form to **Postmark** so submissions actually send an email.
+
+**Deliverables**
+- `POST /api/contact` route handler
+- Server-side zod validation mirroring the client schema
+- Use of `POSTMARK_SERVER_TOKEN`, `POSTMARK_FROM_EMAIL`, `POSTMARK_TO_EMAIL` from env
+- Single email to Charles with name, email, subject, message
+- Clear JSON responses for success / validation errors / server errors
+- Frontend submit handler that calls `/api/contact` and updates status
+
+---
+
+## 11.4 Scheduling CTA (Calendly)  
+**Estimated Time: 1–2 hrs**
+
+**Goal**  
+Add a simple, reliable “Schedule time” CTA that links out to Calendly.
+
+**Deliverables**
+- Standalone scheduling section on `/contact` below the form
+- Env-driven URL: `NEXT_PUBLIC_SCHEDULING_URL="https://calendly.com/pfaff-designs"`
+- Button that opens the scheduling URL in a new tab when configured
+- Disabled state + inline message when env var is missing
+- No changes to form behavior
+
+---
+
+## 11.5 Cmd+K Contact Command  
+**Estimated Time: 1–2 hrs**
+
+**Goal**  
+Expose the contact flow via the global command palette.
+
+**Deliverables**
+- `command` entry for “Contact Charles” / “Open contact page”
+- Command appears under a sensible group (e.g., "Navigation" or "Contact")
+- Executing the command navigates to `/contact`
+- Optional: command for “Schedule time” that opens Calendly
+
+---
+
 #### 📘 Phase History (Nov 14–26)
 - Originally part of early UX plans  
-- Deferred due to AI system complexity
+- Deferred due to AI system complexity  
+- Re-scoped into clear sub-phases in line with Phase 10 style
 
 ---
 
 # Phase 12 — Custom 404 Page
+### Phase Steps
+1. Create /404 page.
+2. Add centered 404 typography.
+3. Ensure layout matches site aesthetic.
+4. Add link back to homepage.
+5. Validate route fallback behavior.
+
 **Status: Not Started**  
 **Estimate: 1–2 hrs**
 
 A simple, branded 404 page to gracefully handle unknown routes.
 
-### Deliverables
-- A `/404` page using Next.js conventions
-- Large, bold "404" centered on the page
-- Minimal styling consistent with portfolio aesthetics
-- No interactive elements or AI integrations required
+---
+
+## 12.1 Basic 404 Layout  
+**Estimated Time: 0.5–1 hr**
+
+**Goal**  
+Create a `/404` page that matches the site’s visual system.
+
+**Deliverables**
+- Next.js 404 page using App Router conventions
+- Full-height layout with centered content
+- Large, bold "404" headline
+- Short supporting copy
+
+---
+
+## 12.2 Navigation & Polish  
+**Estimated Time: 0.5–1 hr**
+
+**Goal**  
+Make it easy to recover from a 404.
+
+**Deliverables**
+- Clear link/button back to the homepage
+- Optional link to the Work page
+- Alignment with typography/spacing tokens
+- Confirm 404 behavior by visiting nonexistent routes
 
 ---
 
 #### 📘 Phase History (Nov 26)
-- Added as a final polish item after core Cmd+K and modal systems stabilized
+- Added as a final polish item after core Cmd+K and modal systems stabilized  
 - Simple implementation intended for V1 completeness
 
 ---
 
 # Phase 13 — Final Content Pass
+### Phase Steps
+1. Review KB content for accuracy.
+2. Improve incomplete or low-context sections.
+3. Normalize naming across projects.
+4. Add external project links.
+5. Polish typography + spacing.
+6. Final editorial review.
+
 **Status: Not Started**  
 **Estimate: 4–6 hrs**
 
 A final polishing phase focused on editorial and visual coherence across the site.
 
-### Deliverables
-- Full review of all KB-backed pages
-- Fix incomplete or low-context project descriptions
-- Ensure consistent project naming, tone, and phrasing
-- Validate section headlines and body copy across pages
-- Light adjustments to image selection or alt text
-- Need to ensure that there are external links to the websites I've worked on very clearly displayed on each page
+---
+
+## 13.1 KB Audit & Accuracy  
+**Estimated Time: 1–2 hrs**
+
+**Goal**  
+Ensure all knowledge base content (YAML/JSON/MD) accurately reflects real work.
+
+**Deliverables**
+- Full read-through of all project KB
+- Fix factual inaccuracies or outdated phrasing
+- Remove vestigial or experimental content not meant for recruiters
+
+---
+
+## 13.2 Low-Context Fixes & Naming  
+**Estimated Time: 1–2 hrs**
+
+**Goal**  
+Strengthen any weak or underspecified project descriptions and unify naming.
+
+**Deliverables**
+- Enhanced descriptions for projects with thin context (e.g., PMI)
+- Canonical naming applied across site (e.g., "PMI.org redesign" vs "PMI Agile")
+- Consistent references to roles, tools, and outcomes
+
+---
+
+## 13.3 External Links & Proof Points  
+**Estimated Time: 1 hr**
+
+**Goal**  
+Make it easy for recruiters to jump to live work.
+
+**Deliverables**
+- Clear external links to live sites or case studies on each relevant page
+- Consistent visual treatment for outbound links
+- Optional "View live" pills/cards on project pages
+
+---
+
+## 13.4 Editorial & Visual Polish  
+**Estimated Time: 1–2 hrs**
+
+**Goal**  
+Tighten the overall narrative and visual rhythm.
+
+**Deliverables**
+- Pass over headlines, subheadlines, and body text
+- Adjust spacing, alignment, and section breaks where needed
+- Confirm tone is warm, clear, and recruiter-friendly
 
 ---
 
 #### 📘 Phase History (Nov 26)
-- Added as a last-mile polish step before Analytics & Insights.
+- Added as a last-mile polish step before Analytics & Insights
 
 ---
 
 # Phase 14 — Analytics & Insight Layer  
+### Phase Steps
+1. Select analytics provider.
+2. Add lightweight page view tracking.
+3. Add cmd+K usage tracking.
+4. Add modalGraph usage tracking.
+5. Add event schemas.
+6. Add dashboard for insights.
+
 **Status: Not Started**  
 **Estimate: 8–12 hrs**
 
-lightweight analytics post‑launch.
+Lightweight analytics post‑launch.
+
+---
+
+## 14.1 Provider Selection & Setup  
+**Estimated Time: 1–2 hrs**
+
+**Goal**  
+Choose a minimal, privacy-conscious analytics provider (e.g., Plausible, Fathom, or simple PostHog setup).
+
+**Deliverables**
+- Provider chosen and installed
+- Base script integrated into layout
+
+---
+
+## 14.2 Page & Section Tracking  
+**Estimated Time: 2–3 hrs**
+
+**Goal**  
+Track how recruiters move through the portfolio.
+
+**Deliverables**
+- Pageview events for key routes (Home, Work, individual projects, Contact)
+- Optional section impression tracking for major sections
+
+---
+
+## 14.3 Cmd+K & Modal Usage  
+**Estimated Time: 2–3 hrs**
+
+**Goal**  
+Understand how the AI layer is used.
+
+**Deliverables**
+- Events for Cmd+K open/close
+- Events for command execution (by category)
+- Events for modalGraph open/close
+- Optional: mode distribution (answer_direct, clarify_then_answer, low_context)
+
+---
+
+## 14.4 Basic Insights View  
+**Estimated Time: 3–4 hrs**
+
+**Goal**  
+Create a small internal view of key metrics.
+
+**Deliverables**
+- Simple dashboard (could be in the analytics provider UI)
+- Key charts: page views, command usage, AI usage
+- Notes for future optimization (what to simplify, what to expand)
 
 ---
 
@@ -463,44 +874,64 @@ lightweight analytics post‑launch.
 
 ---
 
-# Total Time (Nov 8 → Nov 26)
-**~96–114 hrs across all phases completed to date**
+# Phase 15 — Replace History Summary with Sliding Message Window (Option C)  
+### Phase Steps
+1. Add history[] to modalGraph input.
+2. Build rolling window (4–6 messages).
+3. Replace historySummary node.
+4. Update derive_context with history.
+5. Update conversation_policy to use multi-turn context.
+6. Update generate_answer prompt.
+7. Update Cmd+K + inline chat to send history.
+8. Add LangSmith multi-turn dataset.
 
-This includes:
-- Architectural design  
-- LangGraph engineering  
-- Modal UX  
-- Evaluation workflows  
-- Prompt engineering  
-- KB cleanup (notably PMI identity normalization)  
-
----
-
-Phase 15 — Replace History Summary with Sliding Message Window (Option C)
-
-Status: Not Started
-Estimate: 6–8 hrs
+**Status: Not Started**  
+**Estimate: 6–8 hrs**
 
 Upgrade the conversation memory model to use a short rolling window of recent messages (Atlas-style) instead of the current history summary. This will improve contextual coherence in multi-turn conversations without compromising determinism or blowing up token usage.
 
-Deliverables
-	•	Add history: Message[] to modalGraph input schema
-	•	Implement in-memory history tracking (UI + API route)
-	•	Replace history summary node with new “retain last N messages” logic
-	•	Limit window to last 4–6 messages (configurable)
-	•	Update derive_context to parse multi-turn context from history
-	•	Update conversation_policy to use history for mode inference
-	•	Follow-ups
-	•	Project continuity
-	•	Context drift detection
-	•	Update generate_answer prompt to include:
-	•	“CONVERSATION HISTORY (last few messages)” block
-	•	Ensure command palette + quick chat bubble send the updated history
-	•	Add safeguards to prevent outdated context from contaminating retrieval
-	•	Add new LangSmith eval dataset for multi-turn history behavior
-	•	Maintain deterministic behavior within a fixed window
+---
 
-  ---
+## 15.1 History Window Implementation  
+**Estimated Time: 2–3 hrs**
 
-This roadmap is now accurate, historical, and ready to guide future project planning.
+**Goal**  
+Add a bounded `history: Message[]` field to the modalGraph input and wire it end-to-end.
 
+**Deliverables**
+- `history` added to state and input schema
+- Frontend captures last N messages and sends them with each request
+
+---
+
+## 15.2 Node & Policy Updates  
+**Estimated Time: 2–3 hrs**
+
+**Goal**  
+Replace the summary node with a rolling window and teach the graph to reason over multi-turn context.
+
+**Deliverables**
+- `historySummary` node removed or deprecated
+- `derive_context` updated to consider recent history
+- `conversation_policy` updated to use history for:
+  - Follow-up detection
+  - Project continuity
+  - Context drift
+
+---
+
+## 15.3 Prompt & Evaluation Updates  
+**Estimated Time: 2–3 hrs**
+
+**Goal**  
+Ensure prompts and evaluations understand and benefit from the new history model.
+
+**Deliverables**
+- `generate_answer` prompt updated with a “Conversation history (last few messages)” block
+- Cmd+K + inline chat wired to send history alongside the question
+- New LangSmith dataset and judge cases for multi-turn behavior
+
+---
+
+#### 📘 Phase History
+- Planned as a post‑V1 enhancement to replace brittle summary history with a more robust, Atlas-style sliding window.
