@@ -408,21 +408,7 @@ Unified contact + scheduling:
 
 ---
 
-# Phase 12 — Analytics & Insight Layer  
-**Status: Not Started**  
-**Estimate: 8–12 hrs**
-
-lightweight analytics post‑launch.
-
----
-
-#### 📘 Phase History (Nov 14–26)
-- Always intended as post‑V1 tracking  
-- Waiting for modal + palette stability
-
----
-
-# Phase 13 — Custom 404 Page
+# Phase 12 — Custom 404 Page
 **Status: Not Started**  
 **Estimate: 1–2 hrs**
 
@@ -442,6 +428,41 @@ A simple, branded 404 page to gracefully handle unknown routes.
 
 ---
 
+# Phase 13 — Final Content Pass
+**Status: Not Started**  
+**Estimate: 4–6 hrs**
+
+A final polishing phase focused on editorial and visual coherence across the site.
+
+### Deliverables
+- Full review of all KB-backed pages
+- Fix incomplete or low-context project descriptions
+- Ensure consistent project naming, tone, and phrasing
+- Validate section headlines and body copy across pages
+- Light adjustments to image selection or alt text
+- Need to ensure that there are external links to the websites I've worked on very clearly displayed on each page
+
+---
+
+#### 📘 Phase History (Nov 26)
+- Added as a last-mile polish step before Analytics & Insights.
+
+---
+
+# Phase 14 — Analytics & Insight Layer  
+**Status: Not Started**  
+**Estimate: 8–12 hrs**
+
+lightweight analytics post‑launch.
+
+---
+
+#### 📘 Phase History (Nov 14–26)
+- Always intended as post‑V1 tracking  
+- Waiting for modal + palette stability
+
+---
+
 # Total Time (Nov 8 → Nov 26)
 **~96–114 hrs across all phases completed to date**
 
@@ -453,4 +474,33 @@ This includes:
 - Prompt engineering  
 - KB cleanup (notably PMI identity normalization)  
 
+---
+
+Phase 15 — Replace History Summary with Sliding Message Window (Option C)
+
+Status: Not Started
+Estimate: 6–8 hrs
+
+Upgrade the conversation memory model to use a short rolling window of recent messages (Atlas-style) instead of the current history summary. This will improve contextual coherence in multi-turn conversations without compromising determinism or blowing up token usage.
+
+Deliverables
+	•	Add history: Message[] to modalGraph input schema
+	•	Implement in-memory history tracking (UI + API route)
+	•	Replace history summary node with new “retain last N messages” logic
+	•	Limit window to last 4–6 messages (configurable)
+	•	Update derive_context to parse multi-turn context from history
+	•	Update conversation_policy to use history for mode inference
+	•	Follow-ups
+	•	Project continuity
+	•	Context drift detection
+	•	Update generate_answer prompt to include:
+	•	“CONVERSATION HISTORY (last few messages)” block
+	•	Ensure command palette + quick chat bubble send the updated history
+	•	Add safeguards to prevent outdated context from contaminating retrieval
+	•	Add new LangSmith eval dataset for multi-turn history behavior
+	•	Maintain deterministic behavior within a fixed window
+
+  ---
+
 This roadmap is now accurate, historical, and ready to guide future project planning.
+
