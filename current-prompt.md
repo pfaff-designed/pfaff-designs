@@ -1,289 +1,146 @@
-# Phase 11.4 — Contact Form Validation Enhancements and UX Improvements
+
+
+# Phase 12 — Custom 404 Page (Next.js App Router)
 
 ## 🎯 Goal
-Improve the contact form validation and user experience on `/contact` by enhancing client-side validation, adding better UX feedback, and ensuring accessibility compliance.
+Implement a simple, branded 404 experience that matches the site’s editorial aesthetic, works with the App Router, and makes it easy for visitors to recover when they hit an unknown route.
 
 For this phase:
-- ✅ Enhance client-side validation with more detailed error messages and checks
-- ✅ Add ARIA attributes and roles for better accessibility
-- ✅ Improve the UX by disabling the submit button while submitting and focusing on the first error field on validation failure
-- ✅ Maintain the existing server-side validation and email sending logic from Phase 11.3
-- ❌ Do **not** change the API route or server-side logic
-- ❌ Do **not** introduce any new backend services or external API calls
+- ✅ Use **Next.js App Router** conventions for not-found handling
+- ✅ Create a centered, minimal 404 layout that fits the existing design language
+- ✅ Provide clear navigation back to the homepage (and optionally Work)
+- ✅ Ensure Cmd+K and global UI patterns still work on the 404 screen
+- ❌ Do **not** change any AI, modalGraph, or command palette logic
+- ❌ Do **not** introduce new dependencies or complex routing logic
 
 ---
 
 ## 0. Files & Structure
 
-You will likely need to update:
+You will likely need to work with:
 
-- `src/app/contact/page.tsx` — **frontend form** (existing)
+- `app/not-found.tsx` — **new file** for App Router 404 handling
+- (Optional) `app/layout.tsx` or root layout — only if needed for composition, but avoid structural changes
 
----
-
-## 1. Enhance Client-Side Validation
-
-Update the client-side validation schema or logic to:
-
-- Ensure the `subject` field, if provided, is at least 3 characters long (if non-empty)
-- Provide clearer, more specific error messages for each field
-- Validate that the `message` does not contain any disallowed words (e.g., "spam", "advertisement")
-
-Example error messages:
-
-- Name: "Please enter your name."
-- Email: "Please enter a valid email address."
-- Subject: "Subject must be at least 3 characters if provided."
-- Message: "Message must be at least 10 characters and not contain disallowed words."
+Do **not** add a legacy `pages/404.tsx`; this project is App Router only.
 
 ---
 
-## 2. Accessibility Improvements
+## 1. Implement `app/not-found.tsx`
 
-Add the following accessibility features:
+Create a new file at `app/not-found.tsx` that:
 
-- Add `aria-invalid="true"` to inputs with errors
-- Link error messages to inputs using `aria-describedby`
-- Use proper roles and landmarks for the form and feedback messages
-- Automatically focus on the first invalid input after validation failure
+1. Uses the existing layout primitives / typography tokens (as much as possible) to stay on-brand.
+2. Renders a full-height section with **centered content**, including:
+   - A **large, bold** `404` heading
+   - A short supporting line, e.g. `"This page doesn’t exist (yet)."`
+   - A small hint that Cmd+K can help, e.g. `"You can also press Cmd + K to jump somewhere else."`
+3. Includes at least one primary call to action:
+   - A main button/link: `"Back to home"` → `/`
+   - Optionally a secondary link: `"View work"` → `/work`
 
----
+### Layout expectations
 
-## 3. UX Improvements
+- Vertically center the content using flex utilities or equivalent.
+- Respect the site’s max-width patterns (e.g., `max-w-xl` or similar) and horizontal padding.
+- Use the existing button component (e.g., `Button` from `@/components/ui/button`) if available.
 
-- Disable the submit button while the form is submitting
-- Change the submit button text to "Sending…" when submitting
-- After a successful submission, focus on the success message for screen readers
-- Clear form fields on success
-- Maintain inline error messages below each field
+Example structure (you can adapt classNames to match the codebase):
 
----
+```tsx
+// app/not-found.tsx
 
-## 4. Implementation Details
+import Link from "next/link";
+import { Button } from "@/components/ui/button"; // adjust import if needed
 
-Assuming you have the following state hooks:
-
-```ts
-const [values, setValues] = React.useState<ContactFormValues>(/* ... */);
-const [errors, setErrors] = React.useState<Partial<Record<keyof ContactFormValues, string>>>({});
-const [status, setStatus] = React.useState<"idle" | "submitting" | "success" | "error">("idle");
-const [formError, setFormError] = React.useState<string | null>(null);
+export default function NotFound() {
+  return (
+    <main className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4">
+      <section className="max-w-xl text-center space-y-4">
+        <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground">Not found</p>
+        <h1 className="text-5xl font-semibold tracking-tight">404</h1>
+        <p className="text-sm text-muted-foreground">
+          This page doesn’t exist (yet).
+        </p>
+        <p className="text-xs text-muted-foreground">
+          You can head back home, explore the work, or press <kbd>Cmd</kbd> + <kbd>K</kbd> to jump somewhere else.
+        </p>
+        <div className="flex items-center justify-center gap-3 pt-4">
+          <Button asChild>
+            <Link href="/">Back to home</Link>
+          </Button>
+          <Button asChild variant="ghost">
+            <Link href="/work">View work</Link>
+          </Button>
+        </div>
+      </section>
+    </main>
+  );
+}
 ```
 
-Update the `handleSubmit` function accordingly, and update the form elements to include the accessibility attributes and behaviors described.
+Adjust naming, imports, and spacing utilities to match existing patterns in the repo.
+
+---
+
+## 2. Keep Global Behaviors Intact
+
+The 404 page should behave like any other page in terms of global UI:
+
+- Cmd+K should still work if it’s wired globally (do **not** special-case or disable it here).
+- Global navigation (if present in the layout) should still render as usual.
+- Do **not** alter the root layout structure beyond what is absolutely necessary.
+
+If `app/layout.tsx` wraps all pages, `not-found.tsx` should implicitly use that layout by default (App Router convention). Avoid changing layout composition unless something is clearly broken.
+
+---
+
+## 3. Styling & Aesthetic Alignment
+
+Make sure the 404 page feels like part of the portfolio, not a default boilerplate:
+
+- Use the same typography scale and color system as the rest of the site.
+- Respect the spacing rhythm (e.g., vertical spacing tokens, max-widths).
+- Keep it **minimal and editorial**, no extra decorative elements needed.
+
+If you see existing patterns for section headings, small eyebrow text, or layout wrappers, reuse them instead of inventing new ones.
+
+---
+
+## 4. Routing Behavior & Verification
+
+Verify that:
+
+1. Visiting a clearly non-existent route (e.g., `/this-page-does-not-exist`) shows the new 404 page.
+2. Links behave correctly:
+   - `Back to home` → `/`
+   - `View work` → `/work`
+3. Cmd+K still opens the command palette on the 404 screen.
+4. The 404 page looks correct on both desktop and a mobile viewport via DevTools.
+
+You do **not** need to add automated tests for this phase, but if a 404-related test harness already exists, update it as needed.
 
 ---
 
 ## 5. Do NOT
 
-- Modify the `/api/contact` API route or server-side logic
-- Add any new pages or routes
-- Add AI or complex state management
-- Change the visual design beyond what's necessary for accessibility and UX described
+- Do **not** modify any AI / modalGraph / LangGraph logic.
+- Do **not** change command palette behavior.
+- Do **not** add new dependencies.
+- Do **not** create additional routes beyond `app/not-found.tsx`.
 
 ---
 
-## ✅ Acceptance Checklist (11.4)
+## ✅ Acceptance Checklist (Phase 12)
 
-- [ ] Client-side validation includes subject length and disallowed words check
-- [ ] Error messages are clear and specific
-- [ ] Inputs with errors have `aria-invalid="true"` and proper `aria-describedby`
-- [ ] The form and feedback messages use appropriate ARIA roles
-- [ ] Submit button disables and changes text while submitting
-- [ ] Focus moves to the first invalid input on validation failure
-- [ ] Focus moves to success message on successful submission
-- [ ] Form fields clear on success
-- [ ] No changes to the server-side API
-- [ ] No new pages or external dependencies added
+- [ ] `app/not-found.tsx` exists and uses the App Router 404 convention
+- [ ] 404 page shows a large, centered `404` heading
+- [ ] 404 page includes a short explanatory line
+- [ ] 404 page mentions `Cmd + K` as a way to navigate
+- [ ] Primary CTA navigates back to `/`
+- [ ] Optional secondary CTA navigates to `/work`
+- [ ] Page layout matches the site’s editorial style
+- [ ] Cmd+K works on the 404 page
+- [ ] Non-existent routes show the custom 404 page correctly
 
-Make these Phase 11.4 changes now.
-
-# Phase 11.4 — Contact Form Validation Enhancements and UX Improvements (Updated with Cursor Clarifications)
-
-## 🎯 Goal
-Enhance the `/contact` form with improved client-side validation, accessibility compliance, and polished UX—fully aligned with Cursor’s clarifying questions.
-
-For this phase:
-- ✅ Strengthen client-side validation (including optional subject length + disallowed words)
-- ✅ Improve ARIA accessibility
-- ✅ Add refined UX behaviors (disable button, focus management)
-- ❌ Do **not** modify server-side API logic from Phase 11.3
-- ❌ Do **not** introduce new backend services or routes
-
----
-
-## 0. Files & Structure
-
-You will update:
-- `src/app/contact/page.tsx`
-
-No new files or shared components should be created.
-
----
-
-## 1. Enhanced Client-Side Validation
-
-### ### 1.1 Schema Requirements (Updated with Clarifications)
-
-Update the Zod schema with **these exact rules and messages**:
-
-```ts
-const DISALLOWED_WORDS = ["spam", "advertisement"];
-
-const contactFormSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Please enter your name."),
-
-  email: z
-    .string()
-    .min(1, "Please enter a valid email address.")
-    .email("Please enter a valid email address."),
-
-  subject: z
-    .string()
-    .optional()
-    .or(z.literal(""))
-    .refine(
-      (value) => !value || value.trim().length >= 3,
-      "Subject must be at least 3 characters if provided."
-    ),
-
-  message: z
-    .string()
-    .min(10, "Message must be at least 10 characters and not contain disallowed words.")
-    .refine(
-      (value) => {
-        const lower = value.toLowerCase();
-        return !DISALLOWED_WORDS.some((word) => lower.includes(word));
-      },
-      "Message must be at least 10 characters and not contain disallowed words."
-    ),
-});
-```
-
-### Key clarifications applied:
-- **Disallowed words** use the fixed list: `spam`, `advertisement`.
-- Check is **case-insensitive**.
-- Error message is exactly:
-  > Message must be at least 10 characters and not contain disallowed words.
-- **Empty subject is allowed**, validation applies only when a non-empty value is provided.
-
----
-
-## 2. Accessibility Improvements (Updated per Clarification)
-
-Add the following to each input **directly in the page file** (do NOT modify shared components):
-
-- `aria-invalid={!!errors.fieldName}`
-- `aria-describedby="{fieldName}-error"` when an error exists
-
-Each error message should be:
-
-```tsx
-<p id="name-error" className="text-xs text-red-500 mt-1">{errors.name}</p>
-```
-
-### Screen-reader focus on success
-Cursor asked whether to focus the toast or an inline element.
-
-**Do this:**
-- Keep the toast if it exists (optional)
-- Add a **success message element inside the form** with:
-  - `role="status"`
-  - `tabIndex={-1}`
-  - A `ref` so we can call `successRef.current?.focus()` after submit
-
-The inline `role="status"` element is the accessibility anchor point.
-
----
-
-## 3. UX Improvements
-
-Enhance the form behavior:
-
-- Disable the button when `status === "submitting"`
-- Change button label to **"Sending…"**
-- On successful submit:
-  - Clear the form fields
-  - Set status to `success`
-  - Focus the inline success message via `successRef`
-
----
-
-## 4. Implementing the Changes
-
-### 4.1 Add new state
-
-```ts
-const successRef = React.useRef<HTMLParagraphElement | null>(null);
-```
-
-### 4.2 Update `handleSubmit`
-- Keep all existing steps from Phase 11.3
-- After successful API call:
-  ```ts
-  setStatus("success");
-  setValues({ name: "", email: "", subject: "", message: "" });
-  setTimeout(() => successRef.current?.focus(), 10);
-  ```
-
----
-
-## 5. Required Inline Success Message
-
-Place this **below the submit button**:
-
-```tsx
-{status === "success" && (
-  <p
-    ref={successRef}
-    role="status"
-    tabIndex={-1}
-    className="text-xs text-emerald-500 mt-2"
-  >
-    Thanks for reaching out — your message has been sent.
-  </p>
-)}
-```
-
-This is the element that receives focus.
-
----
-
-## 6. Do NOT
-
-- Change the server-side API route or its validation
-- Add any new backend dependencies
-- Modify shared UI components (FormField, Input, Label, etc.)
-- Introduce new routes or pages
-- Introduce AI, modalGraph, or command palette logic
-
----
-
-## ✅ Acceptance Checklist (11.4)
-
-Cursor, please verify:
-
-### Validation
-- [ ] Schema includes optional subject + length rule
-- [ ] Schema rejects disallowed words (`spam`, `advertisement`)
-- [ ] Error messages match prompt exactly
-
-### Accessibility
-- [ ] Each field has correct `aria-invalid` and `aria-describedby`
-- [ ] Error elements have stable IDs
-- [ ] Inline success message uses `role="status"` and receives focus
-
-### UX
-- [ ] Submit button disables during submission
-- [ ] Button label changes to **Sending…**
-- [ ] Form fields clear on success
-- [ ] First invalid field receives focus on validation failure
-- [ ] Success message receives focus on successful submit
-
-### Stability
-- [ ] No changes to API route logic
-- [ ] No new pages, providers, or AI integrations
-
-Make these Phase 11.4 changes now.
+Make these Phase 12 changes now.

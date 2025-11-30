@@ -730,12 +730,18 @@ Make it easy to recover from a 404.
 
 # Phase 13 — Final Content Pass
 ### Phase Steps
-1. Review KB content for accuracy.
-2. Improve incomplete or low-context sections.
-3. Normalize naming across projects.
-4. Add external project links.
-5. Polish typography + spacing.
-6. Final editorial review.
+1. Full editorial review of all website content.
+2. Review KB content for accuracy.
+3. Improve incomplete or low-context sections.
+4. Normalize naming across projects.
+5. Add external project links to all relevant case study pages.
+6. Ensure composer appears on landing page with a cue like "If you need me, you can always press Cmd + K".
+7. Verify that all project cards display correct images.
+8. Ensure all website embeds appear correctly.
+9. Ensure all images load properly and accurately represent their intended subject.
+10. Polish typography, spacing, and section rhythm across all pages.
+11. Final editorial + visual review.
+12. ensure all case studies are present
 
 **Status: Not Started**  
 **Estimate: 4–6 hrs**
@@ -872,9 +878,103 @@ Create a small internal view of key metrics.
 - Always intended as post‑V1 tracking  
 - Waiting for modal + palette stability
 
+---  
+
+# Phase 15 — QA Pass  
+### Phase Steps
+1. Define the QA test matrix (pages × devices × features).
+2. Run functional tests for all core flows (browse, Cmd+K, modal, contact, scheduling).
+3. Verify KB-backed content and case studies in the live UI.
+4. Run accessibility and keyboard-only checks.
+5. Do basic performance + error-state checks.
+6. Triage and fix launch-blocking issues.
+
+**Status: Not Started**  
+**Estimate: 6–10 hrs**
+
+A focused, pre-launch QA phase to make sure the portfolio behaves reliably across key flows, devices, and contexts.
+
 ---
 
-# Phase 15 — Replace History Summary with Sliding Message Window (Option C)  
+## 15.1 Functional QA (Core Flows)  
+**Estimated Time: 3–4 hrs**
+
+**Goal**  
+Verify that all primary user journeys work end-to-end without errors.
+
+**Deliverables**
+- Test checklist covering:
+  - Home → Work → Project → Contact navigation
+  - Cmd+K open/close and command execution
+  - Modal assistant open/close and basic questioning
+  - Contact form submission (happy path + validation errors)
+  - Scheduling CTA click-through to Calendly
+- Bug list for any broken or confusing behaviors
+- Fixes applied for all launch-blocking issues
+
+---
+
+## 15.2 Cross-Browser & Responsive QA  
+**Estimated Time: 2–3 hrs**
+
+**Goal**  
+Ensure the site looks and behaves correctly across common screen sizes and modern browsers.
+
+**Deliverables**
+- Manual checks on:
+  - Desktop: Chrome, Safari, Firefox
+  - Mobile viewport using DevTools (and real device if available)
+- Verification that:
+  - Layouts don't clip or overflow in key sections (hero, work grid, project pages, contact)
+  - Cmd+K palette and inline chat position correctly and remain usable on smaller screens
+  - 404 page renders cleanly on all viewports
+- Bug list + fixes for any layout or interaction issues found
+
+---
+
+## 15.3 Accessibility & UX Polish  
+**Estimated Time: 1–2 hrs**
+
+**Goal**  
+Make sure core interactions are accessible and feel smooth for real humans (keyboard and screen readers).
+
+**Deliverables**
+- Keyboard-only pass for:
+  - Global navigation
+  - Cmd+K palette
+  - Modal assistant
+  - Contact form
+- Spot-checks for:
+  - Focus states on interactive elements
+  - Form labels, `aria-*` attributes, and error messaging
+  - Button/link semantics (no divs pretending to be buttons)
+- Small UX polish fixes where friction is obvious (e.g., confusing labels, missing hover cues)
+
+---
+
+## 15.4 Pre-Launch Sanity & Regression  
+**Estimated Time: 1–2 hrs**
+
+**Goal**  
+Do one last full sweep to catch regressions and confirm the system is ready for real recruiters.
+
+**Deliverables**
+- Final pass through all key pages:
+  - Home, Work, each case study, Contact, 404
+- Quick sanity tests for:
+  - AI modal (simple factual question, cross-project question, low-context question)
+  - Cmd+K (navigation + at least one AI command)
+  - Contact + scheduling flows
+- Short list of non-blocking issues (nice-to-have post-launch fixes)
+
+---
+
+#### 📘 Phase History (Planned)
+- Added as the last gate before calling V1 "done"  
+- Intentionally scoped to be tight and pragmatic, not a full testing framework
+
+---
+# Phase 16 — Replace History Summary with Sliding Message Window (Option C)  
 ### Phase Steps
 1. Add history[] to modalGraph input.
 2. Build rolling window (4–6 messages).
@@ -890,9 +990,9 @@ Create a small internal view of key metrics.
 
 Upgrade the conversation memory model to use a short rolling window of recent messages (Atlas-style) instead of the current history summary. This will improve contextual coherence in multi-turn conversations without compromising determinism or blowing up token usage.
 
----
 
-## 15.1 History Window Implementation  
+
+## 16.1 History Window Implementation  
 **Estimated Time: 2–3 hrs**
 
 **Goal**  
@@ -904,7 +1004,7 @@ Add a bounded `history: Message[]` field to the modalGraph input and wire it end
 
 ---
 
-## 15.2 Node & Policy Updates  
+## 16.2 Node & Policy Updates  
 **Estimated Time: 2–3 hrs**
 
 **Goal**  
@@ -920,7 +1020,7 @@ Replace the summary node with a rolling window and teach the graph to reason ove
 
 ---
 
-## 15.3 Prompt & Evaluation Updates  
+## 16.3 Prompt & Evaluation Updates  
 **Estimated Time: 2–3 hrs**
 
 **Goal**  
@@ -935,3 +1035,6 @@ Ensure prompts and evaluations understand and benefit from the new history model
 
 #### 📘 Phase History
 - Planned as a post‑V1 enhancement to replace brittle summary history with a more robust, Atlas-style sliding window.
+
+---
+
