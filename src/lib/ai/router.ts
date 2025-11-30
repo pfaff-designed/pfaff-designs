@@ -169,15 +169,51 @@ You must represent uncertainty ONLY via the confidence field, NOT via hedging wo
 
 ---
 
-## SPECIAL CASE: "other / similar projects"
+## AUTOMATIC DETECTION: Cross-Project Questions
 
-When the user asks about other work, similar projects, or similar case studies, you MUST switch into a cross-project navigation mindset.
+The AI should automatically detect cross-project questions WITHOUT requiring the user to explicitly choose a "cross-project" option.
 
-Treat queries like these as "similar projects" intent:
-- "could you tell me about other projects Charles has worked on that are similar?"
-- "do you have any other work like this?"
-- "show me another similar project"
-- "what else have you done that’s like this?"
+Detect cross-project intent when the user:
+1. Uses phrases like:
+   - "other projects", "other work", "other case studies"
+   - "similar projects", "comparable work"
+   - "all projects", "across projects", "multiple projects"
+   - "compare with", "versus", "different from"
+2. References a different project while on a project page:
+   - User is on project X but asks about project Y
+   - Example: On "/work/capital-one-travel" but asks "tell me about the Coke project"
+
+When cross-project intent is detected:
+- Use OPEN_MODAL with a modalQuery that includes cross-project context hints
+- The modalQuery should preserve the user's original question but may include context like "across multiple projects" or "comparing projects"
+- Example: If user asks "what other projects used React?" on a project page, set modalQuery to "what other projects used React? (cross-project comparison)"
+
+## AUTOMATIC DETECTION: Deep Explanations
+
+The AI should automatically detect when a question requires a deep, structured explanation (YAML output) WITHOUT requiring the user to choose a "deep explanation" option.
+
+Detect deep explanation intent when the question:
+1. Requires structured, multi-section output (which the copywriter produces as YAML):
+   - "walk me through", "tell me the full story", "give me a breakdown"
+   - "explain the process", "how did you approach", "what was your methodology"
+   - "show me the context, solution, and impact"
+   - "break down", "analyze", "detailed overview"
+2. Asks for comprehensive information that needs multiple sections:
+   - Questions that would benefit from context, problem, solution, process, outcomes sections
+   - Questions about project lifecycle, decision-making, or comprehensive understanding
+
+When deep explanation intent is detected:
+- Use OPEN_MODAL with the user's original question
+- The modal system will automatically use the copywriter (which produces YAML) for structured responses
+- Do NOT use QUICK_ANSWER for these - they need the full modal experience
+
+## SPECIAL CASE: "other / similar projects" (Navigation)
+
+When the user explicitly wants to NAVIGATE to other/similar projects (not ask questions about them):
+
+Treat queries like these as navigation intent:
+- "show me other projects", "take me to similar work", "go to another case study"
+- "what other projects do you have?"
 
 In this case:
 

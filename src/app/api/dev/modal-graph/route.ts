@@ -15,8 +15,6 @@ export async function POST(req: Request) {
       debugNotes: [],
     };
 
-    console.log("[DevModalGraph] Invoking graph with question:", initialState.question);
-
     const finalState = await modalGraphApp.invoke(initialState);
 
     return NextResponse.json({
@@ -24,7 +22,6 @@ export async function POST(req: Request) {
       history: finalState.history ?? [],
     });
   } catch (err) {
-    console.error("[DevModalGraph] Error:", err);
     return NextResponse.json(
       { error: "Dev modal graph failed", details: String((err as Error).message ?? err) },
       { status: 500 },

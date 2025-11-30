@@ -168,10 +168,6 @@ export function AiModalHost() {
           history,
         };
 
-        if (process.env.NODE_ENV !== "production") {
-          console.log("[AiModalHost] Calling /api/ai/modal", requestBody);
-        }
-
         // Add timeout to prevent hanging
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
@@ -191,17 +187,6 @@ export function AiModalHost() {
           }
 
           const data: ModalResponseBody = await res.json();
-        
-        if (process.env.NODE_ENV !== "production") {
-          console.log("[AiModalHost] API response received", {
-            answerLength: data.answer?.length || 0,
-            actionsCount: data.actions?.length || 0,
-            mode: data.mode,
-            debugNotes: data.debugNotes,
-          });
-          console.log("[modalGraph] mode:", data.mode);
-          console.log("[modalGraph] debugNotes:", data.debugNotes);
-        }
 
         const answerText =
           data.answer?.trim() ||
@@ -229,10 +214,6 @@ export function AiModalHost() {
           clearTimeout(timeoutId);
         }
       } catch (error) {
-        if (process.env.NODE_ENV !== "production") {
-          console.error("[AiModalHost] Error calling API:", error);
-        }
-        
         const errorMessage =
           error instanceof Error && error.name === "AbortError"
             ? "Request timed out. Please try again."
@@ -426,10 +407,6 @@ export function AiModalHost() {
             history,
           };
 
-          if (process.env.NODE_ENV !== "production") {
-            console.log("[AiModalHost] Calling /api/ai/modal (from openAiModal)", requestBody);
-          }
-
           // Add timeout to prevent hanging
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
@@ -449,15 +426,6 @@ export function AiModalHost() {
             }
 
             const data: ModalResponseBody = await res.json();
-            
-            if (process.env.NODE_ENV !== "production") {
-              console.log("[AiModalHost] API response received (from openAiModal)", {
-                answerLength: data.answer?.length || 0,
-                actionsCount: data.actions?.length || 0,
-                mode: data.mode,
-                debugNotes: data.debugNotes,
-              });
-            }
 
             const answerText =
               data.answer?.trim() ||
@@ -485,10 +453,6 @@ export function AiModalHost() {
             clearTimeout(timeoutId);
           }
         } catch (error) {
-          if (process.env.NODE_ENV !== "production") {
-            console.error("[AiModalHost] Error calling API (from openAiModal):", error);
-          }
-          
           const errorMessage =
             error instanceof Error && error.name === "AbortError"
               ? "Request timed out. Please try again."

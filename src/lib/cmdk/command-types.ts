@@ -25,6 +25,7 @@ export interface Command {
   label: string;
   description?: string;
   keywords: string[];
+  meta?: string; // Optional metadata label (e.g., "AI", "Nav")
   visible?: (ctx: CommandContext) => boolean;
   run: (ctx: CommandContext) => void | Promise<void>;
 }

@@ -11,7 +11,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
   const hasKey = !!process.env.LANGCHAIN_API_KEY;
-  console.log("🔍 LANGCHAIN_API_KEY present?", hasKey);
   // NEVER return the key to the client – just a boolean
   return NextResponse.json({
     langchainKeyPresent: hasKey,
@@ -23,8 +22,6 @@ export async function GET() {
  * This endpoint always returns null answerLayout and should not be used.
  */
 export async function POST(req: NextRequest) {
-  console.warn("[DEPRECATED] /api/query POST endpoint called. Use /api/ai/query instead.");
-  
   return NextResponse.json(
     { 
       error: "This endpoint is deprecated. Use /api/ai/query instead.",

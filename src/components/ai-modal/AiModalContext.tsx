@@ -155,7 +155,7 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
     }
 
     case "OPEN_AI_MODAL": {
-      const { question, pagePath, projectSlug, sectionHeadline, sectionText } = event.payload;
+      const { question, pagePath, projectSlug, sectionHeadline, sectionText, source } = event.payload;
       
       // Open modal if closed, set context, and immediately submit question
       const baseState = !state.isOpen
@@ -163,7 +163,7 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
             ...state,
             isOpen: true,
             status: "thinking" as AiModalStatus, // Go directly to thinking since we're submitting
-            source: "button" as AiModalSource,
+            source: (source ?? "keyboard") as AiModalSource,
             errorMessage: undefined,
             composerValue: "",
             lastQuestion: question,
@@ -171,6 +171,7 @@ function aiModalReducer(state: AiModalState, event: AiModalEvent): AiModalState 
         : {
             ...state,
             status: "thinking" as AiModalStatus, // Go directly to thinking since we're submitting
+            source: (source ?? state.source ?? "keyboard") as AiModalSource,
             errorMessage: undefined,
             composerValue: "",
             lastQuestion: question,
@@ -303,6 +304,7 @@ export interface OpenAiModalOptions {
   projectSlug?: string;
   sectionHeadline?: string;
   sectionText?: string;
+  source?: AiModalSource;
 }
 
 export interface AiModalContextValue {

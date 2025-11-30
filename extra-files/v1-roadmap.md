@@ -422,6 +422,26 @@ lightweight analytics post‑launch.
 
 ---
 
+# Phase 13 — Custom 404 Page
+**Status: Not Started**  
+**Estimate: 1–2 hrs**
+
+A simple, branded 404 page to gracefully handle unknown routes.
+
+### Deliverables
+- A `/404` page using Next.js conventions
+- Large, bold "404" centered on the page
+- Minimal styling consistent with portfolio aesthetics
+- No interactive elements or AI integrations required
+
+---
+
+#### 📘 Phase History (Nov 26)
+- Added as a final polish item after core Cmd+K and modal systems stabilized
+- Simple implementation intended for V1 completeness
+
+---
+
 # Total Time (Nov 8 → Nov 26)
 **~96–114 hrs across all phases completed to date**
 

@@ -2,12 +2,14 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { usePathname } from "next/navigation";
-import { Input } from "@/components/atoms/Input";
+import { usePathname, useRouter } from "next/navigation";
 import { filterCommands, createCommandContext, type Command } from "@/lib/cmdk";
 import { cn } from "@/lib/utils";
 import type { UseCommandPaletteReturn } from "@/lib/cmdk/useCommandPalette";
 import type { UseInlineChatReturn } from "@/lib/inline-chat/useInlineChat";
+import { useAiModal } from "@/components/ai-modal/AiModalContext";
+import { Button } from "@/components/atoms/Button";
+import { X, Download } from "lucide-react";
 
 export interface CommandPaletteProps {
   palette: UseCommandPaletteReturn;
@@ -23,12 +25,21 @@ export interface CommandPaletteProps {
 export function CommandPalette({ palette, inlineChat }: CommandPaletteProps) {
   const { isOpen, palettePosition, input, setInput, closePalette, setPalettePosition } = palette;
   const pathname = usePathname();
+  const router = useRouter();
+  const { openAiModal } = useAiModal();
+  
+  // Store setPalettePosition in a ref to avoid closure issues
+  const setPalettePositionRef = React.useRef(setPalettePosition);
+  React.useEffect(() => {
+    setPalettePositionRef.current = setPalettePosition;
+  }, [setPalettePosition]);
+  
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [activeIndex, setActiveIndex] = React.useState(0);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = React.useState(false);
   const dragStartPos = React.useRef<{ x: number; y: number } | null>(null);
-  const [showAllQuickActions, setShowAllQuickActions] = React.useState(false);
+  const [showAllCommands, setShowAllCommands] = React.useState(false);
 
   // Extract projectSlug from pathname (same logic as AiKeyboardShortcut)
   const projectSlug = React.useMemo(() => {
@@ -44,7 +55,7 @@ export function CommandPalette({ palette, inlineChat }: CommandPaletteProps) {
     return undefined;
   }, [pathname]);
 
-  // Create CommandContext with real openInlineChat implementation
+  // Create CommandContext with real openInlineChat and openAiModal implementations
   const ctx = React.useMemo(
     () =>
       createCommandContext(input, pathname ?? "", {
@@ -53,7 +64,6 @@ export function CommandPalette({ palette, inlineChat }: CommandPaletteProps) {
         sectionHeadline: undefined,
         sectionText: undefined,
         openInlineChat: (args) => {
-          console.log("[CommandPalette] openInlineChat called with:", args);
           // Open inline chat with offset position (palette will close after command.run)
           const position = palettePosition
             ? {
@@ -61,7 +71,6 @@ export function CommandPalette({ palette, inlineChat }: CommandPaletteProps) {
                 y: palettePosition.y + 20,
               }
             : undefined;
-          console.log("[CommandPalette] Opening inline chat at position:", position);
           inlineChat.openInlineChat({
             ...args,
             pagePath: pathname ?? undefined,
@@ -69,76 +78,107 @@ export function CommandPalette({ palette, inlineChat }: CommandPaletteProps) {
             position,
           });
         },
+        openAiModal: (args) => {
+          // Close the palette before opening the modal
+          closePalette();
+          
+          // Call the real openAiModal with correct context
+          const effectivePagePath = args.pagePath ?? (pathname ? pathname : undefined);
+          const effectiveProjectSlug = args.projectSlug ?? (projectSlug ? projectSlug : undefined);
+          
+          openAiModal({
+            question: args.question,
+            pagePath: effectivePagePath,
+            projectSlug: effectiveProjectSlug,
+            // Section-level context is currently not wired in; leave undefined
+            sectionHeadline: undefined,
+            sectionText: undefined,
+            source: "keyboard", // Command palette uses keyboard source
+          });
+        },
+        navigate: (path) => {
+          closePalette();
+          router.push(path);
+        },
+        download: (path) => {
+          closePalette();
+          
+          // Handle external URLs (like Supabase storage)
+          if (path.startsWith("http://") || path.startsWith("https://")) {
+            // For external URLs, open in new tab to trigger download
+            window.open(path, "_blank");
+          } else {
+            // For local paths, create a temporary anchor element to trigger download
+            const link = document.createElement("a");
+            link.href = path;
+            link.download = path.split("/").pop() || "download";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }
+        },
       }),
-    [input, pathname, projectSlug, palettePosition, closePalette, inlineChat]
+    [input, pathname, projectSlug, palettePosition, closePalette, inlineChat, openAiModal, router]
   );
 
   // Filter commands based on input
   const allCommands = React.useMemo(() => {
     const filtered = filterCommands(input, ctx);
-    console.log("[CommandPalette] Filtered commands for input:", input, "→", filtered.map(c => ({ id: c.id, label: c.label, kind: c.kind })));
     return filtered;
   }, [input, ctx]);
 
-  // Separate ai_quick commands from others
-  const { quickActions, otherCommands } = React.useMemo(() => {
-    const quick = allCommands.filter((c) => c.kind === "ai_quick");
-    const others = allCommands.filter((c) => c.kind !== "ai_quick");
-    console.log("[CommandPalette] Separated commands - quickActions:", quick.length, quick.map(c => c.label), "otherCommands:", others.length);
-    return { quickActions: quick, otherCommands: others };
-  }, [allCommands]);
-
-  // Check if there are more than 3 quick actions
-  const hasMoreQuickActions = React.useMemo(() => {
-    return quickActions.length > 3;
-  }, [quickActions.length]);
-
-  // Limit quick actions display to 3 max
-  const displayedQuickActions = React.useMemo(() => {
-    if (showAllQuickActions) {
-      return quickActions;
-    }
-    // Always limit to 3, even if there are exactly 3
-    return quickActions.slice(0, 3);
-  }, [quickActions, showAllQuickActions]);
-
-  // Combine displayed commands
+  // Determine displayed commands (max 6: 5 commands + "Show more")
   const commands = React.useMemo(() => {
-    const result: typeof allCommands = [];
+    const MAX_DISPLAYED = 5;
     
-    // Add displayed quick actions (max 3)
-    result.push(...displayedQuickActions);
-    
-    // Add "Show more" option if there are more than 3 quick actions total
-    if (!showAllQuickActions && hasMoreQuickActions) {
-      result.push({
-        id: "show-more-quick-actions",
+    if (showAllCommands) {
+      // Show all commands + "Collapse" button at the end
+      const displayed = [...allCommands];
+      displayed.push({
+        id: "collapse-menu",
         kind: "help" as const,
-        label: `… Show ${quickActions.length - 3} more`,
-        description: "Expand to see all quick AI actions",
-        keywords: ["more", "expand", "show"],
+        label: "Collapse",
+        description: "Collapse to show fewer commands",
+        keywords: ["collapse", "less", "fewer"],
         run: () => {
-          setShowAllQuickActions(true);
+          setShowAllCommands(false);
         },
       });
+      return displayed;
     }
     
-    // Add other commands
-    result.push(...otherCommands);
+    if (allCommands.length <= MAX_DISPLAYED) {
+      // Show all commands if there are 5 or fewer
+      return allCommands;
+    }
     
-    console.log("[CommandPalette] Final commands:", result.length, "displayedQuickActions:", displayedQuickActions.length, "totalQuickActions:", quickActions.length, "hasMore:", hasMoreQuickActions, "showAll:", showAllQuickActions);
-    console.log("[CommandPalette] Result commands:", result.map(c => ({ id: c.id, label: c.label, kind: c.kind })));
+    // Show first 5 commands + "Show more" button
+    const displayed = allCommands.slice(0, MAX_DISPLAYED);
+    const remainingCount = allCommands.length - MAX_DISPLAYED;
     
-    return result;
-  }, [displayedQuickActions, otherCommands, showAllQuickActions, hasMoreQuickActions, quickActions.length]);
+    displayed.push({
+      id: "show-more-commands",
+      kind: "help" as const,
+      label: `Show ${remainingCount} more`,
+      description: "Expand to see all commands",
+      keywords: ["more", "expand", "show"],
+      run: () => {
+        setShowAllCommands(true);
+      },
+    });
+    
+    return displayed;
+  }, [allCommands, showAllCommands]);
 
   // Reset active index when commands change
   React.useEffect(() => {
-    console.log("[CommandPalette] Commands changed, resetting activeIndex to 0. Commands length:", commands.length);
     setActiveIndex(0);
-    // Reset showAllQuickActions when input changes
-    setShowAllQuickActions(false);
-  }, [commands.length, input]);
+  }, [commands.length]);
+
+  // Reset showAllCommands when input changes
+  React.useEffect(() => {
+    setShowAllCommands(false);
+  }, [input]);
 
   // Focus input when palette opens
   React.useEffect(() => {
@@ -147,32 +187,34 @@ export function CommandPalette({ palette, inlineChat }: CommandPaletteProps) {
     }
   }, [isOpen]);
 
-  // Calculate position with safety clamps
-  // Position is frozen when palette opens, so this only recalculates if palettePosition changes
-  const position = React.useMemo(() => {
+  // Calculate position with viewport clamping (as per Phase 10 requirements)
+  const clampedPosition = React.useMemo(() => {
+    // Guard against SSR - window is not available on the server
+    if (typeof window === "undefined") {
+      return { x: 0, y: 0 };
+    }
+
     if (!palettePosition) {
-      return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
+      return { x: window.innerWidth / 2, y: window.innerHeight / 3 };
     }
 
-    const offsetX = 20;
-    const offsetY = 20;
-    const paletteWidth = 400; // Approximate width
-    const paletteHeight = 300; // Approximate height
+    const width = 400;   // approximate palette width
+    const height = 260;  // approximate palette height
+    const margin = 16;
 
-    let left = palettePosition.x + offsetX;
-    let top = palettePosition.y + offsetY;
+    let x = palettePosition.x;
+    let y = palettePosition.y;
 
-    // Clamp to viewport
-    if (left + paletteWidth > window.innerWidth) {
-      left = window.innerWidth - paletteWidth - 10;
+    if (x + width + margin > window.innerWidth) {
+      x = window.innerWidth - width - margin;
     }
-    if (top + paletteHeight > window.innerHeight) {
-      top = window.innerHeight - paletteHeight - 10;
+    if (y + height + margin > window.innerHeight) {
+      y = window.innerHeight - height - margin;
     }
-    if (left < 10) left = 10;
-    if (top < 10) top = 10;
+    if (x < margin) x = margin;
+    if (y < margin) y = margin;
 
-    return { top: `${top}px`, left: `${left}px` };
+    return { x, y };
   }, [palettePosition]);
 
   // Handle keyboard navigation
@@ -186,22 +228,37 @@ export function CommandPalette({ palette, inlineChat }: CommandPaletteProps) {
         setActiveIndex((prev) => Math.max(prev - 1, 0));
       } else if (event.key === "Enter") {
         event.preventDefault();
-        console.log("[CommandPalette] Enter pressed. activeIndex:", activeIndex, "commands.length:", commands.length);
-        if (commands[activeIndex]) {
-          const command = commands[activeIndex];
-          console.log("[CommandPalette] Executing command:", command.id, command.label, "kind:", command.kind);
-          console.log("[CommandPalette] All available commands:", commands.map((c, i) => ({ index: i, id: c.id, label: c.label, kind: c.kind })));
-          command.run(ctx);
+        
+        // If user has typed something but no commands match, open inline chat
+        if (input.trim().length > 0 && allCommands.length === 0) {
+          const position = palettePosition
+            ? {
+                x: palettePosition.x + 20,
+                y: palettePosition.y + 20,
+              }
+            : undefined;
+          inlineChat.openInlineChat({
+            question: input.trim(),
+            pagePath: pathname ?? undefined,
+            projectSlug: projectSlug ?? null,
+            position,
+          });
           closePalette();
-        } else {
-          console.error("[CommandPalette] No command at activeIndex:", activeIndex, "commands.length:", commands.length);
+        } else if (commands[activeIndex]) {
+          const command = commands[activeIndex];
+          command.run(ctx);
+          // Note: closePalette() is called inside openAiModal/openInlineChat for ai commands
+          // Only close for non-AI commands (nav, download, help)
+          if (command.kind !== "ai_deep" && command.kind !== "ai_quick") {
+            closePalette();
+          }
         }
       } else if (event.key === "Escape") {
         event.preventDefault();
         closePalette();
       }
     },
-    [commands, activeIndex, ctx, closePalette]
+    [commands, allCommands, activeIndex, ctx, closePalette, input, pathname, projectSlug, palettePosition, inlineChat]
   );
 
   // Handle click outside to close
@@ -222,19 +279,22 @@ export function CommandPalette({ palette, inlineChat }: CommandPaletteProps) {
   // Handle command click
   const handleCommandClick = React.useCallback(
     (command: Command) => {
-      console.log("[CommandPalette] Clicking command:", command.id, command.label, "kind:", command.kind);
       command.run(ctx);
-      closePalette();
+      // Note: closePalette() is called inside openAiModal/openInlineChat for ai commands
+      // Only close for non-AI commands (nav, download, help)
+      if (command.kind !== "ai_deep" && command.kind !== "ai_quick") {
+        closePalette();
+      }
     },
     [ctx, closePalette]
   );
 
-  // Handle drag start
+  // Handle drag start - matches InlineChatWindow pattern
   const handleMouseDown = React.useCallback(
     (event: React.MouseEvent) => {
-      // Only start drag if clicking on the header area (not input or buttons)
+      // Only start drag if clicking on the header area (not buttons or content)
       const target = event.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "BUTTON" || target.closest("button")) {
+      if (target.tagName === "BUTTON" || target.closest("button") || target.tagName === "INPUT" || target.closest("input")) {
         return;
       }
 
@@ -259,16 +319,22 @@ export function CommandPalette({ palette, inlineChat }: CommandPaletteProps) {
     const handleMouseMove = (event: MouseEvent) => {
       if (!dragStartPos.current) return;
 
+      const setPos = setPalettePositionRef.current;
+      if (typeof setPos !== "function") {
+        return;
+      }
+
       const newX = event.clientX - dragStartPos.current.x;
       const newY = event.clientY - dragStartPos.current.y;
 
-      // Clamp to viewport
+      // Clamp to viewport with margin
       const paletteWidth = 400;
       const paletteHeight = 500;
-      const clampedX = Math.max(10, Math.min(newX, window.innerWidth - paletteWidth - 10));
-      const clampedY = Math.max(10, Math.min(newY, window.innerHeight - paletteHeight - 10));
+      const margin = 16;
+      const clampedX = Math.max(margin, Math.min(newX, window.innerWidth - paletteWidth - margin));
+      const clampedY = Math.max(margin, Math.min(newY, window.innerHeight - paletteHeight - margin));
 
-      setPalettePosition({ x: clampedX, y: clampedY });
+      setPos({ x: clampedX, y: clampedY });
     };
 
     const handleMouseUp = () => {
@@ -283,85 +349,123 @@ export function CommandPalette({ palette, inlineChat }: CommandPaletteProps) {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, setPalettePosition]);
+  }, [isDragging]);
+
+  // Animation state for smooth open/close
+  const [isVisible, setIsVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+    } else {
+      setIsVisible(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
+  const handleBackgroundClick = () => {
+    closePalette();
+  };
+
   const paletteContent = (
     <div
-      ref={containerRef}
-      className="fixed z-50 flex flex-col bg-[color:var(--bg-default)] border border-[color:var(--border-subtle)] rounded-lg shadow-lg min-w-[400px] max-w-[600px] max-h-[500px] overflow-hidden"
-      style={{ ...position, cursor: isDragging ? "grabbing" : "default" }}
-      onKeyDown={handleKeyDown}
-      onMouseDown={handleMouseDown}
+      className="fixed inset-0 z-50 pointer-events-none"
+      onClick={handleBackgroundClick}
     >
-      {/* Input */}
-      <div className="p-3 border-b border-[color:var(--border-subtle)] cursor-move" style={{ userSelect: "none" }}>
-        <Input
-          ref={inputRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type a command or search..."
-          className="w-full"
-        />
-      </div>
+      <div
+        ref={containerRef}
+        className={cn(
+          "absolute pointer-events-auto flex flex-col gap-2 min-w-[320px] max-w-[420px]",
+          "transition-all duration-[180ms] ease-[cubic-bezier(0.33,1,0.68,1)]",
+          isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        )}
+        style={{
+          top: `${clampedPosition.y}px`,
+          left: `${clampedPosition.x}px`,
+          cursor: isDragging ? "grabbing" : "default",
+        }}
+        onKeyDown={handleKeyDown}
+        onMouseDown={handleMouseDown}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Pill input */}
+        <div className="rounded-full border border-[color:var(--border-subtle)] bg-background/80 backdrop-blur-sm shadow-sm px-4 py-2 flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            Cmd+K
+          </span>
+          <input
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="bg-transparent outline-none text-sm flex-1 placeholder:text-muted-foreground"
+            placeholder="Ask or search…"
+          />
+          <button
+            type="button"
+            onClick={closePalette}
+            className="flex items-center justify-center size-4 text-muted-foreground hover:text-[color:var(--text-default)] transition-colors cursor-pointer"
+            aria-label="Close command palette"
+          >
+            <X className="size-3" />
+          </button>
+        </div>
 
-            {/* Command List */}
-            <div className="overflow-y-auto flex-1">
-              {commands.length === 0 ? (
-                <div className="px-4 py-8 text-center text-sm text-[color:var(--text-default)] opacity-50">
-                  No commands found
-                </div>
-              ) : (
-                <ul className="py-2">
-                  {commands.map((command, index) => {
-                    const isShowMore = command.id === "show-more-quick-actions";
-                    const isQuickAction = command.kind === "ai_quick";
-                    const isFirstOtherCommand = !isQuickAction && !isShowMore && index === displayedQuickActions.length + (hasMoreQuickActions && !showAllQuickActions ? 1 : 0);
-                    
-                    return (
-                      <React.Fragment key={command.id}>
-                        {/* Add separator before first non-quick command */}
-                        {isFirstOtherCommand && displayedQuickActions.length > 0 && (
-                          <li className="px-4 py-2 border-t border-[color:var(--border-subtle)] my-1">
-                            <div className="text-xs font-medium text-[color:var(--text-default)] opacity-50 uppercase tracking-wide">
-                              Other Commands
-                            </div>
-                          </li>
-                        )}
-                        <li>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (isShowMore) {
-                                setShowAllQuickActions(true);
-                              } else {
-                                handleCommandClick(command);
-                              }
-                            }}
-                            className={cn(
-                              "w-full px-4 py-2 text-left text-sm transition-colors cursor-pointer",
-                              "hover:bg-[color:var(--state-hover)] focus:bg-[color:var(--state-hover)] focus:outline-none",
-                              index === activeIndex && "bg-[color:var(--state-hover)]",
-                              "text-[color:var(--text-default)]",
-                              isShowMore && "opacity-70 italic"
-                            )}
-                            onMouseEnter={() => setActiveIndex(index)}
-                          >
-                            <div className="font-medium">
-                              {isShowMore ? "…" : command.label}
-                            </div>
-                            {command.description && (
-                              <div className="text-xs opacity-70 mt-0.5">{command.description}</div>
-                            )}
-                          </button>
-                        </li>
-                      </React.Fragment>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
+        {/* Actions grid */}
+        {commands.length > 0 && (
+          <div className="grid grid-cols-3 gap-3 auto-rows-auto">
+            {commands.map((command, index) => {
+              const isShowMore = command.id === "show-more-commands";
+              const isCollapse = command.id === "collapse-menu";
+              const isResume = command.id === "download-resume";
+              const label = command.label;
+              
+              // Determine column span based on text length
+              // Rough estimate: ~12-15 characters per column at text-sm
+              const getColumnSpan = (text: string): number => {
+                const length = text.length;
+                if (length <= 15) return 1;
+                if (length <= 30) return 2;
+                return 3; // Max span for very long text
+              };
+              
+              const columnSpan = getColumnSpan(label);
+              
+              return (
+                <Button
+                  key={command.id}
+                  variant="outline"
+                  isActive={index === activeIndex}
+                  onClick={() => {
+                    if (isShowMore) {
+                      setShowAllCommands(true);
+                    } else if (isCollapse) {
+                      setShowAllCommands(false);
+                    } else {
+                      handleCommandClick(command);
+                    }
+                  }}
+                  className={cn(
+                    "justify-center text-center",
+                    columnSpan === 2 && "col-span-2",
+                    columnSpan === 3 && "col-span-3",
+                    (isShowMore || isCollapse) && "opacity-70 italic"
+                  )}
+                  style={columnSpan > 1 ? { gridColumn: `span ${columnSpan}` } : undefined}
+                  onMouseEnter={() => setActiveIndex(index)}
+                >
+                  <span className="font-medium text-sm whitespace-nowrap flex items-center gap-1.5">
+                    {isResume && <Download className="size-3" />}
+                    {label}
+                  </span>
+                </Button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 

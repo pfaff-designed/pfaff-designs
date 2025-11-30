@@ -78,8 +78,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<QuickAnsw
 
     return NextResponse.json({ answer: answerText });
   } catch (error) {
-    console.error("[Quick Answer API] Error:", error);
-    
     // Return friendly fallback
     return NextResponse.json(
       {

@@ -43,8 +43,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("[API] Palette route error:", error);
-    
     return NextResponse.json(
       {
         error: "Internal server error",
