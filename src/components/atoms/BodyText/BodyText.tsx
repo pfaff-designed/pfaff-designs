@@ -10,7 +10,7 @@ export interface BodyTextProps extends React.HTMLAttributes<HTMLParagraphElement
 }
 
 const BodyText = React.forwardRef<HTMLParagraphElement, BodyTextProps>(
-  ({ body, variant = "default", richText = false, markdown = false, className, ...props }, ref) => {
+  ({ body, variant = "default", richText = true, markdown = false, className, ...props }, ref) => {
     const baseClasses = cn(
       "text-left font-normal leading-[1.5]",
       {

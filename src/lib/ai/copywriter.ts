@@ -59,12 +59,19 @@ function makeCopywriterCacheKey(input: CopywriterInput): string {
 
 /**
  * Build project short facts as JSON text string for the LangChain prompt template
+ * Accepts either a string (already formatted) or an object (will be formatted)
  */
 function formatProjectShortFacts(projectShortFacts?: CopywriterInput["projectShortFacts"]): string {
   if (!projectShortFacts) {
     return "{}";
   }
 
+  // If already a string, return it
+  if (typeof projectShortFacts === "string") {
+    return projectShortFacts;
+  }
+
+  // Otherwise format the object
   const facts: Record<string, any> = {};
   if (projectShortFacts.client) facts.client = projectShortFacts.client;
   if (projectShortFacts.projectNameOrUrl) facts.projectNameOrUrl = projectShortFacts.projectNameOrUrl;
@@ -84,14 +91,31 @@ function formatProjectShortFacts(projectShortFacts?: CopywriterInput["projectSho
 async function callCopywriterLLM(input: CopywriterInput): Promise<CopywriterOutput> {
   console.time("copywriter-haiku");
 
-  // Get the LangChain prompt template from LangSmith (fallback disabled)
+  // Check for required API key
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error("ANTHROPIC_API_KEY is not set. Cannot call Anthropic API.");
+  }
+
+  // Get the LangChain prompt template from LangSmith (with fallback support)
   const { template: promptTemplate, source: promptSource } = await getCopywriterPromptTemplate();
   
-  // Log which prompt source is being used (should always be langsmith now)
+  // Log which prompt source is being used
+  if (promptSource === "fallback") {
+    console.warn("[Copywriter] ⚠️ Using FALLBACK prompt (LangSmith unavailable)");
+  } else {
     console.log("[Copywriter] ✅ Using LangSmith prompt: pfaff-copywriter-answer-blocks-v3");
+  }
 
-  // Format project short facts as JSON text
+  // Format project short facts
   const projectShortFactsText = formatProjectShortFacts(input.projectShortFacts);
+
+  // Format retrieved chunks as JSON string if provided
+  const retrievedChunksText = input.retrievedChunks && input.retrievedChunks.length > 0
+    ? JSON.stringify(input.retrievedChunks, null, 2)
+    : "[]";
+
+  // Get global about sections (already formatted as string)
+  const globalAboutSectionsText = input.globalAboutSections || "";
 
   // Build global style guide (includes intent-specific guidance)
   let globalStyleGuide = "Clear, confident, warm, and professional. No fluff, no hype language.";
@@ -104,16 +128,78 @@ async function callCopywriterLLM(input: CopywriterInput): Promise<CopywriterOutp
   }
 
   // Format the prompt with variables - returns BaseMessage[]
-  const messages: BaseMessage[] = await promptTemplate.formatMessages({
-    question: input.question,
-    context: input.context,
-    project_short_facts: projectShortFactsText,
-    project_id: input.projectId || "",
-    global_style_guide: globalStyleGuide,
+  // Ensure all variables are strings (not undefined) to avoid LangChain errors
+  const formatVars = {
+    question: String(input.question || ""),
+    context: String(input.context || ""),
+    section_title: String(input.sectionTitle || ""),
+    section_body: String(input.sectionBody || ""),
+    project_short_facts: String(projectShortFactsText || "{}"),
+    retrieved_chunks: String(retrievedChunksText || "[]"),
+    global_about_sections: String(globalAboutSectionsText || ""),
+  };
+
+  // Log what we're passing (truncated for readability)
+  console.log("[Copywriter] Formatting prompt template with variables:", {
+    question: formatVars.question.substring(0, 50),
+    contextLength: formatVars.context.length,
+    sectionTitle: formatVars.section_title.substring(0, 30),
+    sectionBodyLength: formatVars.section_body.length,
+    projectFactsLength: formatVars.project_short_facts.length,
+    retrievedChunksLength: formatVars.retrieved_chunks.length,
+    globalAboutSectionsLength: formatVars.global_about_sections.length,
   });
 
+  // Try to inspect the template structure (for debugging)
+  try {
+    // Check if we can get template info (this might not work for all template types)
+    const templateStr = promptTemplate.toString();
+    console.log("[Copywriter] Template structure (first 500 chars):", templateStr.substring(0, 500));
+  } catch (e) {
+    // Ignore - not all templates support toString
+  }
+
+  let messages: BaseMessage[];
+  try {
+    console.log("[Copywriter] Calling formatMessages...");
+    messages = await promptTemplate.formatMessages(formatVars);
+    console.log("[Copywriter] ✅ Prompt template formatted successfully");
+    console.log("[Copywriter] Generated", messages.length, "messages");
+  } catch (formatError) {
+    console.error("[Copywriter] ❌ Error formatting prompt template:", formatError);
+    console.error("[Copywriter] Error type:", formatError instanceof Error ? formatError.constructor.name : typeof formatError);
+    console.error("[Copywriter] Error message:", formatError instanceof Error ? formatError.message : String(formatError));
+    console.error("[Copywriter] Error stack:", formatError instanceof Error ? formatError.stack : "No stack trace");
+    console.error("[Copywriter] Variables passed:", Object.keys(formatVars));
+    console.error("[Copywriter] Variable values (truncated):", {
+      question: formatVars.question.substring(0, 100),
+      context: formatVars.context.substring(0, 200),
+      section_title: formatVars.section_title,
+      section_body: formatVars.section_body.substring(0, 100),
+      project_short_facts: formatVars.project_short_facts.substring(0, 200),
+      retrieved_chunks: formatVars.retrieved_chunks.substring(0, 200),
+      global_about_sections: formatVars.global_about_sections.substring(0, 200),
+    });
+    console.error("[Copywriter] This likely means the prompt template doesn't have all required variables.");
+    console.error("[Copywriter] Expected variables: question, context, section_title, section_body, project_short_facts, retrieved_chunks, global_about_sections");
+    throw new Error(`Prompt template formatting failed: ${formatError instanceof Error ? formatError.message : String(formatError)}. Make sure the prompt template includes all required variables.`);
+  }
+
   // Using LangChain's ChatAnthropic so LangSmith can trace this call
-  const res = await copywriterModel.invoke(messages);
+  console.log("[Copywriter] Calling Anthropic LLM...");
+  let res;
+  try {
+    res = await copywriterModel.invoke(messages);
+    console.log("[Copywriter] ✅ LLM call completed");
+  } catch (llmError) {
+    console.error("[Copywriter] ❌ LLM call failed:", llmError);
+    console.error("[Copywriter] LLM error details:", {
+      message: llmError instanceof Error ? llmError.message : String(llmError),
+      name: llmError instanceof Error ? llmError.name : undefined,
+      stack: llmError instanceof Error ? llmError.stack : undefined,
+    });
+    throw new Error(`LLM call failed: ${llmError instanceof Error ? llmError.message : String(llmError)}`);
+  }
 
   console.timeEnd("copywriter-haiku");
 
@@ -154,16 +240,73 @@ async function callCopywriterLLM(input: CopywriterInput): Promise<CopywriterOutp
   // Parse and validate JSON
   let parsed: unknown;
   try {
+    console.log("[Copywriter] Parsing JSON from LLM response...");
     parsed = JSON.parse(jsonText);
+    console.log("[Copywriter] ✅ JSON parsed successfully");
   } catch (error) {
-    console.error("[Copywriter] Failed to parse JSON:", error);
-    console.error("[Copywriter] Raw response:", text.substring(0, 500));
-    throw new Error("Failed to parse copywriter JSON response");
+    console.error("[Copywriter] ❌ Failed to parse JSON:", error);
+    console.error("[Copywriter] JSON parse error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : undefined,
+    });
+    console.error("[Copywriter] Raw LLM response (first 1000 chars):", text.substring(0, 1000));
+    console.error("[Copywriter] Extracted JSON text (first 500 chars):", jsonText.substring(0, 500));
+    throw new Error(`Failed to parse copywriter JSON response: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   // Validate against schema
+  console.log("[Copywriter] Validating parsed JSON against schema...");
+  console.log("[Copywriter] Parsed object keys:", Object.keys(parsed as any));
+  console.log("[Copywriter] Parsed object preview:", JSON.stringify(parsed, null, 2).substring(0, 500));
+  
+  try {
   const result = CopywriterOutputSchema.parse(parsed);
+    console.log("[Copywriter] ✅ Schema validation passed");
+    console.log("[Copywriter] Result has", result.answer_blocks.length, "answer blocks");
   return result;
+  } catch (schemaError) {
+    console.error("[Copywriter] ❌ Schema validation failed:", schemaError);
+    if (schemaError instanceof z.ZodError) {
+      console.error("[Copywriter] Schema validation errors:", schemaError.errors);
+      console.error("[Copywriter] Issues found:", schemaError.issues.map(i => ({
+        path: i.path.join("."),
+        message: i.message,
+        code: i.code,
+      })));
+    }
+    console.error("[Copywriter] Parsed object that failed validation:", JSON.stringify(parsed, null, 2));
+    
+    // Try to extract answer_blocks even if schema validation fails
+    const parsedAny = parsed as any;
+    if (parsedAny?.answer_blocks && Array.isArray(parsedAny.answer_blocks) && parsedAny.answer_blocks.length > 0) {
+      console.warn("[Copywriter] ⚠️ Schema validation failed but answer_blocks found, attempting to fix...");
+      
+      // Try to fix common issues
+      const fixedBlocks = parsedAny.answer_blocks.map((block: any) => ({
+        type: block.type || "answer_block",
+        eyebrow: block.eyebrow || "Answer",
+        heading: block.heading || "Answer",
+        body: block.body || "",
+        imageId: block.imageId || block.image_id || null,
+      }));
+      
+      const fixedResult = {
+        answer_blocks: fixedBlocks,
+        question_type: parsedAny.question_type || "general",
+        focus_tags: parsedAny.focus_tags || [],
+      };
+      
+      try {
+        const validated = CopywriterOutputSchema.parse(fixedResult);
+        console.log("[Copywriter] ✅ Fixed result passed schema validation");
+        return validated;
+      } catch (fixError) {
+        console.error("[Copywriter] ❌ Fixed result still failed validation:", fixError);
+      }
+    }
+    
+    throw new Error(`Schema validation failed: ${schemaError instanceof Error ? schemaError.message : String(schemaError)}`);
+  }
 }
 
 /**
@@ -176,15 +319,46 @@ async function callCopywriterLLM(input: CopywriterInput): Promise<CopywriterOutp
 async function generateCopywriterOutputInternal(
   input: CopywriterInput
 ): Promise<CopywriterOutput> {
+  console.log("[Copywriter] ===== STARTING COPYWRITER CALL =====");
+  console.log("[Copywriter] Input summary:", {
+    question: input.question?.substring(0, 100),
+    contextLength: input.context?.length || 0,
+    hasProjectFacts: !!input.projectShortFacts,
+    hasRetrievedChunks: !!input.retrievedChunks && input.retrievedChunks.length > 0,
+    hasGlobalSections: !!input.globalAboutSections,
+    globalSectionsLength: input.globalAboutSections?.length || 0,
+  });
+
   try {
     // Use LangChain prompt template - expects JSON output
+    console.log("[Copywriter] Calling callCopywriterLLM...");
     const result = await callCopywriterLLM(input);
+    console.log("[Copywriter] ✅ Successfully got result from callCopywriterLLM");
+    console.log("[Copywriter] Result has", result.answer_blocks.length, "answer blocks");
     return result;
   } catch (error) {
-    console.error("Error generating copywriter output (outer catch):", error);
-    console.error("Error details:", {
+    console.error("[Copywriter] ===== ERROR CAUGHT IN generateCopywriterOutputInternal =====");
+    console.error("[Copywriter] ❌ Error generating copywriter output:", error);
+    console.error("[Copywriter] Error type:", error instanceof Error ? error.constructor.name : typeof error);
+    console.error("[Copywriter] Error details:", {
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+    });
+
+    // Log input that caused the error (for debugging)
+    console.error("[Copywriter] Input that caused error:", {
+      question: input.question?.substring(0, 100),
+      hasContext: !!input.context,
+      contextLength: input.context?.length || 0,
+      contextPreview: input.context?.substring(0, 200),
+      hasProjectFacts: !!input.projectShortFacts,
+      projectFactsPreview: typeof input.projectShortFacts === "string" ? input.projectShortFacts.substring(0, 200) : "not a string",
+      hasRetrievedChunks: !!input.retrievedChunks && input.retrievedChunks.length > 0,
+      retrievedChunksCount: input.retrievedChunks?.length || 0,
+      hasGlobalSections: !!input.globalAboutSections,
+      globalSectionsLength: input.globalAboutSections?.length || 0,
+      globalSectionsPreview: input.globalAboutSections?.substring(0, 200),
     });
 
     // If it's a LangSmith prompt loading error, re-throw it with context
@@ -192,7 +366,9 @@ async function generateCopywriterOutputInternal(
       throw new Error(`Copywriter failed: ${error.message}`);
     }
 
-    // Last-resort fallback (should rarely be reached now that fallback is disabled)
+    // Last-resort fallback
+    console.error("[Copywriter] ⚠️ Returning fallback error message to user");
+    console.error("[Copywriter] ===== END OF ERROR HANDLING =====");
     const fallback: CopywriterOutput = {
       answer_blocks: [
         {

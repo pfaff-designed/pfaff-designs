@@ -1,16 +1,14 @@
 // orchestrator.ts
 import { z } from "zod";
-import { componentRegistry } from "@/lib/registry/componentRegistry";
-import { resolveMediaIds, extractMediaIdsFromYAML } from "./mediaResolver";
+import { resolveMediaIds } from "./mediaResolver";
 import type { MediaResolution } from "./mediaResolver";
 import { validateSupabaseURL } from "@/lib/utils/urlValidation";
-import yaml from "js-yaml";
 import type { PageJSON, Block } from "@/components/utility/Renderer";
 import { traceable } from "langsmith/traceable";
 import type { QuestionFocus, IntentResult } from "./intentResolver";
 import { logToLangSmith, logDiagnostic } from "./langsmithLogger";
 import { getHeroFacts } from "@/lib/kb/CaseStudyHeroFacts";
-import { AnswerBlockSchema, HeroCaseStudyBlockSchema, BlockSchema, type Block as SchemaBlock } from "@/lib/layout/blockSchema";
+import { HeroCaseStudyBlockSchema, type Block as SchemaBlock } from "@/lib/layout/blockSchema";
 import type { CopywriterOutput } from "./copywriterSchemas";
 
 // Configure LangSmith tracing for LangChain
@@ -47,6 +45,7 @@ const layoutPlanSectionSchema = z.object({
     "2-column-image-left",
     "2-column-split",
     "card-gallery",
+    "project-card-grid",
     "text-with-image",
     "annotated-visual",
     "half-and-half-column",

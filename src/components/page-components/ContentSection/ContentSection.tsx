@@ -8,6 +8,7 @@ import {
   FullWidth,
   TwoColumnImage,
   CardGallery,
+  ProjectCardGrid,
   TextWithImage,
   AnnotatedVisual,
   HalfAndHalfColumn,
@@ -21,6 +22,7 @@ export type ContentSectionVariant =
   | "2-column-image-right"
   | "2-column-image-left"
   | "card-gallery"
+  | "project-card-grid"
   | "text-with-image"
   | "annotated-visual"
   | "half-and-half-column"
@@ -35,6 +37,9 @@ export interface ContentSectionProps {
   eyebrow?: string;
   imageSrc?: string;
   imageAlt?: string;
+  imageObjectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
+  imageAspectRatio?: "auto" | "square" | "video" | "portrait" | "landscape" | "wide";
+  imageLightbox?: boolean;
   isAI?: boolean;
   sectionId?: string; // For scroll-to behavior (e.g., "overview", "process", "impact")
   // Special props for specific variants
@@ -47,6 +52,38 @@ export interface ContentSectionProps {
     url: string;
     alt?: string;
   }>;
+  projectCards?: [
+    {
+      id: string;
+      projectName: string;
+      client: string;
+      projectType: string;
+      disabled?: boolean;
+      variant?: "dark" | "light";
+      fillColor?: "primary" | "secondary" | "yellow" | "dark" | "light" | "default";
+      onClick?: () => void;
+    },
+    {
+      id: string;
+      projectName: string;
+      client: string;
+      projectType: string;
+      disabled?: boolean;
+      variant?: "dark" | "light";
+      fillColor?: "primary" | "secondary" | "yellow" | "dark" | "light" | "default";
+      onClick?: () => void;
+    },
+    {
+      id: string;
+      projectName: string;
+      client: string;
+      projectType: string;
+      disabled?: boolean;
+      variant?: "dark" | "light";
+      fillColor?: "primary" | "secondary" | "yellow" | "dark" | "light" | "default";
+      onClick?: () => void;
+    }
+  ];
   annotations?: Array<{
     x: number;
     y: number;
@@ -67,10 +104,11 @@ export interface ContentSectionProps {
   rightLabel?: string;
   rightContent?: string;
   projectDetails?: {
-    client?: string;
+    tools?: string[];
     role?: string;
     year?: string;
   };
+  projectUrl?: string;
   sectionVariant?: "light" | "dark" | "default";
   containerSize?: "default" | "narrow" | "wide";
   className?: string;
@@ -91,10 +129,14 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
       eyebrow,
       imageSrc,
       imageAlt = "",
+      imageObjectFit,
+      imageAspectRatio,
+      imageLightbox,
       isAI = false,
       sectionId,
       contentBlocks,
       galleryImages,
+      projectCards,
       annotations,
       timelineItems,
       leftImageSrc,
@@ -106,6 +148,7 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
       rightLabel,
       rightContent,
       projectDetails,
+      projectUrl,
       sectionVariant = "default",
       containerSize = "default",
       className,
@@ -145,6 +188,7 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
               imageSrc={imageSrc}
               imageAlt={imageAlt}
               projectDetails={projectDetails}
+              projectUrl={projectUrl}
             />
           );
 
@@ -157,6 +201,9 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
               imageSrc={imageSrc}
               imageAlt={imageAlt}
               imageOnRight={true}
+              imageObjectFit={imageObjectFit}
+              imageAspectRatio={imageAspectRatio}
+              imageLightbox={imageLightbox}
             />
           );
 
@@ -169,11 +216,17 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
               imageSrc={imageSrc}
               imageAlt={imageAlt}
               imageOnRight={false}
+              imageObjectFit={imageObjectFit}
+              imageAspectRatio={imageAspectRatio}
+              imageLightbox={imageLightbox}
             />
           );
 
         case "card-gallery":
           return <CardGallery images={galleryImages} />;
+
+        case "project-card-grid":
+          return <ProjectCardGrid projectCards={projectCards} />;
 
         case "text-with-image":
           return (
@@ -256,8 +309,8 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
       );
     };
 
-    // For full-width, card-gallery, annotated-visual, text-with-image, and default variants, don't wrap in Container/Section as they handle their own layout
-    if (variant === "full-width" || variant === "card-gallery" || variant === "annotated-visual" || variant === "text-with-image" || variant === "default") {
+    // For full-width, card-gallery, project-card-grid, annotated-visual, text-with-image, and default variants, don't wrap in Container/Section as they handle their own layout
+    if (variant === "full-width" || variant === "card-gallery" || variant === "project-card-grid" || variant === "annotated-visual" || variant === "text-with-image" || variant === "default") {
       return (
         <div 
           ref={ref as any} 

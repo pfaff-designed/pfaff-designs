@@ -115,7 +115,7 @@ export const AiModal: React.FC<AiModalProps> = ({
   // Keyboard handling for mobile
   const [keyboardHeight, setKeyboardHeight] = React.useState(0);
 
-  // Body scroll lock
+  // Body scroll lock and reset scroll position
   React.useEffect(() => {
     if (isOpen) {
       // Store the previously focused element
@@ -124,6 +124,17 @@ export const AiModal: React.FC<AiModalProps> = ({
       // Lock body scroll
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
+      
+      // Reset scroll position of messages container after a brief delay to ensure DOM is ready
+      const resetScroll = () => {
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = 0;
+        }
+      };
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        requestAnimationFrame(resetScroll);
+      });
       
       return () => {
         document.body.style.overflow = originalOverflow;

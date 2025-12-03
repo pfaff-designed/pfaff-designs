@@ -13,6 +13,7 @@ import type { CaseStudyPage } from "@/lib/caseStudies/types";
 import type { IntentProfile } from "./intents";
 import type { ContentStrategy } from "./contentStrategies";
 import type { LayoutStrategy } from "./layoutStrategies";
+import { formatGlobalAboutSections } from "@/lib/kb/loader";
 
 /**
  * Get case study data by project slug
@@ -142,13 +143,18 @@ export async function runCopywriterPipeline(
       ? pageContext.sections?.find(s => s.id === routedIntent.bestSectionId)
       : pageContext.sections?.[0];
 
+    // Load global about sections for copywriter
+    const globalAboutSections = formatGlobalAboutSections();
+
     const copywriterInput: CopywriterInput = {
       question: message,
       context,
-      projectId: projectId || null,
       sectionTitle: targetSection?.heading || "General",
-      sectionBody: "", // Empty for general queries, copywriter will use context instead
-      projectShortFacts,
+      sectionBody: targetSection?.body || "", // Use section body if available
+      projectShortFacts: projectShortFacts ? JSON.stringify(projectShortFacts, null, 2) : undefined,
+      retrievedChunks: retrievedChunks, // Pass structured chunks array
+      globalAboutSections: globalAboutSections, // Pass formatted global about sections
+      projectId: projectId || null,
       // Intent-driven content strategy
       intent: intentProfile?.intent,
       contentGoals: contentStrategy?.goals,

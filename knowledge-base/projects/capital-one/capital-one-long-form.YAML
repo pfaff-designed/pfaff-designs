@@ -3,40 +3,48 @@ kind: "project_longform"
 
 project:
   id: "capital-one-travel"
-  title: "Capital One Travel"
+  title: "Capital One"
   client: "Capital One"
-  industry: "Travel, Financial Services"
-  role: "Front-End Engineer / Technologist"
-  one_liner: "Developed reusable front-end components for Capital One Travel's booking flows to support continuous UX and feature updates."
+  industry: "Financial Services, Travel"
+  role: "Front-End Engineer"
+  one_liner: "I worked on Capital One Travel across several phases of the product, contributing to components and pages that needed to support new content and new priorities as the platform grew. One ongoing challenge was expanding the site as Capital One opened new airport lounges. My work focused on building templates and components that made it possible to roll out new lounge pages without reinventing the structure each time. The goal was to create UI that felt cohesive, stable, and simple to extend as new locations launched."
 
 context: |
-  Capital One Travel is a large-scale booking platform that helps travelers get more value from their rewards. The experience spans search, booking, pricing, offers, loyalty benefits, and customer support. Because of the scale of the platform, even small changes require careful engineering, thoughtful UI decisions, and strong coordination across teams.
+  Capital One Travel evolved through many short development cycles, often with different teams contributing at different times. That history left the interface with a mix of patterns that did not always follow the same rules. My work happened inside that environment across several iterations of the product. The lounge expansion was one example, but the larger effort was about building new pieces that fit naturally within the system that was already in place.
 
-  I worked as a front-end engineer through AKQA, collaborating with designers, art directors, product owners, and back-end teams. Most of my work focused on translating detailed design specifications into modular components that could support evolving user flows.
+  When new lounges opened, each page needed its own content and layout, but it also had to feel like part of the same experience. The challenge was working within the patterns that existed while strengthening the areas where the system had started to drift.
+
+  My role was to build components and layouts that could support the platform as it expanded. Sometimes that meant shaping new pages for lounge launches. Other times it meant refining existing patterns so future contributors could work more smoothly. Across the different iterations I worked on, the through-line was the same. I needed to understand how the system behaved, which parts were reliable, and where updates would make the experience more consistent.
+
+  The work was not about producing large, complex features. It was about making thoughtful adjustments to the interface so new additions felt natural, and so the system became a little easier to work with over time.
 
 problem: |
-  Parts of the booking experience needed clearer UI patterns and more consistent components. New features in the rewards flow also required updates to the system, which meant translating complex interactions into stable, maintainable components that fit within an existing design system.
-
-solution: |
-  I built and refined a series of front-end components using React and TypeScript, working directly with designers to ensure every detail aligned with interaction expectations. I focused on creating components that were flexible, predictable, and easy to reuse so future updates could be implemented without rewriting the UI.
-
-  Because the travel platform has many moving pieces, clarity and consistency were essential. I helped ensure new modules fit cleanly into the existing system and supported responsive layouts that worked well across devices.
+  The site needed scalable templates and consistent UI patterns to support new content, including airport lounge launches, without increasing system fragmentation. Existing components were not always consistent, and new work often introduced additional variations.
 
 process: |
-  My workflow started with reviewing design files and validating technical feasibility with the broader team. I collaborated closely with designers to refine spacing, layout, and behavior, and I built modular components that followed Capital One’s design system guidelines.
+  Each cycle of work began with reading the existing system. The product had gone through many updates, so the first step was understanding which patterns were still solid and which ones had started to drift. I spent time tracing components, checking how they behaved across the site, and identifying the inconsistencies that caused friction for design, QA, and engineering.
 
-  After implementation, I worked through design QA, testing, and iteration. I also supported cross-browser testing and documented patterns and edge cases for other engineers. Throughout the project, communication was key—small UI details often had significant impact in a product as complex as a travel booking system.
+  Rather than rebuilding everything, I looked for ways to use the structure that was already there. When launching a new lounge page, the question was how to build it so it fit the system and would not create more complexity for the next launch. This often meant adjusting layout primitives, tightening spacing rules, or reusing established interactions so the new work felt native to the interface.
+
+  Across the different iterations, the approach stayed consistent. Smooth the rough edges, strengthen the reusable pieces, and leave the system more predictable than it was before.
+
+solution: |
+  I built page templates and front-end components that supported new lounge launches and other content updates. The work focused on strengthening the system rather than replacing it. I used existing patterns when they were reliable and refined spacing, layout behavior, and interaction rules when those patterns needed clarity.
+
+  The goal was to create additions that felt native to the interface while improving predictability for teams who would work on the site later.
 
 outcomes: |
-  The components I developed became part of updated travel flows, supporting new booking logic, rewards interactions, and UI improvements. The work strengthened consistency across the platform and made it easier for teams to extend the system without rebuilding components from scratch.
+  The work made the site easier to update as new lounges and new content rolled out. The templates and components we put in place reduced the amount of one-off development needed for each launch, and the interface began behaving more consistently across different pages.
 
-  The project also improved the user experience by clarifying interactions and tightening visual alignment across the booking journey.
+  Small improvements added up. Aligning spacing rules reduced design and engineering drift. Reusing interaction patterns gave QA fewer variations to track. Cleaning up older components made the system more predictable for anyone working in it later.
+
+  Over time, the experience became steadier. New additions fit more naturally, and the product handled expansion without creating extra friction for the teams involved.
 
 reflections: |
-  This project sharpened my ability to collaborate across disciplines on a high-stakes, detail-heavy experience. It reinforced the importance of predictable components and clear front-end structure, especially when multiple teams rely on the same UI patterns.
+  Working on Capital One Travel gave me a clearer sense of how much the small engineering decisions shape the long-term health of a product. Details like how a layout scales, how a component handles edge cases, or how patterns stay aligned across pages can determine whether a system grows smoothly or becomes harder to maintain. When those details are handled well, people do not think about them. The experience simply works.
 
-  I enjoyed the level of craftsmanship required to make complex flows feel simple, and it gave me deeper insight into building design-system-friendly components at scale.
+  This project helped me understand the value of building with the future in mind. It showed me how much I care about creating systems that stay stable as a product grows.
 
 links:
   - label: "Capital One Travel"
-    url: "https://capitalonetravel.com/"
+    url: "https://www.capitalonetravel.com/"

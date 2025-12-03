@@ -74,8 +74,8 @@
     --neutral-100: #FDF9F4;  /* main background */
     --neutral-200: #FDF9F4;  /* subtle neutral */
     --neutral-300: #FDF9F4;  /* muted neutral */
-    --neutral-800: #26291D;  /* deep neutral */
-    --neutral-900: #26291D;  /* main dark text */
+    --neutral-800: #1C1F17;  /* deep neutral */
+    --neutral-900: #1C1F17;  /* main dark text */
 
     /* Brand / Accent */
     --primary-500:   #C26044; /* warm primary accent */
@@ -107,13 +107,13 @@
     --state-hover:       var(--neutral-300);
 
     /* Overlays & subtle text tints */
-    --overlay-90: rgba(38, 41, 29, 0.90); /* neutral-900 at 90% (#26291D) */
-    --overlay-70: rgba(38, 41, 29, 0.70);
-    --overlay-50: rgba(38, 41, 29, 0.50);
+    --overlay-90: rgba(28, 31, 23, 0.90); /* neutral-900 at 90% (#1C1F17) */
+    --overlay-70: rgba(28, 31, 23, 0.70);
+    --overlay-50: rgba(28, 31, 23, 0.50);
 
-    --muted-foreground-60: rgba(38, 41, 29, 0.60); /* extra-subtle text */
+    --muted-foreground-60: rgba(28, 31, 23, 0.60); /* extra-subtle text */
 
-    --border-soft: rgba(38, 41, 29, 0.25); /* soft border from dark neutral */
+    --border-soft: rgba(28, 31, 23, 0.25); /* soft border from dark neutral */
 
     /* Shadcn-compatible variables */
     --background: var(--bg-default);
@@ -209,6 +209,8 @@
     line-height: var(--line-height-normal);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
   }
 
   /* Typography Base Styles */

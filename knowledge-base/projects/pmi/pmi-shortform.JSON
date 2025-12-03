@@ -1,41 +1,59 @@
-
-
 {
-  "slug": "pmi",
-  "name": "PMI.org Redesign",
+  "version": 1,
+  "kind": "project_facts",
+  "projectId": "pmi",
   "client": "Project Management Institute",
-  "one_liner": "Built a modern, responsive front-end for PMI's Agile certification site to clarify the value and make the path to certification easier to follow.",
-  "projectSummary": "Redesigned and rebuilt the PMI Agile Certified Practitioner (ACP) page with a clearer structure, modern UI, and accessible, responsive components.",
+  "industry": "Professional Certification, Education",
+  "one_liner": "Implemented components and refined patterns for PMI's redesigned certification experience using a structured design system and Radix UI primitives.",
+  "timeline": {
+    "year": 2022,
+    "duration": "Multi-sprint engagement"
+  },
+  "role": "Front-End Engineer",
+  "team": {
+    "company": "AKQA",
+    "collaborators": [
+      "PMI Designer",
+      "PMI Senior Engineer",
+      "Project Manager",
+      "QA"
+    ]
+  },
+  "projectSummary": "Contributed to PMI's major redesign by building front-end components, refining interaction patterns, and implementing structured system workflows using Radix UI and design tokens.",
   "problem": {
-    "summary": "The existing ACP page was text-heavy, difficult to skim, and visually outdated. Key certification details and benefits were hard for users to quickly understand, especially on mobile."
+    "summary": "The certification experience needed a clearer, more cohesive design system that could scale across complex content while maintaining consistency."
   },
   "goals": [
-    "Improve clarity and readability of ACP certification information",
-    "Create a modern, responsive UI aligned with PMI’s evolving brand",
-    "Translate detailed Figma designs into stable, accessible components",
-    "Enhance structure and hierarchy for easier content understanding"
+    "Translate design tokens into reliable, reusable components",
+    "Support a scalable and consistent design system",
+    "Streamline UI behavior across certification flows",
+    "Ensure alignment between Figma specs and front-end implementation"
   ],
   "responsibilities": [
-    "Built modular React components based on detailed design specifications",
-    "Developed responsive layouts with strong typographic hierarchy",
-    "Collaborated with designers to refine spacing, readability, and interaction details",
-    "Ensured accessibility compliance across all UI elements",
-    "Worked with back-end engineers to integrate structured content cleanly",
-    "Conducted device testing to confirm consistency across breakpoints"
+    "Built and refined React components using Radix UI primitives",
+    "Implemented styles and behaviors based on detailed design tokens",
+    "Collaborated with designers to match spacing and interaction patterns",
+    "Addressed bugs and supported QA to stabilize interface behavior",
+    "Created a PR checklist template to improve engineering workflow"
   ],
   "skillsUsed": [
     "React",
     "TypeScript",
-    "Tailwind CSS",
-    "Responsive layout",
-    "Accessibility implementation",
-    "Design-engineer collaboration",
-    "Component-driven development"
+    "Radix UI",
+    "Design tokens",
+    "Component development",
+    "Front-end collaboration",
+    "Quality assurance workflows"
   ],
   "outcomes": [
-    "Delivered a modern, responsive ACP page aligned with PMI’s updated brand",
-    "Improved clarity and communication of key certification details",
-    "Created reusable components for future PMI site updates",
-    "Enhanced accessibility and readability for content-heavy pages"
+    "Delivered consistent, reusable components for PMI’s redesigned certification platform",
+    "Improved clarity and system alignment across UI patterns",
+    "Strengthened engineering workflow through a structured PR checklist"
+  ],
+  "links": [
+    {
+      "label": "Visit PMI",
+      "url": "https://www.pmi.org/"
+    }
   ]
 }

@@ -18,6 +18,7 @@ type ButtonVariant =
 export interface ButtonProps extends Omit<BaseButtonProps, "variant"> {
   variant?: ButtonVariant;
   isActive?: boolean;
+  asChild?: boolean;
 }
 
 const baseClasses =
@@ -41,12 +42,13 @@ const variantClassMap: Record<ButtonVariant, string> = {
 };
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", isActive, ...props }, ref) => {
+  ({ className, variant = "primary", isActive, asChild, ...props }, ref) => {
     return (
       <BaseButton
         ref={ref}
         variant="default"
         data-active={isActive}
+        asChild={asChild}
         className={cn(
           baseClasses,
           variantClassMap[variant],

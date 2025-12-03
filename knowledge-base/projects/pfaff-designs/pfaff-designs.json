@@ -1,42 +1,57 @@
-
-
 {
-  "one_liner": "Designed and built a generative-UI portfolio that uses RAG and structured agents to surface the right case studies on demand.",
-  "projectSummary": "Designed and built a generative-UI portfolio that combines deterministic React layouts with a RAG-powered AI layer for answering questions, navigating content, and composing recruiter-friendly views of my work.",
+  "version": 1,
+  "kind": "project_facts",
+  "projectId": "pfaff-designs",
+  "client": "Self-initiated",
+  "industry": "Portfolio, Applied AI, Front-End",
+  "one_liner": "Pfaff.design is a portfolio built to solve a familiar problem. The work I do sits between UX, engineering, and applied AI, but those layers are hard to show in a traditional format. This site pairs a clear narrative with an embedded agent that lets people explore the reasoning, structure, and technical detail beneath the surface.",
+  "timeline": {
+    "year": "2024–2025",
+    "duration": "2024–2025"
+  },
+  "role": "Design Engineer / Applied AI Technologist",
+  "team": {
+    "company": "Independent",
+    "collaborators": []
+  },
+  "projectSummary": "Pfaff.design is a portfolio built to solve a familiar problem. The work I do sits between UX, engineering, and applied AI, but those layers are hard to show in a traditional format. This site pairs a clear narrative with an embedded agent that lets people explore the reasoning, structure, and technical detail beneath the surface.",
   "problem": {
-    "summary": "Traditional portfolios bury important information behind navigation and static layouts. Recruiters have limited time and often struggle to quickly understand a candidate’s skills, experience, and impact. I wanted a portfolio that could surface the right details on demand and stay grounded in real project data."
+    "summary": "Every portfolio tells a story, but a lot of the real work happens underneath it. The research, the choices, and the systems that hold everything together rarely fit inside a clean set of screenshots. I wanted to build a portfolio that did not hide that part of the work."
   },
   "goals": [
-    "Create a portfolio that clearly communicates my skills as a design-minded applied AI engineer",
-    "Blend deterministic UI components with AI-generated content in a trustworthy way",
-    "Use RAG and structured knowledge to keep answers grounded in real case studies",
-    "Design an AI interaction model that respects user control and feels natural to use"
+    "Build a portfolio that pairs a clear narrative with an embedded agent",
+    "Let people explore the reasoning, structure, and technical detail beneath the surface",
+    "Support different kinds of readers (quick overview, details, technical depth)",
+    "Keep the experience fast and familiar while revealing deeper structure when needed"
   ],
   "responsibilities": [
-    "Defined the overall system architecture for a generative-UI portfolio (KB, RAG, agents, renderer)",
-    "Designed and implemented front-end components in Next.js, React, TypeScript, and Tailwind",
-    "Created a structured knowledge base for case studies, roles, tools, and proof points",
-    "Authored and iterated on prompts for copywriter and orchestrator agents to produce deterministic YAML and JSON",
-    "Implemented a renderer that maps a whitelisted component registry to validated layout JSON",
-    "Collaborated with AI tooling (Anthropic models, LangChain, LangSmith) to trace, debug, and refine agent behavior"
+    "Explored fully generative UI, then shifted to a static site with structured system underneath",
+    "Created a knowledge base in YAML and JSON for organizing project information",
+    "Added intent routing, schemas, and orchestration layer for the agent",
+    "Designed schemas, tested prompts, rewrote pathways, and built guardrails",
+    "Ensured the system stayed predictable and felt steady and conversational"
   ],
   "skillsUsed": [
     "React",
     "Next.js",
     "TypeScript",
     "Tailwind CSS",
-    "shadcn/ui",
-    "RAG (retrieval-augmented generation)",
-    "LangChain and Anthropic models",
-    "Supabase (database and storage)",
-    "Prompt and schema design",
-    "Component-driven development",
-    "Interaction design for AI experiences"
+    "Applied AI engineering",
+    "RAG and structured prompting",
+    "Schema and systems design",
+    "Front-end architecture"
   ],
   "outcomes": [
-    "Shipped a portfolio that can answer natural-language questions about my work while staying grounded in curated case studies",
-    "Established a reusable architecture for deterministic generative UI that can be extended with features like a command palette and richer AI navigation",
-    "Created a concrete example of applied AI engineering work that demonstrates both system design and front-end implementation skills",
-    "Built a foundation for future experiments in conversational navigation, AI-assisted storytelling, and dynamic case study presentations"
+    "A portfolio that tells a clear story and gives people a way to explore the structure behind it",
+    "Static pages that give readers the overview they expect, and an embedded agent for deeper exploration",
+    "A system that reflects how I think, how I solve problems, and how I like to work with technology",
+    "A place to test ideas about clarity, interaction, and AI-assisted systems",
+    "A foundation that leaves room for future versions to become even more adaptive"
+  ],
+  "links": [
+    {
+      "label": "Visit pfaff.design",
+      "url": "https://pfaff.design"
+    }
   ]
 }

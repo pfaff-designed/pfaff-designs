@@ -1,146 +1,194 @@
+# Cursor Task — Upgrade Conversation Policy for Portfolio Questions & Tighten Low-Context Prompt
 
+You’re working in the `pfaff-designs` repo.
+We’ve recently:
+- Injected `[PORTFOLIO_FACTS]` into every `contextBlob`.
+- Added a dedicated `low_context_fallback` branch in `generate_answer`.
+- Gated Copywriter refinement to safer modes.
 
-# Phase 12 — Custom 404 Page (Next.js App Router)
+This helped, but portfolio questions like:
 
-## 🎯 Goal
-Implement a simple, branded 404 experience that matches the site’s editorial aesthetic, works with the App Router, and makes it easy for visitors to recover when they hit an unknown route.
+> "How does this portfolio use AI?"
 
-For this phase:
-- ✅ Use **Next.js App Router** conventions for not-found handling
-- ✅ Create a centered, minimal 404 layout that fits the existing design language
-- ✅ Provide clear navigation back to the homepage (and optionally Work)
-- ✅ Ensure Cmd+K and global UI patterns still work on the 404 screen
-- ❌ Do **not** change any AI, modalGraph, or command palette logic
-- ❌ Do **not** introduce new dependencies or complex routing logic
+still sometimes behave like generic low-context queries, especially when asked from project pages like `/work/capital-one-travel`.
 
----
+We want to more explicitly privilege **portfolio / site questions** in `conversation_policy` and tighten the behavior of `low_context_fallback` answers so they feel like the rubric we defined in Phase 8.
 
-## 0. Files & Structure
-
-You will likely need to work with:
-
-- `app/not-found.tsx` — **new file** for App Router 404 handling
-- (Optional) `app/layout.tsx` or root layout — only if needed for composition, but avoid structural changes
-
-Do **not** add a legacy `pages/404.tsx`; this project is App Router only.
+Please make the changes below.
 
 ---
 
-## 1. Implement `app/not-found.tsx`
+## 1. Upgrade `conversation_policy` for Portfolio Questions
 
-Create a new file at `app/not-found.tsx` that:
+**Goal:** When a user clearly asks about **the portfolio/site itself**, the agent should:
+- Treat the question as **portfolio-wide**, regardless of the current page.
+- Prefer `answer_direct` or `clarify_then_answer` (instead of automatically falling into `low_context_fallback`).
+- Use the existing `[PORTFOLIO_FACTS]` context to talk about:
+  - RAG pipeline
+  - Copywriter + Orchestrator workflow
+  - Deterministic JSON UI / component registry
+  - Cmd+K command palette & conversational modal
 
-1. Uses the existing layout primitives / typography tokens (as much as possible) to stay on-brand.
-2. Renders a full-height section with **centered content**, including:
-   - A **large, bold** `404` heading
-   - A short supporting line, e.g. `"This page doesn’t exist (yet)."`
-   - A small hint that Cmd+K can help, e.g. `"You can also press Cmd + K to jump somewhere else."`
-3. Includes at least one primary call to action:
-   - A main button/link: `"Back to home"` → `/`
-   - Optionally a secondary link: `"View work"` → `/work`
+### Steps
 
-### Layout expectations
+1. Open the `conversation_policy` node file.
+   - Look for debug messages like `"[conversation_policy]"` or logic that sets `state.mode`.
 
-- Vertically center the content using flex utilities or equivalent.
-- Respect the site’s max-width patterns (e.g., `max-w-xl` or similar) and horizontal padding.
-- Use the existing button component (e.g., `Button` from `@/components/ui/button`) if available.
+2. Introduce a small helper or inline logic to detect **portfolio/site questions** from the raw question text:
 
-Example structure (you can adapt classNames to match the codebase):
+   ```ts
+   function isPortfolioQuestion(question: string): boolean {
+     const q = question.toLowerCase();
 
-```tsx
-// app/not-found.tsx
+     return (
+       q.includes("portfolio") ||
+       q.includes("this site") ||
+       q.includes("this website") ||
+       q.includes("this experience") ||
+       q.includes("this interface") ||
+       q.includes("pfaff.design") ||
+       q.includes("your site")
+     );
+   }
+   ```
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button"; // adjust import if needed
+   (If you prefer, you can inline this instead of a separate function.)
 
-export default function NotFound() {
-  return (
-    <main className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4">
-      <section className="max-w-xl text-center space-y-4">
-        <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground">Not found</p>
-        <h1 className="text-5xl font-semibold tracking-tight">404</h1>
-        <p className="text-sm text-muted-foreground">
-          This page doesn’t exist (yet).
-        </p>
-        <p className="text-xs text-muted-foreground">
-          You can head back home, explore the work, or press <kbd>Cmd</kbd> + <kbd>K</kbd> to jump somewhere else.
-        </p>
-        <div className="flex items-center justify-center gap-3 pt-4">
-          <Button asChild>
-            <Link href="/">Back to home</Link>
-          </Button>
-          <Button asChild variant="ghost">
-            <Link href="/work">View work</Link>
-          </Button>
-        </div>
-      </section>
-    </main>
-  );
+3. At the top of the `conversation_policy` logic (before the usual `mode` selection heuristics), compute:
+
+   ```ts
+   const portfolioQuestion = isPortfolioQuestion(state.question ?? "");
+   ```
+
+4. If `portfolioQuestion` is `true`, override the mode selection with a simple heuristic **before** the low-context rules run. For example:
+
+   ```ts
+   if (portfolioQuestion) {
+     // Choose between answer_direct vs clarify_then_answer based on simplicity
+     const q = (state.question ?? "").trim();
+     const isShort = q.length <= 140; // short, direct questions
+
+     const chosenMode: ConversationMode = isShort
+       ? "answer_direct"
+       : "clarify_then_answer";
+
+     return {
+       ...state,
+       mode: chosenMode,
+       debugNotes: [
+         ...(state.debugNotes ?? []),
+         `[conversation_policy] portfolioQuestion=true mode=${chosenMode}`,
+       ],
+     };
+   }
+   ```
+
+   Notes:
+   - Do **not** introduce a new `effectiveProjectSlug` or change existing state shape.
+   - The presence of `[PORTFOLIO_FACTS]` in `contextBlob` is already enough for `generate_answer` to talk about the portfolio.
+   - This block should **run before** any generic `low_context_fallback` decision.
+
+5. Keep all existing routing logic for non-portfolio questions intact. Only add this early portfolio-question override.
+
+---
+
+## 2. Tighten the `low_context_fallback` System Prompt
+
+**Goal:** Make low-context answers feel closer to the Phase 8 behavioral spec:
+- Warm, recruiter-friendly tone.
+- No AI-speak (no "As an AI…", no "leveraging cutting-edge technologies" boilerplate).
+- Clear structure:
+  - 2–3 sentences on how the portfolio/Charles’s work use AI.
+  - 1–2 sentences tying in 2–3 **named projects**.
+  - Exactly **one** warm follow-up question.
+- Never apologize for limited context.
+
+This applies **especially** when a portfolio question still ends up in `low_context_fallback` (e.g., homepage with minimal context).
+
+### Steps
+
+1. Open the `generate_answer` node file.
+   - Find the `if (state.mode === "low_context_fallback") { ... }` branch you added earlier.
+
+2. Update the `system` message content in the Anthropic (or equivalent) call to reflect the stronger rubric.
+   - Keep the existing structure (array of strings joined with `"\n"`), but expand it along these lines:
+
+   ```ts
+   text: [
+     "You are helping a recruiter or hiring manager understand Charles Pfaff and his AI-powered portfolio.",
+     "You are in LOW CONTEXT FALLBACK mode.",
+     "You MAY NOT apologize for limited context or say that you do not have enough information.",
+     "Use the provided context, including [PORTFOLIO_FACTS] and the project list, as truth.",
+     "",
+     "Your job:",
+     "- In 2–3 sentences, describe how this portfolio and Charles's work use AI (RAG, multi-agent orchestration, generative UI, deterministic JSON components).",
+     "- In 1–2 sentences, mention 2–3 representative projects by name (for example: Capital One Travel, PMI, Tanger, Coca-Cola AI concept, the pfaff.design portfolio).",
+     "- End with exactly ONE warm, guiding follow-up question.",
+     "",
+     "If the question is about 'this portfolio' or 'this site', focus on the portfolio's AI architecture and behavior — not just a generic biography.",
+     "Avoid generic AI marketing language and avoid phrases like 'cutting-edge' unless grounded in the given context.",
+   ].join("\n"),
+   ```
+
+3. Ensure the branch still:
+   - Returns early with a new state that includes the `answerText`.
+   - Appends a debug note like `"[generate_answer] handled low_context_fallback via LLM"`.
+   - Uses the existing error fallback message if the LLM call fails.
+
+4. Do **not** change the Copywriter gating logic in this step. We still want `low_context_fallback` on normal project pages to **skip** Copywriter refinement (as previously implemented).
+
+---
+
+## 3. Sanity Check: Portfolio Questions From Anywhere
+
+After implementing 1 & 2, please sanity-check behavior using the dev harness at `/api/dev/modal-graph` (or equivalent test harness) with POST bodies like:
+
+```json
+{
+  "question": "How does this portfolio use AI?",
+  "pagePath": "/work/capital-one-travel",
+  "projectSlug": "capital-one-travel",
+  "history": []
 }
 ```
 
-Adjust naming, imports, and spacing utilities to match existing patterns in the repo.
+and:
+
+```json
+{
+  "question": "What is this site doing with AI behind the scenes?",
+  "pagePath": "/",
+  "projectSlug": "pfaff-designs-portfolio",
+  "history": []
+}
+```
+
+Confirm that:
+- `conversation_policy` sets `mode` to either `answer_direct` or `clarify_then_answer` when `isPortfolioQuestion` is true.
+- `generate_answer` produces:
+  - A clear explanation of how the portfolio uses AI (RAG, Copywriter + Orchestrator, JSON UI, Cmd+K, modal).
+  - 2–3 named projects.
+  - Exactly one follow-up question.
+  - No apologies about context or "I do not have enough information".
 
 ---
 
-## 2. Keep Global Behaviors Intact
+## Checklist (Cursor, please verify before you’re done)
 
-The 404 page should behave like any other page in terms of global UI:
-
-- Cmd+K should still work if it’s wired globally (do **not** special-case or disable it here).
-- Global navigation (if present in the layout) should still render as usual.
-- Do **not** alter the root layout structure beyond what is absolutely necessary.
-
-If `app/layout.tsx` wraps all pages, `not-found.tsx` should implicitly use that layout by default (App Router convention). Avoid changing layout composition unless something is clearly broken.
-
----
-
-## 3. Styling & Aesthetic Alignment
-
-Make sure the 404 page feels like part of the portfolio, not a default boilerplate:
-
-- Use the same typography scale and color system as the rest of the site.
-- Respect the spacing rhythm (e.g., vertical spacing tokens, max-widths).
-- Keep it **minimal and editorial**, no extra decorative elements needed.
-
-If you see existing patterns for section headings, small eyebrow text, or layout wrappers, reuse them instead of inventing new ones.
-
----
-
-## 4. Routing Behavior & Verification
-
-Verify that:
-
-1. Visiting a clearly non-existent route (e.g., `/this-page-does-not-exist`) shows the new 404 page.
-2. Links behave correctly:
-   - `Back to home` → `/`
-   - `View work` → `/work`
-3. Cmd+K still opens the command palette on the 404 screen.
-4. The 404 page looks correct on both desktop and a mobile viewport via DevTools.
-
-You do **not** need to add automated tests for this phase, but if a 404-related test harness already exists, update it as needed.
-
----
-
-## 5. Do NOT
-
-- Do **not** modify any AI / modalGraph / LangGraph logic.
-- Do **not** change command palette behavior.
-- Do **not** add new dependencies.
-- Do **not** create additional routes beyond `app/not-found.tsx`.
-
----
-
-## ✅ Acceptance Checklist (Phase 12)
-
-- [ ] `app/not-found.tsx` exists and uses the App Router 404 convention
-- [ ] 404 page shows a large, centered `404` heading
-- [ ] 404 page includes a short explanatory line
-- [ ] 404 page mentions `Cmd + K` as a way to navigate
-- [ ] Primary CTA navigates back to `/`
-- [ ] Optional secondary CTA navigates to `/work`
-- [ ] Page layout matches the site’s editorial style
-- [ ] Cmd+K works on the 404 page
-- [ ] Non-existent routes show the custom 404 page correctly
-
-Make these Phase 12 changes now.
+- [ ] `conversation_policy` now detects portfolio/site questions via `isPortfolioQuestion` (or equivalent) based on the raw question text.
+- [ ] For portfolio questions, `conversation_policy`:
+  - [ ] Sets `mode` to `answer_direct` for short, direct questions.
+  - [ ] Sets `mode` to `clarify_then_answer` for longer / more complex questions.
+  - [ ] Logs a debug note like `[conversation_policy] portfolioQuestion=true mode=...`.
+- [ ] Non-portfolio questions still follow the existing mode routing logic.
+- [ ] The `low_context_fallback` system prompt has been updated to:
+  - [ ] Forbid apologies / "not enough context" language.
+  - [ ] Require 2–3 sentences on how the portfolio and work use AI.
+  - [ ] Require 2–3 named projects.
+  - [ ] Require exactly one warm follow-up question.
+- [ ] For portfolio questions tested via `/api/dev/modal-graph`, the final `answerText`:
+  - [ ] Talks concretely about the portfolio’s AI system (RAG, agents, JSON UI, command palette).
+  - [ ] Mentions at least 2 projects (e.g., Capital One Travel, PMI, Tanger, Coca-Cola, pfaff.design portfolio).
+  - [ ] Ends with a single, friendly follow-up question.
+  - [ ] Does **not** include "I don't have enough context" or similar language.
+- [ ] No public types or external interfaces consumed by the UI were broken.

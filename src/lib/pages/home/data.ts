@@ -5,6 +5,7 @@ import type { HomePageData } from "./types";
  * Static content for the home page
  */
 export const homePageData: HomePageData = {
+  welcomeMessage: "Hey 👋 I’m <strong>Charles</strong>. I’m a design-minded engineer who works with RAG and Generative UI to create digital experiences that feel intuitive and thoughtfully made. Thanks for visiting.",
   hero: {
     eyebrow: "Design-minded engineer · Applied AI",
     headline: "Design-minded engineer",
@@ -17,9 +18,9 @@ export const homePageData: HomePageData = {
   },
   about: {
     eyebrow: "About",
-    headline: "AI, by design",
-    body: "I'm a front-end engineer and technologist who specializes in building scalable AI products using generative UI. My work sits at the intersection of design, engineering, and applied AI—I help teams translate complex AI capabilities into intuitive, user-focused experiences.",
+    headline: "Hey, a little about me",
+    body: "I'm an engineer based in Richmond, VA. I started in marketing, moved into UX and design, and eventually into engineering. Coming into engineering this way taught me to build with people in mind while keeping the direction and purpose of the project in focus. I've worked with teams at Capital One, Coca-Cola, PMI, and others to create experiences that are thoughtful, clear, and genuinely useful. <br><br> If you'd like to get in touch, I'm easy to <a href=\"/contact\" class=\"underline hover:no-underline\">reach</a>.",
   },
-  welcomeMessage: "Hey 👋, my name is Charles, I'm a design-minded engineer interested in helping you build scalable ai products using generative ui. Thanks for checking out my portfolio don't forget to say hi below vvv",
+  
 };
 

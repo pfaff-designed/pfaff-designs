@@ -4,6 +4,8 @@ import { Heading } from "@/components/atoms/Heading";
 import { BodyText } from "@/components/atoms/BodyText";
 import { Eyebrow } from "@/components/atoms/Eyebrow";
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/molecules/Card";
+import { ProjectCard } from "@/components/molecules/ProjectCard";
+import { ProjectCardGrid } from "@/components/molecules/ProjectCardGrid";
 import { Section } from "@/components/layout/Section";
 import { Container } from "@/components/layout/Container";
 import { ImageContainer } from "@/components/atoms/ImageContainer";
@@ -142,6 +144,22 @@ export const componentRegistry: Record<string, RegistryEntry> = {
     category: "molecule",
     allowedChildren: [],
     allowedParents: ["CardHeader"],
+  },
+
+  ProjectCard: {
+    name: "ProjectCard",
+    component: ProjectCard,
+    category: "molecule",
+    allowedChildren: [],
+    allowedParents: ["ProjectCardGrid", "*"],
+  },
+
+  ProjectCardGrid: {
+    name: "ProjectCardGrid",
+    component: ProjectCardGrid,
+    category: "molecule",
+    allowedChildren: ["ProjectCard"],
+    allowedParents: "*",
   },
 
   MediaFigure: {

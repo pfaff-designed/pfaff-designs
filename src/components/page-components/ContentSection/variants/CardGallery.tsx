@@ -1,6 +1,10 @@
 import * as React from "react";
 import { ImageContainer } from "@/components/atoms/ImageContainer";
 
+/**
+ * @deprecated This component is deprecated. Use ProjectCardGrid from @/components/molecules/ProjectCardGrid instead.
+ * CardGallery will be removed in a future version.
+ */
 export interface CardGalleryProps {
   images?: Array<{
     url: string;
@@ -8,7 +12,16 @@ export interface CardGalleryProps {
   }>;
 }
 
+/**
+ * @deprecated This component is deprecated. Use ProjectCardGrid from @/components/molecules/ProjectCardGrid instead.
+ * CardGallery will be removed in a future version.
+ */
 export const CardGallery: React.FC<CardGalleryProps> = ({ images }) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(
+      "CardGallery component is deprecated. Use ProjectCardGrid from @/components/molecules/ProjectCardGrid instead."
+    );
+  }
   // Default to 6 images if none provided
   const displayImages = images || Array(6).fill(null).map((_, i) => ({
     url: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=60",

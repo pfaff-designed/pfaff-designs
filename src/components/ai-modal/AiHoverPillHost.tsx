@@ -51,6 +51,9 @@ export function AiHoverPillHost() {
     isVisible: false,
   });
 
+  // Only show hover pill on case study pages (paths starting with /work/)
+  const isCaseStudyPage = pathname?.startsWith("/work/") ?? false;
+
   // Refs for desktop cursor tracking
   const latestPosRef = React.useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const activeRegionRef = React.useRef<HTMLElement | null>(null);
@@ -88,7 +91,7 @@ export function AiHoverPillHost() {
       }
 
       const region = target.closest<HTMLElement>("[data-ai-interactive]");
-      if (!region) {
+      if (!region || !isCaseStudyPage) {
         activeRegionRef.current = null;
         topicLabelRef.current = "";
         return;
@@ -205,7 +208,7 @@ export function AiHoverPillHost() {
         clearTimeout(fadeOutTimeoutRef.current);
       }
     };
-  }, [state.active, state.topicLabel, openAiModal, pathname]);
+  }, [state.active, state.topicLabel, openAiModal, pathname, isCaseStudyPage]);
 
   // Mobile/Touch: tap on region shows pill at top-center
   React.useEffect(() => {
@@ -214,7 +217,7 @@ export function AiHoverPillHost() {
       if (!target) return;
 
       const region = target.closest<HTMLElement>("[data-ai-interactive]");
-      if (!region) {
+      if (!region || !isCaseStudyPage) {
         // Tap outside → start fade-out
         setState((prev) => {
           if (prev.active) {
@@ -263,7 +266,7 @@ export function AiHoverPillHost() {
     return () => {
       window.removeEventListener("touchstart", handleTouchStart);
     };
-  }, []);
+  }, [isCaseStudyPage]);
 
   // Don't render until active
   if (!state.active) {

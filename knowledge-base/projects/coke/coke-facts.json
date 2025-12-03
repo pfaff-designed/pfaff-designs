@@ -1,53 +1,56 @@
 {
-    "version": 1,
-    "kind": "project_facts",
-    "projectId": "coca-cola-creative-technology",
-    "client": "Coca-Cola",
-    "industry": "Brand, Creative Technology, Innovation",
-    "one_liner": "Prototyped AI-powered retail experiences for Coca-Cola, including a hydration-aware vending concept that recommends drinks.",
-    "timeline": {
-      "year": 2023,
-      "duration": "Innovation sprint"
-    },
-    "role": "Creative Technologist / Front-End Engineer",
-    "team": {
-      "company": "AKQA",
-      "collaborators": [
-        "Designers",
-        "Art Directors",
-        "Creative Directors",
-        "AI/ML Experimentation Team"
-      ]
-    },
-    "projectSummary": "Developed AI-powered experiential prototypes for Coca-Cola, including an interactive vending machine concept that analyzed hydration signals and recommended products.",
-    "problem": {
-      "summary": "Coca-Cola needed fast, functional prototypes to evaluate how AI-driven personalization could enhance retail and experiential brand interactions."
-    },
-    "goals": [
-      "Explore how AI could personalize retail and experiential touchpoints",
-      "Create functional prototypes from early creative concepts",
-      "Simulate AI-driven recommendations and adaptive UI states",
-      "Help leadership evaluate feasibility for future brand experiences"
-    ],
-    "responsibilities": [
-      "Built front-end prototypes for AI-driven interaction concepts",
-      "Collaborated with designers and art directors to refine experiential flows",
-      "Simulated hydration detection, product recommendations, and adaptive UI behavior",
-      "Iterated quickly on creative and technical ideas during the innovation sprint",
-      "Translated imaginative concepts into interactive, testable demos"
-    ],
-    "skillsUsed": [
-      "Creative technology prototyping",
-      "Front-end engineering",
-      "Experience design collaboration",
-      "Rapid prototyping and iteration",
-      "AI-assisted interaction concepts",
-      "UI development for experimental product flows"
-    ],
-    "outcomes": [
-      "Delivered interactive prototypes demonstrating AI-enabled retail experiences",
-      "Helped clarify how personalized recommendations could support brand interactions",
-      "Enabled creative leadership to evaluate next-step opportunities for AI-driven concepts"
-    ],
-    "links": []
-  }
+  "version": 1,
+  "kind": "project_facts",
+  "projectId": "coca-cola-hydration-vending",
+  "client": "Coca-Cola",
+  "industry": "Brand, Creative Technology, Innovation",
+  "one_liner": "Explored a hydration-aware vending concept through research, data modeling, and an interactive prototype.",
+  "timeline": {
+    "year": 2023,
+    "duration": "Innovation sprint"
+  },
+  "role": "Creative Technologist / Applied AI Researcher",
+  "team": {
+    "company": "AKQA",
+    "collaborators": [
+      "Designers",
+      "Art Directors",
+      "Creative Directors",
+      "AI/ML Experimentation Team"
+    ]
+  },
+  "projectSummary": "Researched hydration detection, modeled simulated sensor data, and built an AI-assisted prototype for a hydration-aware vending experience.",
+  "problem": {
+    "summary": "The team needed a grounded way to evaluate whether an AI-assisted hydration experience was feasible without access to real sensors or hardware."
+  },
+  "goals": [
+    "Understand feasible approaches to hydration detection for consumer environments",
+    "Model simulated hydration data based on scientific research",
+    "Design interpretation logic for AI-assisted product recommendations",
+    "Prototype the end-to-end user flow for early concept evaluation",
+    "Explore both near-term feasibility and far-future product directions"
+  ],
+  "responsibilities": [
+    "Researched hydration science and existing detection hardware",
+    "Created a simulated hydration data model with realistic variability",
+    "Designed interpretation rules mapping hydration states to product sets",
+    "Built an interactive prototype demonstrating the full experience",
+    "Collaborated with creative leadership to refine behavior and flow",
+    "Outlined far-future vision concepts such as nutrient-mixing systems"
+  ],
+  "skillsUsed": [
+    "Applied AI prototyping",
+    "Data modeling and signal interpretation",
+    "Creative technology research",
+    "Interaction flow design",
+    "Prompt and behavior design",
+    "Rapid prototyping"
+  ],
+  "outcomes": [
+    "Delivered a working prototype that demonstrated the hydration-aware experience",
+    "Helped the team evaluate feasibility and user understanding before hardware investment",
+    "Provided clarity on which aspects of hydration detection were plausible",
+    "Established a near-term concept and a far-future vision for leadership review"
+  ],
+  "links": []
+}

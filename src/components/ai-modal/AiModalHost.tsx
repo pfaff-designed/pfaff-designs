@@ -83,6 +83,24 @@ export function AiModalHost() {
   const actionsRef = React.useRef<HTMLDivElement>(null);
   const composerInputRef = React.useRef<HTMLTextAreaElement>(null);
 
+  // Clear all local state when modal closes or opens to ensure fresh start
+  const prevIsOpenRef = React.useRef(isOpen);
+  React.useEffect(() => {
+    const wasOpen = prevIsOpenRef.current;
+    const isNowOpen = isOpen;
+    
+    // Clear state when modal closes OR when it transitions from closed to open
+    if (!isNowOpen || (!wasOpen && isNowOpen)) {
+      setMessages([]);
+      setActions([]);
+      setComposerValue("");
+      setQueuedUserMessage(null);
+      setLastQuestion("");
+    }
+    
+    prevIsOpenRef.current = isNowOpen;
+  }, [isOpen]);
+
   // "Replace while open" helper for opening from selection
   const handleOpenFromSelection = React.useCallback(
     (payload: { selectedText: string; headline?: string }) => {
@@ -570,37 +588,40 @@ export function AiModalHost() {
           </>
         )}
         renderActions={() => {
+          // TEMPORARILY DISABLED: Quick actions disabled
+          return null;
+          
           // Show retry button if there's an error and we have a last question
-          if (hasError && lastQuestion) {
-            return (
-              <div ref={actionsRef}>
-                <AiActionsRow
-                  actions={[
-                    {
-                      type: "suggest_question",
-                      label: "Try again",
-                      suggestedQuestion: lastQuestion,
-                    },
-                  ]}
-                  onActionClick={() => handleRetry()}
-                />
-              </div>
-            );
-          }
+          // if (hasError && lastQuestion) {
+          //   return (
+          //     <div ref={actionsRef}>
+          //       <AiActionsRow
+          //         actions={[
+          //           {
+          //             type: "suggest_question",
+          //             label: "Try again",
+          //             suggestedQuestion: lastQuestion,
+          //           },
+          //         ]}
+          //         onActionClick={() => handleRetry()}
+          //       />
+          //     </div>
+          //   );
+          // }
           
           // Otherwise show regular actions
-          if (actions.length > 0) {
-            return (
-              <div ref={actionsRef}>
-                <AiActionsRow
-                  actions={actions}
-                  onActionClick={handleActionClick}
-                />
-              </div>
-            );
-          }
+          // if (actions.length > 0) {
+          //   return (
+          //     <div ref={actionsRef}>
+          //       <AiActionsRow
+          //         actions={actions}
+          //         onActionClick={handleActionClick}
+          //       />
+          //     </div>
+          //   );
+          // }
           
-          return null;
+          // return null;
         }}
         renderComposer={() => (
           <Composer

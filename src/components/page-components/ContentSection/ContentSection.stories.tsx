@@ -18,6 +18,7 @@ const meta: Meta<typeof ContentSection> = {
         "2-column-image-right",
         "2-column-image-left",
         "card-gallery",
+        "project-card-grid",
         "text-with-image",
         "annotated-visual",
         "half-and-half-column",
@@ -40,7 +41,7 @@ export const FullWidth: Story = {
     eyebrow: "Subtitle",
     body: "THIS IS A HIGH LEVEL SUMMARY I helped build a travel booking platform that improved conversion by 15%.",
     projectDetails: {
-      client: "Capital One",
+      tools: ["React", "TypeScript", "Next.js"],
       role: "Developer",
       year: "2024-2025",
     },

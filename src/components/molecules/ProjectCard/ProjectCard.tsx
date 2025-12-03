@@ -121,27 +121,27 @@ export const ProjectCard = React.forwardRef<HTMLDivElement, ProjectCardProps>(
           transformStyle: "preserve-3d",
           borderColor:
             accentStyle === "dark"
-              ? "rgba(253, 249, 244, 0.2)" // light border for dark accent
-              : "rgba(38, 41, 29, 0.2)", // dark border for light accent
+              ? "rgba(253, 249, 244, 0.2)" // light border for dark accent (using --neutral-50)
+              : "rgba(28, 31, 23, 0.2)", // dark border for light accent (using --neutral-900)
           // Fill color background
           backgroundColor:
             fillColor === "primary"
-              ? "rgb(231, 111, 81)" // accent-primary
+              ? "var(--accent-primary)"
               : fillColor === "secondary"
-              ? "rgb(158, 200, 210)" // accent-secondary
+              ? "var(--accent-secondary)"
               : fillColor === "yellow"
-              ? "rgb(255, 248, 167)" // accent-yellow
+              ? "var(--accent-tertiary)"
               : fillColor === "dark"
-              ? "rgb(38, 41, 29)" // dark
+              ? "var(--neutral-900)"
               : fillColor === "light"
-              ? "rgb(253, 249, 244)" // light
+              ? "var(--neutral-50)"
               : undefined, // "default" uses className
           // Text color adjustments for colored fills
           color:
             fillColor === "primary" || fillColor === "secondary" || fillColor === "dark"
-              ? "rgb(253, 249, 244)" // white text for dark/colored backgrounds
+              ? "var(--neutral-50)" // white text for dark/colored backgrounds
               : fillColor === "yellow" || fillColor === "light"
-              ? "rgb(38, 41, 29)" // dark text for light/colored backgrounds
+              ? "var(--neutral-900)" // dark text for light/colored backgrounds
               : undefined, // "default" uses className
         }}
         onClick={disabled ? undefined : onClick}
@@ -182,7 +182,7 @@ export const ProjectCard = React.forwardRef<HTMLDivElement, ProjectCardProps>(
             <div 
               className="absolute inset-0 rounded-3xl bg-gradient-to-br via-transparent to-transparent pointer-events-none"
               style={{
-                background: "linear-gradient(to bottom right, rgba(38, 41, 29, 0.05), transparent, transparent)",
+                background: "linear-gradient(to bottom right, rgba(28, 31, 23, 0.05), transparent, transparent)",
               }}
             />
           </>
@@ -205,8 +205,8 @@ export const ProjectCard = React.forwardRef<HTMLDivElement, ProjectCardProps>(
                   ? {
                       color:
                         fillColor === "primary" || fillColor === "secondary" || fillColor === "dark"
-                          ? "rgb(253, 249, 244)" // white text
-                          : "rgb(38, 41, 29)", // dark text
+                          ? "var(--neutral-50)" // white text
+                          : "var(--neutral-900)", // dark text
                     }
                   : undefined
               }
@@ -227,8 +227,8 @@ export const ProjectCard = React.forwardRef<HTMLDivElement, ProjectCardProps>(
                   ? {
                       color:
                         fillColor === "primary" || fillColor === "secondary" || fillColor === "dark"
-                          ? "rgba(253, 249, 244, 0.7)" // white text with opacity
-                          : "rgba(38, 41, 29, 0.7)", // dark text with opacity
+                          ? "color-mix(in srgb, var(--neutral-50) 70%, transparent)" // white text with opacity
+                          : "color-mix(in srgb, var(--neutral-900) 70%, transparent)", // dark text with opacity
                     }
                   : undefined
               }
@@ -248,11 +248,11 @@ export const ProjectCard = React.forwardRef<HTMLDivElement, ProjectCardProps>(
                   // Use accent style to determine project type color
                   accentStyle === "dark"
                     ? fillColor === "default" && isDark
-                      ? "rgba(253, 249, 244, 0.8)" // light text with opacity for dark default
-                      : "rgba(253, 249, 244, 0.9)" // light text for dark accent
+                      ? "color-mix(in srgb, var(--neutral-50) 80%, transparent)" // light text with opacity for dark default
+                      : "color-mix(in srgb, var(--neutral-50) 90%, transparent)" // light text for dark accent
                     : fillColor === "default" && isLight
-                    ? "rgba(38, 41, 29, 0.8)" // dark text with opacity for light default
-                    : "rgba(38, 41, 29, 0.9)", // dark text for light accent
+                    ? "color-mix(in srgb, var(--neutral-900) 80%, transparent)" // dark text with opacity for light default
+                    : "color-mix(in srgb, var(--neutral-900) 90%, transparent)", // dark text for light accent
               }}
             >
               {projectType}

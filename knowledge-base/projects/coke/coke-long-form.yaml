@@ -2,41 +2,67 @@ version: "1"
 kind: "project_longform"
 
 project:
-  id: "coca-cola-creative-technology"
-  title: "Coca-Cola Creative Technology Prototyping"
+  id: "coca-cola-hydration-vending"
+  title: "Coca-Cola Hydration-Aware Vending Exploration"
   client: "Coca-Cola"
   industry: "Brand, Creative Technology, Innovation"
-  role: "Creative Technologist / Front-End Engineer"
-  one_liner: "Prototyped AI-powered retail experiences for Coca-Cola, including a hydration-aware vending concept that recommends drinks."
+  role: "Creative Technologist / Applied AI Researcher"
+  one_liner: "Explored the feasibility of a hydration-aware vending concept through research, data modeling, and a working prototype."
 
 context: |
-  Coca-Cola was exploring how AI could shape future retail and experiential touchpoints. The team wanted to understand what an intelligent, personalized brand interaction might look like—from vending machines to product discovery moments.
+  Anyone who has trained seriously knows dehydration does not hit all at once. It shows up as small changes: a little fatigue, a dip in focus, the sense that something is off even if you cannot name it. Most people rely on instinct to catch those moments, not instruments.
 
-  Through AKQA, I worked as a creative technologist supporting designers, art directors, and creative leadership. My role was to translate early creative concepts into functional prototypes that made ambitious ideas tangible enough to evaluate.
+  Coca-Cola wanted to explore a vending concept that could help people before they reached that point. The idea was to read a simple hydration signal, interpret it responsibly, and recommend a product that matched the person’s condition.
 
-  One of the key explorations was an AI‑enabled vending machine concept that analyzed a person’s hydration indicators and recommended products accordingly. Although experimental, it gave the team a concrete way to explore how AI‑driven personalization could enhance everyday brand interactions.
+  My role was to figure out how that experience could work in practice. I researched how hydration is measured, evaluated existing detection hardware, created simulated data based on the science, and shaped how the system should interpret that information. From there, I built a prototype flow that let the team see the idea as something real rather than theoretical.
 
 problem: |
-  Coca-Cola needed a way to evaluate AI‑driven brand experiences quickly, without committing to full-scale production. They were looking for working prototypes that demonstrated how AI could personalize interactions, recommend products, or adapt in real time based on user input.
+  The idea was simple to describe but difficult to evaluate without real hardware. Hydration sits at the intersection of fluid levels, electrolyte balance, activity, and environmental factors. Even when you simplify the problem, you still have questions about what a reading represents and how confidently you can act on it.
+
+  The team also needed clarity on the near-term feasibility as well as the far-future potential of the concept. A prototype had to balance scientific grounding, practical limitations, and creative direction.
 
 solution: |
-  I built front-end prototypes that connected to simple AI classification and recommendation logic, allowing the team to simulate different interaction flows and evaluate how AI might support the brand experience.
-
-  Working closely with designers and art directors, I translated creative concepts into interactive UI elements that were clear, expressive, and flexible enough to iterate on rapidly during the exploration phase.
+  I developed a simplified but science-informed hydration model, created simulated sensor data, and designed interpretation rules that translated hydration states into product recommendations. I then built an interactive prototype that demonstrated how the experience might unfold, giving the team a way to evaluate the idea through interaction rather than description.
 
 process: |
-  I partnered with the creative team to outline the intended user journey and understand which AI signals and outputs the concept required. From there, I developed interactive prototypes that simulated hydration detection, product recommendations, and adaptive UI states.
+  I began by researching how dehydration is classified and measured. Some methods are accurate but impractical outside clinical settings. Others are more feasible but noisy. I mapped out which signals could reasonably be used in a consumer environment and identified hardware that could approximate them.
 
-  These prototypes evolved quickly as creative leadership refined the direction. I adjusted the UI, updated interactions, and ensured everything aligned with Coca-Cola’s visual and tonal direction. Because this was a rapid innovation sprint, the work required flexible thinking, fast iteration, and close collaboration across disciplines.
+  Since there were no real sensors for the exploration, I generated simulated hydration data based on the research. This included ranges for mild, moderate, and more significant dehydration, with added variation to reflect natural noise. The goal was believability, not precision.
+
+  With the data model in place, I shaped the system’s interpretation rules. This included how conservative recommendations should be, how hydration states mapped to Coca-Cola’s product set, and how the system should behave when readings were unclear.
+
+  Once the logic felt stable, I built a prototype that showed the experience end-to-end. It let the team explore pacing, tone, and edge cases and understand how the concept behaved in practice.
 
 outcomes: |
-  The prototypes helped Coca-Cola understand how AI could enrich everyday brand interactions. They turned abstract ideas into concrete experiences that leadership could react to, evaluate, and build from.
+  The exploration helped Coca-Cola understand what an AI-assisted hydration experience might look like and how it might function in a real environment. It revealed which ideas felt intuitive, which needed more clarity, and where hardware limitations would shape future directions.
 
-  The work provided a starting point for exploring AI-assisted product selection, personalized recommendations, and adaptive retail environments.
+  The prototype gave leadership a concrete way to evaluate the concept. Instead of reacting to static mockups, they could interact with a working flow and see how the system responded to different hydration conditions.
 
 reflections: |
-  This project reinforced how valuable creative technology is during early exploration. I enjoyed working tightly with designers and creative directors to turn imaginative ideas into something people could interact with.
+  I enjoyed the mix of research, feasibility work, and prototyping. It required thinking across disciplines and shaping an experience that felt grounded even without real hardware. The project strengthened my ability to model system behavior and build prototypes that help teams make decisions when the path forward is not fully defined.
 
-  It strengthened my ability to build fast, expressive prototypes and deepened my appreciation for how AI can support meaningful, human-centered brand experiences.
+  The work also involved imagining a far-future version of the system. One direction envisioned a machine similar to a Coke Freestyle unit that could mix electrolytes, vitamins, and other nutrients in real time based on a person’s hydration indicators. This vision set a long-term north star, while the prototype focused on near-term feasibility.
+
+technical_notes:
+  hydration_classification: |
+    The prototype used a simplified hydration classification model that divided dehydration into mild, moderate, and more significant ranges. These categories were based on research into relative fluid loss and electrolyte imbalance. Each simulated reading included natural variation to reflect the noise expected in real sensor environments. The purpose was not medical precision but a believable signal for early concept evaluation.
+
+  hardware_feasibility: |
+    The research evaluated hydration detection methods such as electrical impedance and optical skin readings. Clinical approaches like blood sodium analysis were excluded because they are impractical for consumer environments. The goal was to identify sensor types that could approximate hydration levels well enough to support concept testing.
+
+  simulated_data_model: |
+    Since no real sensors were present, all hydration readings were simulated. The dataset included patterns representing mild, moderate, and more significant dehydration, along with expected natural variation. Borderline cases were intentionally incorporated to test how the interpretation logic behaved when signals were ambiguous.
+
+  interpretation_logic: |
+    The interpretation rules favored conservative recommendations. When hydration readings were ambiguous or near a threshold, the system defaulted to gentler product categories or withheld a recommendation. Each hydration level mapped to a subset of Coca-Cola hydration products aligned with expected electrolyte needs. The mapping was intentionally simple and easy to adjust as the concept evolved.
+
+  prototype_architecture: |
+    The prototype was structured so that hydration thresholds, product mappings, and interpretation rules could be updated independently of the flow. This allowed the team to test alternative concepts quickly. The interaction model simulated the core steps of the system: receiving a reading, interpreting it, and recommending a product.
+
+  prompt_design: |
+    The system relied on structured prompts that emphasized responsible interpretation, avoidance of medical language, and consistent outputs. The instructions guided the model to treat hydration readings as signals requiring careful interpretation rather than certainty.
+
+  future_vision: |
+    One part of the exploration involved imagining a far-future system capable of mixing electrolytes, vitamins, and nutrients in real time based on a person’s condition. This direction was intentionally treated as long-term vision rather than an immediate goal. The prototype focused on evaluating the feasibility and experience of the early-stage concept.
 
 links: []
