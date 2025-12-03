@@ -2,7 +2,6 @@ import * as React from "react";
 import { ArrowUpRight } from "lucide-react";
 import { Heading } from "@/components/atoms/Heading";
 import { ImageContainer } from "@/components/atoms/ImageContainer";
-import { Button } from "@/components/atoms/Button";
 import { cn } from "@/lib/utils";
 
 export interface FullWidthProps {
@@ -62,29 +61,11 @@ export const FullWidth: React.FC<FullWidthProps> = ({
                 className="text-[color:var(--neutral-50)]"
               />
             )}
-            <div className="flex flex-col gap-4 md:gap-6">
-              {eyebrow && (
-                <p className="font-medium text-base md:text-[1.4375rem] leading-6 md:leading-[2rem] tracking-[-0.014375rem] text-[color:var(--neutral-50)]">
-                  {eyebrow}
-                </p>
-              )}
-              {projectUrl && (
-                <Button
-                  variant="outline"
-                  asChild
-                  className="border-[color:var(--neutral-50)] text-[color:var(--neutral-50)] hover:border-[color:var(--neutral-50)] hover:text-[color:var(--neutral-50)] hover:bg-[color:var(--neutral-50)]/10 w-fit"
-                >
-                  <a
-                    href={projectUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    View Project
-                    <ArrowUpRight className="size-4" />
-                  </a>
-                </Button>
-              )}
-            </div>
+            {eyebrow && (
+              <p className="font-medium text-base md:text-[1.4375rem] leading-6 md:leading-[2rem] tracking-[-0.014375rem] text-[color:var(--neutral-50)]">
+                {eyebrow}
+              </p>
+            )}
           </div>
 
           {/* Bottom Section: Body (left) and Project Details (right) */}
@@ -101,32 +82,39 @@ export const FullWidth: React.FC<FullWidthProps> = ({
             )}
 
             {/* Project Details - Bottom Right */}
-            {projectDetails && (
-              <div className="flex flex-col gap-2 flex-shrink-0 w-full md:max-w-[33.625rem]">
-                {/* Labels Row */}
-                <div className="flex gap-4 md:gap-6 font-medium text-sm md:text-[1.4375rem] leading-5 md:leading-[2rem] tracking-[-0.014375rem] text-[color:var(--neutral-50)]">
-                  {projectDetails.tools !== undefined && projectDetails.tools.length > 0 && (
-                    <p className="w-20 md:w-[10rem]">Tools</p>
-                  )}
-                  {projectDetails.role !== undefined && (
-                    <p className="w-20 md:w-[10rem]">Role</p>
-                  )}
-                  {projectDetails.year !== undefined && (
-                    <p className="w-20 md:w-[10rem]">Year</p>
-                  )}
-                </div>
-                {/* Values Row */}
-                <div className="flex gap-4 md:gap-6 font-medium text-sm md:text-[1.4375rem] leading-5 md:leading-[2rem] tracking-[-0.014375rem] text-[color:var(--neutral-50)]">
-                  {projectDetails.tools && projectDetails.tools.length > 0 && (
-                    <p className="w-20 md:w-[10rem]">{projectDetails.tools.join(", ")}</p>
-                  )}
-                  {projectDetails.role && (
-                    <p className="w-20 md:w-[10rem]">{projectDetails.role}</p>
-                  )}
-                  {projectDetails.year && (
-                    <p className="w-20 md:w-[10rem]">{projectDetails.year}</p>
-                  )}
-                </div>
+            {(projectDetails || projectUrl) && (
+              <div className="flex flex-wrap gap-2 md:gap-3 flex-shrink-0 w-full md:max-w-[33.625rem]">
+                {/* View Project Link Badge - Primary color, glassmorphic, first in list */}
+                {projectUrl && (
+                  <a
+                    href={projectUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center gap-1.5 rounded-full border border-[rgba(194,96,68,0.4)] bg-[rgba(194,96,68,0.4)] backdrop-blur-sm px-3 py-1.5 text-xs md:text-sm font-medium text-[color:var(--neutral-50)] hover:bg-[rgba(194,96,68,0.5)] hover:border-[rgba(194,96,68,0.5)] hover:ring-2 hover:ring-[rgba(194,96,68,0.5)] hover:ring-offset-2 hover:ring-offset-transparent transition-all"
+                  >
+                    View Project
+                    <ArrowUpRight className="size-3 md:size-4 transition-transform group-hover:rotate-12" />
+                  </a>
+                )}
+                {/* Role Badge - Dark glassmorphic styling */}
+                {projectDetails?.role && (
+                  <span className="inline-flex items-center rounded-full border border-white/20 bg-[rgba(28,31,23,0.4)] backdrop-blur-sm px-3 py-1.5 text-xs md:text-sm font-medium text-[color:var(--neutral-50)]">
+                    {projectDetails.role}
+                  </span>
+                )}
+                {/* Tools Badges */}
+                {projectDetails?.tools && projectDetails.tools.length > 0 && (
+                  <>
+                    {projectDetails.tools.map((tool, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center rounded-full border border-[color:var(--neutral-50)]/30 bg-[color:var(--neutral-50)]/10 backdrop-blur-sm px-3 py-1.5 text-xs md:text-sm font-medium text-[color:var(--neutral-50)]"
+                      >
+                        {tool}
+                      </span>
+                    ))}
+                  </>
+                )}
               </div>
             )}
           </div>
