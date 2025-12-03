@@ -9,12 +9,26 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
+/**
+ * @deprecated This component is deprecated. Use ProjectCard from @/components/molecules/ProjectCard instead.
+ * Card will be removed in a future version.
+ */
 export interface CardProps extends React.ComponentProps<typeof BaseCard> {
   variant?: "default" | "highlight";
 }
 
+/**
+ * @deprecated This component is deprecated. Use ProjectCard from @/components/molecules/ProjectCard instead.
+ * Card will be removed in a future version.
+ */
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant = "default", ...props }, ref) => (
+  ({ className, variant = "default", ...props }, ref) => {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        "Card component is deprecated. Use ProjectCard from @/components/molecules/ProjectCard instead."
+      );
+    }
+    return (
     <BaseCard
       ref={ref}
       className={cn(
@@ -25,7 +39,8 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       )}
       {...props}
     />
-  )
+    );
+  }
 );
 Card.displayName = "Card";
 

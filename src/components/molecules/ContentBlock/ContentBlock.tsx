@@ -67,7 +67,8 @@ const ContentBlock = React.forwardRef<HTMLDivElement, ContentBlockProps>(
               {/* Body Text */}
               <BodyText
                 body={item.body}
-                richText={item.richText}
+                richText={item.richText !== false}
+                markdown={item.richText === false ? true : false}
                 className={cn("flex-1 max-w-[388px]", bodyClassName)}
               />
             </div>

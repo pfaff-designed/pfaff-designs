@@ -5,6 +5,11 @@ import { CommandPalette } from "./CommandPalette";
 import { useCommandPalette } from "@/lib/cmdk/useCommandPalette";
 import { useInlineChat } from "@/lib/inline-chat/useInlineChat";
 import { InlineChatWindow } from "@/components/inline-chat";
+import { useAiModal } from "@/components/ai-modal/AiModalContext";
+import { usePathname } from "next/navigation";
+
+// Feature flag: Set to false to disable inline chat and use AI modal instead
+const ENABLE_INLINE_CHAT = false;
 
 /**
  * CommandPaletteProvider
@@ -15,6 +20,8 @@ import { InlineChatWindow } from "@/components/inline-chat";
 export function CommandPaletteProvider() {
   const palette = useCommandPalette();
   const inlineChat = useInlineChat();
+  const { openAiModal } = useAiModal();
+  const pathname = usePathname();
 
   const handleBackToPalette = React.useCallback(() => {
     // Close inline chat
@@ -54,24 +61,48 @@ export function CommandPaletteProvider() {
         const selectedText = selection?.toString().trim();
 
         if (selectedText && selectedText.length > 0) {
-          // Open inline chat with quoted passage
-          const question = `Can you tell me more about this?\n\n"${selectedText}"`;
-          
-          // Get cursor position for anchoring
-          const range = selection?.getRangeAt(0);
-          const rect = range?.getBoundingClientRect();
-          const position = rect
-            ? {
-                x: rect.left + rect.width / 2,
-                y: rect.bottom + 10, // Position below selection
-              }
-            : undefined;
+          if (ENABLE_INLINE_CHAT) {
+            // Open inline chat with quoted passage
+            const question = `Can you tell me more about this?\n\n"${selectedText}"`;
+            
+            // Get cursor position for anchoring
+            const range = selection?.getRangeAt(0);
+            const rect = range?.getBoundingClientRect();
+            const position = rect
+              ? {
+                  x: rect.left + rect.width / 2,
+                  y: rect.bottom + 10, // Position below selection
+                }
+              : undefined;
 
-          inlineChat.openInlineChat({
-            question,
-            selectionText: selectedText,
-            position,
-          });
+            inlineChat.openInlineChat({
+              question,
+              selectionText: selectedText,
+              position,
+            });
+          } else {
+            // Use AI modal instead
+            const question = `Can you tell me more about this?\n\n"${selectedText}"`;
+            
+            // Derive projectSlug from pathname if on a work page
+            const projectSlugMatch = pathname?.match(/^\/work\/([^/]+)/);
+            let projectSlug: string | undefined;
+            if (projectSlugMatch) {
+              let slug = projectSlugMatch[1];
+              // Normalize PMI paths
+              if (slug === "pmi" || slug === "pmi-agile" || slug === "pmi-acp" || slug.startsWith("pmi-")) {
+                slug = "pmi";
+              }
+              projectSlug = slug;
+            }
+            
+            openAiModal({
+              question,
+              pagePath: pathname ?? undefined,
+              projectSlug,
+              sectionText: selectedText,
+            });
+          }
         } else {
           // No selection - open command palette as normal
           palette.togglePalette();
@@ -81,18 +112,20 @@ export function CommandPaletteProvider() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [palette, inlineChat]);
+  }, [palette, inlineChat, openAiModal, pathname]);
 
   return (
     <>
       <CommandPalette palette={palette} inlineChat={inlineChat} />
-      <InlineChatWindow
-        state={inlineChat.state}
-        onClose={inlineChat.closeInlineChat}
-        setAnchorPosition={inlineChat.setAnchorPosition}
-        onBack={handleBackToPalette}
-        onSendFollowUp={inlineChat.sendFollowUp}
-      />
+      {ENABLE_INLINE_CHAT && (
+        <InlineChatWindow
+          state={inlineChat.state}
+          onClose={inlineChat.closeInlineChat}
+          setAnchorPosition={inlineChat.setAnchorPosition}
+          onBack={handleBackToPalette}
+          onSendFollowUp={inlineChat.sendFollowUp}
+        />
+      )}
     </>
   );
 }

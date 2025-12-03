@@ -1,81 +1,56 @@
-
-
 version: 1
 id: pfaff-designs
 kind: case_study
 
 meta:
-  title: "Generative‑UI Portfolio"
+  title: "Pfaff.design"
   slug: "/work/pfaff-designs"
 
 project:
-  client: "Self‑initiated"
-  title: "Generative‑UI Portfolio"
-  role: "Applied AI Engineer / Front‑End Engineer"
+  client: "Self-initiated"
+  title: "Pfaff.design"
+  role: "Design Engineer / Applied AI Technologist"
   year: "2024–2025"
-  one_liner: "Designed and built a generative-UI portfolio that uses RAG and structured agents to surface the right case studies on demand."
+  one_liner: "Pfaff.design is a portfolio built to solve a familiar problem. The work I do sits between UX, engineering, and applied AI, but those layers are hard to show in a traditional format. This site pairs a clear narrative with an embedded agent that lets people explore the reasoning, structure, and technical detail beneath the surface."
 
 context: |
-  This project began as a way to rethink how a portfolio could work for modern hiring workflows.  
-  Traditional portfolios bury important information deep in navigation layers, require recruiters to hunt for relevant details, and often present static case studies that don’t adapt to what the viewer actually wants to know.
+  Every portfolio tells a story, but a lot of the real work happens underneath it.
 
-  I wanted to build a portfolio that behaved differently—one that could answer questions, surface the right information on demand, and generate structured, recruiter‑friendly content without ever inventing details.  
-  The result was a fully generative‑UI system powered by a structured knowledge base, a RAG pipeline, and two specialized AI agents for copywriting and layout orchestration.
+  The research, the choices, and the systems that hold everything together rarely fit inside a clean set of screenshots.
+
+  I wanted to build a portfolio that did not hide that part of the work. Something where the surface stayed simple to read, and the structure underneath was still available for anyone who wanted to explore it.
+
+  Pfaff.design became the place to try that.
 
 problem: |
-  Recruiters have limited time. Case studies are long. Portfolios often force users to scroll, skim, and guess where information lives.  
-  I needed a system that could:
-  - Let users ask natural‑language questions
-  - Provide grounded answers using only real project data
-  - Dynamically generate layouts while staying fully deterministic
-  - Maintain trust, clarity, and readability across all responses
+  The idea for the site grew out of a simple question: how do you let people read the story while still giving them access to everything underneath it?
+
+  I knew the portfolio needed to work for different kinds of readers. Some people want a quick overview. Others want the details. A few want the technical depth. I wanted the site to support all of those paths without turning into something confusing or slow.
 
 solution: |
-  I designed an architecture built from four core pieces:
-  1. **A structured knowledge base** of case studies, roles, proof points, tools, and longform narratives.
-  2. **A RAG pipeline** using Supabase embeddings and LangChain to retrieve only relevant information.
-  3. **A Copywriter Agent** that takes retrieved data and outputs strict, validated YAML following fixed schemas.
-  4. **An Orchestrator Agent** that converts YAML into validated JSON layouts using a whitelisted component registry.
+  That is why the foundation is a static site. It keeps the experience fast and familiar, and it lets the case studies stay focused on clear narrative. On top of that, the site includes an embedded agent that can answer questions, surface extra context, and reveal the deeper structure when someone wants it.
 
-  The front end—built with Next.js, React, TypeScript, Tailwind, and shadcn—renders these JSON layouts deterministically.  
-  Every generative output is grounded, repeatable, and built directly from curated project data.
+  It created a balance I had not seen in a traditional portfolio. You can skim the work like any normal site, or you can treat it like a conversation and follow the threads that matter to you.
 
 process: |
-  I defined the system holistically: UI design, agent prompts, schema design, data modeling, RAG retrieval, and orchestration behavior.
+  I started with planning, research, and a long list of questions about how a generative front end should behave. I explored a version of the site that was fully generative. Every answer came from the model, and every layout was created on the fly. The prototype worked, but it also revealed a problem. Generative interfaces are interesting when people want to spend time with them, but a portfolio needs to get information across quickly.
 
-  **1. Knowledge Base Design**  
-  I structured all project content into normalized YAML/JSON entries, each with typed sections (tools, outcomes, role, problem, solution, etc.). This foundation became the single source of truth.
+  That is what pushed the project in a different direction. I shifted to a static site that holds the primary narrative and built a structured system underneath it. The content lives in a knowledge base written in YAML and JSON, which are simple text-based formats for organizing information. They let me define the important pieces of each project in a way that is easy for both humans and the agent to understand.
 
-  **2. RAG Retrieval**  
-  Built Supabase‑backed embeddings with metadata (projectId, sectionType, tags) so the system could distinguish “tools on this project” from “tools in general.”
+  Once that content layer was in place, I added intent routing, schemas, and a small orchestration layer. The agent can figure out when to give a quick answer, when to generate a structured layout, or when to offer a deeper dive. It also knows what it should not invent.
 
-  **3. Copywriter Agent**  
-  Wrote a strict prompt with validation rules so it never invents facts and always outputs YAML that matches the required case study schema.
-
-  **4. Orchestrator Agent**  
-  Created a deterministic component registry and orchestrator prompt that turns YAML into layout JSON that the UI can render without surprises.
-
-  **5. Renderer**  
-  Implemented a JSON‑driven layout renderer with whitelisted components to ensure safety, clarity, and consistency.
+  Most of the work in this phase happened quietly in the background. Designing schemas, testing prompts, rewriting pathways, and building guardrails so the system stayed predictable. The goal was not to automate the site. The goal was to create something that felt steady and conversational at the same time.
 
 outcomes: |
-  The final system can answer natural‑language questions like:
-  - “What tools did you use on Tanger?”
-  - “What was your role on PMI?”
-  - “Tell me about your approach to AI.”
+  The finished site does two things at once. It tells a clear story about the work, and it also gives people a way to explore the structure behind it. Most portfolios flatten that distinction. This one makes space for both.
 
-  The responses are concise, scannable, grounded, and dynamically assembled into a cohesive layout.
-
-  Key outcomes:
-  - A portfolio that adapts to each viewer’s needs  
-  - Deterministic generative UI with no hallucinated content  
-  - A real example of applied AI engineering, orchestration, and interface design  
-  - A scalable architecture ready for features like command palette navigation and conversational browsing  
+  The static pages give readers the overview they expect, and the embedded agent lets them go deeper when they want to understand how something was built, why certain decisions were made, or what tools and processes shaped the project. That mix feels closer to how I work in real life.
 
 reflections: |
-  This project brought together everything I care about as a creative technologist: clarity, system design, UX, and meaningful AI.  
-  It reinforced that the future of portfolios—and many digital experiences—will be a hybrid of deterministic UI and model‑driven content, grounded in structured knowledge and careful orchestration.
+  The build taught me a lot about working with AI in a controlled way. The constraints, the schemas, and the routing logic matter as much as the model itself. The most interesting parts of the project were not the flashy features, but the small structural choices that made the system predictable and easy to reason about.
+
+  In the end, Pfaff.design became more than a portfolio. It became a place to test ideas about clarity, interaction, and AI-assisted systems. It reflects how I think, how I solve problems, and how I like to work with technology. And it leaves room for future versions of the site to become even more adaptive.
 
 links:
-  - label: "Visit pfaff-designs.com"
-    url: "https://pfaff-designs.com"
+  - label: "Visit pfaff.design"
+    url: "https://pfaff.design"

@@ -222,9 +222,7 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
             ? "relative w-full flex flex-col gap-[1rem]"
             : "fixed left-1/2 -translate-x-1/2 z-50 flex flex-col gap-[1rem] w-[24.875rem]",
           "transition-[filter] duration-200",
-          isFocused
-            ? "drop-shadow-[0_-2px_8px_rgba(158,200,210,0.8),0_-1px_2px_rgba(255,255,255,0.5)]"
-            : "drop-shadow-[0_-2px_8px_rgba(0,0,0,0.08),0_-1px_2px_rgba(255,255,255,0.5)]",
+          "drop-shadow-[0_-2px_8px_rgba(0,0,0,0.08),0_-1px_2px_rgba(255,255,255,0.5)]",
           className
         )}
         style={{
@@ -256,18 +254,19 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
             ref={containerRef}
             className={cn(
               "relative flex items-center w-full",
-              "bg-[color:var(--bg-default)]",
-              "pr-2 pl-6 py-[0.5rem]",
-              isFocused
-                ? "border-2 border-[color:var(--accent-secondary)]"
-                : "border border-[color:var(--border-subtle)] border-opacity-40"
+              "rounded-full border border-[color:var(--border-subtle)]",
+              "bg-background shadow-sm",
+              "px-4 py-2",
+              "overflow-hidden",
+              isFocused && "border-[color:var(--accent-secondary)]"
             )}
             style={{
               borderRadius: isMultiline ? "8px" : "9999px",
               transition: "border-radius 300ms ease-in-out, border 150ms ease-out",
+              minHeight: "2.5rem",
             }}
           >
-            <div className="relative z-[1] flex-1 pr-12 px-[2px] min-h-[2.25rem] flex items-center" style={{ isolation: 'isolate' }}>
+            <div className="relative z-[1] flex-1 pr-12 min-w-0 flex items-center" style={{ isolation: 'isolate' }}>
               <textarea
                 ref={inputRef}
                 value={inputValue}
@@ -287,8 +286,9 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
                 placeholder={placeholder}
                 rows={1}
                 className={cn(
-                  "w-full border-0 bg-transparent px-0 py-0 text-base leading-5 text-[color:var(--text-default)] placeholder:text-[color:var(--text-default)] placeholder:opacity-50",
-                  "focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none",
+                  "w-full border-0 bg-transparent outline-none text-sm flex-1 min-w-0",
+                  "placeholder:text-muted-foreground",
+                  "focus-visible:ring-0 focus-visible:ring-offset-0",
                   "resize-none overflow-y-auto overflow-wrap-break-word",
                   "min-h-[1.25rem] max-h-36", // min-h matches line-height, max-h is 144px
                   inputClassName
@@ -307,12 +307,12 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
               aria-label="Submit query"
               className={cn(
                 "absolute right-2 top-1/2 -translate-y-1/2",
-                "z-[1] flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--accent-primary)] p-0 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent-primary)] focus-visible:ring-offset-2 group",
+                "z-[1] flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[color:var(--accent-primary)] p-0 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent-primary)] focus-visible:ring-offset-2 group",
                 buttonClassName
               )}
             >
               <ArrowDown 
-                className="h-5 w-5 transition-transform duration-200 ease-out group-hover:translate-y-[2px]" 
+                className="h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-y-[2px]" 
                 strokeWidth={2}
                 style={{ color: 'var(--bg-default)' }}
                 aria-hidden="true"

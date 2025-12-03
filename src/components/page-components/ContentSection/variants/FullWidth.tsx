@@ -1,6 +1,8 @@
 import * as React from "react";
+import { ArrowUpRight } from "lucide-react";
 import { Heading } from "@/components/atoms/Heading";
 import { ImageContainer } from "@/components/atoms/ImageContainer";
+import { Button } from "@/components/atoms/Button";
 import { cn } from "@/lib/utils";
 
 export interface FullWidthProps {
@@ -10,10 +12,11 @@ export interface FullWidthProps {
   imageSrc?: string;
   imageAlt?: string;
   projectDetails?: {
-    client?: string;
+    tools?: string[];
     role?: string;
     year?: string;
   };
+  projectUrl?: string;
   className?: string;
 }
 
@@ -24,6 +27,7 @@ export const FullWidth: React.FC<FullWidthProps> = ({
   imageSrc,
   imageAlt = "",
   projectDetails,
+  projectUrl,
   className,
 }) => {
   const topicLabel = headline || "This section";
@@ -58,11 +62,29 @@ export const FullWidth: React.FC<FullWidthProps> = ({
                 className="text-[color:var(--neutral-50)]"
               />
             )}
-            {eyebrow && (
-              <p className="font-medium text-base md:text-[1.4375rem] leading-6 md:leading-[2rem] tracking-[-0.014375rem] text-[color:var(--neutral-50)]">
-                {eyebrow}
-              </p>
-            )}
+            <div className="flex flex-col gap-4 md:gap-6">
+              {eyebrow && (
+                <p className="font-medium text-base md:text-[1.4375rem] leading-6 md:leading-[2rem] tracking-[-0.014375rem] text-[color:var(--neutral-50)]">
+                  {eyebrow}
+                </p>
+              )}
+              {projectUrl && (
+                <Button
+                  variant="outline"
+                  asChild
+                  className="border-[color:var(--neutral-50)] text-[color:var(--neutral-50)] hover:border-[color:var(--neutral-50)] hover:text-[color:var(--neutral-50)] hover:bg-[color:var(--neutral-50)]/10 w-fit"
+                >
+                  <a
+                    href={projectUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View Project
+                    <ArrowUpRight className="size-4" />
+                  </a>
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Bottom Section: Body (left) and Project Details (right) */}
@@ -83,8 +105,8 @@ export const FullWidth: React.FC<FullWidthProps> = ({
               <div className="flex flex-col gap-2 flex-shrink-0 w-full md:max-w-[33.625rem]">
                 {/* Labels Row */}
                 <div className="flex gap-4 md:gap-6 font-medium text-sm md:text-[1.4375rem] leading-5 md:leading-[2rem] tracking-[-0.014375rem] text-[color:var(--neutral-50)]">
-                  {projectDetails.client !== undefined && (
-                    <p className="w-20 md:w-[10rem]">Client</p>
+                  {projectDetails.tools !== undefined && projectDetails.tools.length > 0 && (
+                    <p className="w-20 md:w-[10rem]">Tools</p>
                   )}
                   {projectDetails.role !== undefined && (
                     <p className="w-20 md:w-[10rem]">Role</p>
@@ -95,8 +117,8 @@ export const FullWidth: React.FC<FullWidthProps> = ({
                 </div>
                 {/* Values Row */}
                 <div className="flex gap-4 md:gap-6 font-medium text-sm md:text-[1.4375rem] leading-5 md:leading-[2rem] tracking-[-0.014375rem] text-[color:var(--neutral-50)]">
-                  {projectDetails.client && (
-                    <p className="w-20 md:w-[10rem]">{projectDetails.client}</p>
+                  {projectDetails.tools && projectDetails.tools.length > 0 && (
+                    <p className="w-20 md:w-[10rem]">{projectDetails.tools.join(", ")}</p>
                   )}
                   {projectDetails.role && (
                     <p className="w-20 md:w-[10rem]">{projectDetails.role}</p>

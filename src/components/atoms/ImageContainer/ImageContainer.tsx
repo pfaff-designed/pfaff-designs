@@ -75,7 +75,9 @@ const ImageContainer = React.forwardRef<HTMLDivElement, ImageContainerProps>(
         ref={ref}
         className={cn(
           "relative w-full overflow-hidden",
+          "bg-[var(--bg-default)]",
           aspectRatio !== "auto" && aspectRatioClasses[aspectRatio],
+          aspectRatio === "auto" && fill && "min-h-[20rem]",
           containerClassName
         )}
       >

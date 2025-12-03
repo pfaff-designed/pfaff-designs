@@ -16,6 +16,7 @@ import { MediaImage } from "@/components/media/MediaImage";
 import { getProjectBySlug } from "@/lib/projects/registry";
 import { getMediaItemById, SUPABASE_MEDIA_BUCKET } from "@/lib/media/registry";
 import { getPublicStorageURL } from "@/lib/supabase/storage";
+import { getToolsForCaseStudy } from "@/lib/caseStudies/tools";
 import Link from "next/link";
 
 export default function CaseStudyPage() {
@@ -86,16 +87,27 @@ export default function CaseStudyPage() {
             return (
               <ContentSection
                 variant="full-width"
-                eyebrow={`Case Study · ${caseStudy.client}`}
+                eyebrow={
+                  slug === "capital-one-travel" 
+                    ? "Scaling Capital One Travel One Lounge at a Time" 
+                    : slug === "coca-cola-creative-technology"
+                    ? "Exploring a hydration-aware vending concept"
+                    : slug === "tanger-outlets"
+                    ? "Contributing to a large architectural redesign through front-end development and middleware integration"
+                    : slug === "pfaff-designs"
+                    ? "Building a portfolio that tells a story and reveals the structure behind it"
+                    : `Case Study · ${caseStudy.client}`
+                }
                 headline={caseStudy.projectName}
                 body={heroBody}
                 imageSrc={validHeroImageUrl}
                 imageAlt={heroMedia?.alt || `${caseStudy.projectName} hero image`}
                 projectDetails={{
-                  client: caseStudy.client,
+                  tools: getToolsForCaseStudy(slug),
                   role: caseStudy.roleSummary,
                   year: caseStudy.timeframe,
                 }}
+                projectUrl={caseStudy.url}
               />
             );
           })()}

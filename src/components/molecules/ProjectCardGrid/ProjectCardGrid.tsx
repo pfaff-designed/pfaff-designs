@@ -7,25 +7,22 @@ export type ProjectCardGridItem = Omit<ProjectCardProps, "className"> & {
 };
 
 export interface ProjectCardGridProps {
-  cards: [ProjectCardGridItem, ProjectCardGridItem, ProjectCardGridItem];
+  cards: ProjectCardGridItem[];
   className?: string;
 }
 
 /**
  * ProjectCardGrid
- * Renders exactly three project cards in a specific layout:
+ * Renders project cards in a responsive grid layout:
  * - Desktop: 2-column grid
- *   - Card 1 (dark): top-left
- *   - Card 2 (light): top-right
- *   - Card 3 (dark): spans both columns, bottom row
  * - Mobile: stacks vertically
+ * - First 2 cards: top row (1 column each)
+ * - Remaining cards: continue in 2-column grid
  */
 export const ProjectCardGrid: React.FC<ProjectCardGridProps> = ({
   cards,
   className,
 }) => {
-  const [card1, card2, card3] = cards;
-
   return (
     <div
       className={cn(
@@ -33,47 +30,27 @@ export const ProjectCardGrid: React.FC<ProjectCardGridProps> = ({
         className
       )}
     >
-      {/* Card 1: Top-left, dark variant */}
-      <div className="md:col-span-1">
-        <ProjectCard
-          key={card1.id}
-          projectName={card1.projectName}
-          client={card1.client}
-          projectType={card1.projectType}
-          variant={card1.variant || "dark"}
-          fillColor={card1.fillColor}
-          disabled={card1.disabled}
-          onClick={card1.onClick}
-        />
-      </div>
-
-      {/* Card 2: Top-right, light variant */}
-      <div className="md:col-span-1">
-        <ProjectCard
-          key={card2.id}
-          projectName={card2.projectName}
-          client={card2.client}
-          projectType={card2.projectType}
-          variant={card2.variant || "light"}
-          fillColor={card2.fillColor}
-          disabled={card2.disabled}
-          onClick={card2.onClick}
-        />
-      </div>
-
-      {/* Card 3: Bottom row, spans both columns, dark variant */}
-      <div className="md:col-span-2">
-        <ProjectCard
-          key={card3.id}
-          projectName={card3.projectName}
-          client={card3.client}
-          projectType={card3.projectType}
-          variant={card3.variant || "dark"}
-          fillColor={card3.fillColor}
-          disabled={card3.disabled}
-          onClick={card3.onClick}
-        />
-      </div>
+      {cards.map((card, index) => {
+        // Every third card (index 2, 5, 8, etc.) spans both columns
+        const isFullWidth = (index + 1) % 3 === 0;
+        
+        return (
+          <div 
+            key={card.id} 
+            className={isFullWidth ? "md:col-span-2" : "md:col-span-1"}
+          >
+            <ProjectCard
+              projectName={card.projectName}
+              client={card.client}
+              projectType={card.projectType}
+              variant={card.variant || (index === 1 ? "light" : "dark")}
+              fillColor={card.fillColor}
+              disabled={card.disabled}
+              onClick={card.onClick}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 };

@@ -1,40 +1,42 @@
-version: "1"
-kind: "project_longform"
+version: 1
+id: tanger
+kind: case_study
+
+meta:
+  title: "Tanger"
+  slug: "/work/tanger"
 
 project:
-  id: "tanger-outlets"
-  title: "Tanger Outlets Digital Experience"
-  client: "Tanger Outlets"
-  industry: "Retail, E-commerce"
-  role: "Front-End Engineer / Technologist"
-  one_liner: "Built a responsive, component-driven web experience for Tanger's outlet retail destinations and promotions."
+  client: "Tanger"
+  title: "Tanger"
+  role: "Front-End Engineer"
+  year: "2022"
+  one_liner: "Tanger was redesigning its entire platform, and the work reached deep into the system architecture. I contributed by building front-end components, fixing bugs, and helping wire the middleware that translated third-party deal data into predictable formats for the UI."
 
 context: |
-  Tanger Outlets needed a refreshed digital experience that better reflected their modern retail brand. The redesign spanned marketing pages, promotional modules, retail listings, and flexible content blocks that needed to support ongoing updates throughout the year.
+  Tanger was going through more than a visual refresh. Behind the scenes, the team was rebuilding the architecture that powered the entire site. The old platform relied on static pages with inconsistent structures. The new approach required a flexible system built around structured content, reusable components, and integrations with external data sources.
 
-  Through AKQA, I worked as a front-end engineer focused on translating detailed Figma designs into reusable, responsive components that could adapt to a wide range of use cases across the Tanger platform.
+  It was the kind of project where the real progress happened underneath the surface. The front end could only succeed if the architecture behind it was stable and consistent.
 
 problem: |
-  The existing platform lacked consistency and flexibility. Promotional content, retail listings, and marketing modules all required more polished layouts and stronger component patterns to support frequent updates. The experience also needed to perform more predictably across mobile and desktop breakpoints.
+  My role focused on the front end, but the front end depended on systems that were still evolving. Components needed predictable data and consistent patterns, and the site relied on a third-party service for deals and coupon information. That data had to be shaped by a middleware layer before it could reach the UI.
+
+  I worked with the engineering team to help wire that middleware, shape the data flowing into the components, and make sure the interface behaved reliably as the system settled into place.
 
 solution: |
-  I developed a library of reusable UI modules using React and TypeScript. Each component was designed to support variations in layout, content, and hierarchy while staying aligned with Tanger’s brand system. I placed special emphasis on responsive behavior to ensure every module adapted gracefully across breakpoints.
+  Much of my work centered on building and refining components while the underlying architecture was still in flux. I implemented UI elements, fixed bugs, tested edge cases, and worked closely with the design team to make sure interactions matched the intended experience.
 
-  I also collaborated closely with designers and art directors to refine spacing, alignment, typography, and micro-interactions—ensuring each component felt intentional and cohesive within the broader experience.
+  I also collaborated with backend engineers to connect the middleware to the third-party deals service. This included mapping incoming data, resolving mismatches, and verifying that the components rendered correctly across different scenarios.
 
 process: |
-  I started by reviewing each Figma module and identifying the architectural patterns needed for flexibility and reuse. From there, I built components using predictable state handling, clear props structures, and semantic markup.
-
-  Throughout implementation, I worked with designers to refine interaction details and spacing, and partnered with backend engineers to connect components with dynamic content. I tested modules across multiple devices and breakpoints to ensure layout, typography, and behavior remained consistent.
-
-  Rapid iteration was a core part of the process, and tight communication across teams helped keep the build aligned with evolving design feedback.
+  Even early in my career, this project gave me experience at the intersection of system logic and interface behavior. The front end needed clarity, but the system underneath needed stability, and I was part of helping those two sides meet.
 
 outcomes: |
-  The new components created a more cohesive and modern digital experience for Tanger. Marketing teams gained flexible, reusable modules they could deploy across multiple pages, and the updated layouts improved clarity, readability, and navigation. The work also made future updates easier by establishing a more reliable component foundation.
+  The redesigned platform moved Tanger from a collection of static pages to a scalable architecture built around structured content and reusable components. My work helped stabilize the integration between the middleware and the UI, and contributed to a system that is easier to maintain and evolve.
 
 reflections: |
-  This project strengthened my ability to design and implement component systems that balance creative direction with real-world technical constraints. It reinforced the importance of reusable architecture in marketing-driven platforms, where content needs shift often. I enjoyed shaping UI patterns that felt clean, intentional, and dependable at scale.
+  This project shaped how I think about system design. It showed how much the quality of an interface depends on the clarity of the data behind it. It also gave me early experience working with middleware and structured content, tools that continue to influence how I think about scalable interfaces and AI-enabled systems.
 
 links:
-  - label: "Tanger Outlet"
-    url: "https://www.tanger.com/"
+  - label: "Visit Tanger"
+    url: "https://www.tanger.com"

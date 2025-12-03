@@ -7,6 +7,9 @@ export type { TwoColumnImageProps } from "./TwoColumnImage";
 export { CardGallery } from "./CardGallery";
 export type { CardGalleryProps } from "./CardGallery";
 
+export { ProjectCardGrid } from "./ProjectCardGrid";
+export type { ProjectCardGridProps } from "./ProjectCardGrid";
+
 export { TextWithImage } from "./TextWithImage";
 export type { TextWithImageProps } from "./TextWithImage";
 

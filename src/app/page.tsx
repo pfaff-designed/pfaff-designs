@@ -14,19 +14,32 @@ import { SUPABASE_MEDIA_BUCKET } from "@/lib/media/registry";
 import { getPublicStorageURL } from "@/lib/supabase/storage";
 import { ProjectCardGrid } from "@/components/molecules/ProjectCardGrid";
 import { useRouter } from "next/navigation";
+import { Heading } from "@/components/atoms/Heading";
+import { PortfolioImage } from "@/components/atoms/PortfolioImage";
+import { BodyText } from "@/components/atoms/BodyText";
 
 export default function Home() {
   const { state } = useAIAnswer();
   const { answerLayout, status } = state;
   const router = useRouter();
 
-  // Map first 3 case studies to ProjectCardGrid format
+  // Map case studies to ProjectCardGrid format
   const projectCards = React.useMemo(() => {
-    const selectedStudies = caseStudies.slice(0, 3);
+    // Get specific case studies: first 3 + coke + pfaff.design
+    const cokeStudy = caseStudies.find(s => s.slug === "coca-cola-creative-technology");
+    const pfaffStudy = caseStudies.find(s => s.slug === "pfaff-designs");
+    const selectedStudies = [
+      ...caseStudies.slice(0, 3),
+      ...(cokeStudy ? [cokeStudy] : []),
+      ...(pfaffStudy ? [pfaffStudy] : [])
+    ];
+    
     const projectTypeMap: Record<string, string> = {
       "capital-one-travel": "Travel Platform",
       "pmi": "Certification Site",
       "tanger-outlets": "Digital Experience",
+      "coca-cola-creative-technology": "Creative Technology",
+      "pfaff-designs": "Portfolio Platform",
     };
 
     return selectedStudies.map((study, index) => ({
@@ -35,13 +48,9 @@ export default function Home() {
       client: study.client,
       projectType: projectTypeMap[study.slug] || study.roleSummary,
       variant: index === 1 ? ("light" as const) : ("dark" as const),
-      fillColor: "default" as const,
+      fillColor: "dark" as const,
       onClick: () => router.push(`/work/${study.slug}`),
-    })) as [
-      { id: string; projectName: string; client: string; projectType: string; variant: "dark" | "light"; fillColor: "default"; onClick: () => void },
-      { id: string; projectName: string; client: string; projectType: string; variant: "dark" | "light"; fillColor: "default"; onClick: () => void },
-      { id: string; projectName: string; client: string; projectType: string; variant: "dark" | "light"; fillColor: "default"; onClick: () => void }
-    ];
+    }));
   }, [router]);
 
   return (
@@ -50,12 +59,14 @@ export default function Home() {
       {status === "idle" && !answerLayout && (
         <>
           {/* Introduction Section - Moved to top */}
-          <Section className="h-[calc(100vh-13.33333rem)] flex items-center">
+          <Section className="h-screen flex items-center">
             <Container>
-              <div className="max-w-[25rem] mx-auto text-left">
-                <p className="text-base leading-5 text-[var(--text-default)]">
-                  {homePageData.welcomeMessage}
-                </p>
+              <div className="max-w-[25rem] mx-auto text-left -mt-20">
+                <BodyText
+                  body={homePageData.welcomeMessage}
+                  variant="default"
+                  className="text-base leading-5"
+                />
               </div>
             </Container>
           </Section>
@@ -67,11 +78,11 @@ export default function Home() {
           >
             <Container>
               <div className="space-y-[3rem] md:space-y-[4rem]">
-                <ContentSection
-                  variant="default"
-                  eyebrow={homePageData.selectedWork.eyebrow}
-                  headline={homePageData.selectedWork.headline}
-                  body={homePageData.selectedWork.body}
+                <Heading
+                  variant="display"
+                  text={homePageData.selectedWork.headline}
+                  level={2}
+                  className="text-left"
                 />
 
                 {/* Case Studies Grid */}
@@ -84,20 +95,21 @@ export default function Home() {
           <Section className="py-[4rem] md:py-[6rem]">
             <Container>
               <ContentSection
-                variant="default"
+                variant="2-column-image-right"
+                imageSrc="https://ijwldoqqihdtwegdjjwf.supabase.co/storage/v1/object/public/media/profile-pic.png"
+                imageAlt="Profile picture"
                 eyebrow={homePageData.about.eyebrow}
                 headline={homePageData.about.headline}
                 body={homePageData.about.body}
               />
-              {/* About Section Image */}
-              <div className="w-full mt-12 md:mt-16 max-w-[52.5625rem] mx-auto">
-                <ImageContainer
-                  imageSrc={getPublicStorageURL(SUPABASE_MEDIA_BUCKET, "home/about.jpg")}
-                  alt="Design engineer working on AI-powered interfaces"
-                  aspectRatio="wide"
-                  containerClassName="w-full"
+              {/* <div className="w-full max-w-[26.28125rem] mx-auto">
+                <PortfolioImage
+                  imageSrc="https://ijwldoqqihdtwegdjjwf.supabase.co/storage/v1/object/public/media/profile-pic.png"
+                  alt="Profile picture"
+                  containerClassName="w-full aspect-[3/4]"
+                  objectFit="contain"
                 />
-              </div>
+              </div> */}
             </Container>
           </Section>
         </>

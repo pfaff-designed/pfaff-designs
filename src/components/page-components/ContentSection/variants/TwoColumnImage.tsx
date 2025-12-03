@@ -1,6 +1,8 @@
 import * as React from "react";
 import { ContentBlock, type ContentBlockItem } from "@/components/molecules/ContentBlock";
 import { ImageContainer } from "@/components/atoms/ImageContainer";
+import { ImageLightbox } from "@/components/molecules/ImageLightbox";
+import { cn } from "@/lib/utils";
 
 export interface TwoColumnImageProps {
   headline?: string;
@@ -9,6 +11,9 @@ export interface TwoColumnImageProps {
   imageSrc?: string;
   imageAlt?: string;
   imageOnRight?: boolean;
+  imageObjectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
+  imageAspectRatio?: "auto" | "square" | "video" | "portrait" | "landscape" | "wide";
+  imageLightbox?: boolean;
 }
 
 export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
@@ -18,6 +23,9 @@ export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
   imageSrc,
   imageAlt = "",
   imageOnRight = true,
+  imageObjectFit = "cover",
+  imageAspectRatio,
+  imageLightbox = false,
 }) => {
   const topicLabel = headline || "This section";
 
@@ -34,13 +42,24 @@ export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
     }
   ] : [];
 
+  const imageContainer = imageSrc ? (
+    <ImageContainer
+      imageSrc={imageSrc}
+      alt={imageAlt}
+      aspectRatio={imageAspectRatio || (imageOnRight ? "portrait" : "landscape")}
+      objectFit={imageObjectFit}
+    />
+  ) : null;
+
   const imageComponent = imageSrc && (
-    <div className="flex-1 shrink-0">
-      <ImageContainer
-        imageSrc={imageSrc}
-        alt={imageAlt}
-        aspectRatio={imageOnRight ? "portrait" : "landscape"}
-      />
+    <div className={cn("flex-1 shrink-0", imageAspectRatio === "auto" && "min-h-[20rem]")}>
+      {imageLightbox ? (
+        <ImageLightbox imageSrc={imageSrc} imageAlt={imageAlt}>
+          {imageContainer}
+        </ImageLightbox>
+      ) : (
+        imageContainer
+      )}
     </div>
   );
 
@@ -62,8 +81,8 @@ export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
   );
 
   const containerClasses = imageOnRight
-    ? "flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-[13.1875rem] lg:justify-center"
-    : "flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12 lg:justify-center";
+    ? "flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-center"
+    : "flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-center";
 
   return (
     <div className={containerClasses}>

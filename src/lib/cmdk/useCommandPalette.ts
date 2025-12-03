@@ -41,7 +41,7 @@ export function useCommandPalette(): UseCommandPaletteReturn {
   const openPalette = React.useCallback(
     (opts?: { x?: number; y?: number; initialInput?: string }) => {
       const fallbackX = window.innerWidth / 2;
-      const fallbackY = window.innerHeight / 3;
+      const fallbackY = window.innerHeight * 0.9;
       const fromRef = lastMousePosition.current;
 
       // Set palette position once (frozen) - use opts, then ref, then fallback

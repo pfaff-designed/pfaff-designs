@@ -41,7 +41,7 @@ export const DefaultSection: React.FC<DefaultSectionProps> = ({
         {
           eyebrow: displayEyebrow,
           body: body,
-          richText: false,
+          richText: true,
           isAI: isAI,
         },
       ]

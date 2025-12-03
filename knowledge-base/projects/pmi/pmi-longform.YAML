@@ -1,37 +1,58 @@
-version: "1"
-kind: "project_longform"
+version: 1
+id: pmi
+kind: case_study
+
+meta:
+  title: "Project Management Institute"
+  slug: "/work/pmi"
 
 project:
-  id: "pmi"
-  slug: "pmi"
-  title: "PMI.org Redesign"
   client: "Project Management Institute"
-  industry: "Professional Certification, Education"
-  role: "Front-End Engineer / Technologist"
-  one_liner: "Built a modern, responsive front-end for PMI's Agile certification site to clarify the value and make the path to certification easier to follow."
+  title: "PMI Website Redesign"
+  role: "Front-End Engineer"
+  year: "2022"
+  one_liner: "Built components and refined patterns for PMI’s redesigned certification experience using a structured design system and Radix UI primitives."
 
 context: |
-  PMI is a globally recognized organization in the project management and agile certification space. They needed a refreshed site for their Agile Certified Practitioner (ACP) program—one that clearly communicated the value of the certification and felt modern, trustworthy, and easy to navigate.
+  PMI was undergoing a brand refresh and a redesign of the user experience for people pursuing certifications. The existing site was functional but inconsistent, and the new direction required an interface that was clearer, more cohesive, and easier to navigate.
 
-  Delivered through AKQA, the project required close collaboration across design, engineering, and project management. My role focused on front-end engineering and design translation, turning detailed Figma files into reliable, responsive components that worked cleanly across devices and accessibility requirements.
+  To support this, the team invested in a well-structured component library built on design tokens and predictable patterns. The goal was to create a system that could scale across complex content while staying consistent and easy to maintain.
 
 problem: |
-  The existing ACP page felt dated and text-heavy. Key benefits and requirements were hard to skim, the value proposition wasn’t immediately clear, and the experience didn’t adapt well to mobile. PMI needed a structure that made information easier to understand while aligning with their evolving brand.
+  The certification platform supports a large, global audience, and the content spans many formats and flows. The system needed to:
+  - Present complex information clearly
+  - Create visual and behavioral consistency across pages
+  - Translate detailed design tokens into reliable front-end patterns
+  - Support a structured, scalable component library
+
+  The challenge was to bring a carefully defined design system into code while keeping the components flexible enough to work across multiple layouts.
 
 solution: |
-  I built a modern, responsive front-end using React, TypeScript, and Tailwind. Working from Figma, I translated the visual direction into accessible components that emphasized clarity, hierarchy, and readability. The updated structure made it easier for users to understand the certification at a glance while still offering depth where needed.
+  My contribution centered on implementing components with Radix UI primitives and shaping them to reflect PMI’s detailed design system. I worked from precise Figma specs and used design tokens to build components that behaved consistently across the site.
+
+  I collaborated closely with the PMI designer, PM, and senior engineer to refine interactions and make sure the system reflected the intended patterns. I also introduced a PR checklist template that helped improve the consistency and clarity of code reviews.
 
 process: |
-  I reviewed the design concepts with the creative team to clarify interaction details and ensure the structure would hold across all breakpoints. From there, I developed modular components with predictable state handling and strong accessibility support.
+  **1. Component Development**  
+  Built new components and refined existing patterns using Radix primitives. Ensured alignment between Figma specifications, design tokens, and front-end behavior.
 
-  Throughout the build, I refined spacing, hierarchy, and layout in partnership with designers, and worked with back-end engineers to integrate dynamic content. I tested components across multiple devices to ensure the experience remained consistent and trustworthy.
+  **2. UI Refinement**  
+  Worked with design to polish spacing, interactions, and visual details so that the components matched the intended experience.
+
+  **3. Bug Fixing and QA**  
+  Addressed UI issues and verified consistent behavior across multiple content states. Participated in QA and design reviews to support the stability of the system.
+
+  **4. System Alignment**  
+  Helped maintain a clear and predictable component library by following established patterns and reinforcing organized workflows. Created a PR checklist that supported consistent reviews across the team.
 
 outcomes: |
-  The refreshed ACP page improved clarity around PMI’s Agile certification and delivered a modern, responsive experience. The components were structured for reuse, making future updates easier, and the final build aligned strongly with PMI’s brand and accessibility standards. Users could understand the certification more quickly and navigate the information with greater confidence.
+  The redesign delivered a clearer and more cohesive experience for PMI’s global certification audience. The structured component library created a stable foundation that could support future growth and evolving content needs.
+
+  This project shaped how I think about front-end engineering. It taught me how strong systems are built, how to translate design tokens into code, and how clarity in process leads to clarity in the final product.
 
 reflections: |
-  This project reinforced the value of tight design–engineering collaboration. Working closely with designers helped ensure the final build expressed the intended visual language without unnecessary complexity. It also strengthened my practice of creating accessible, readable interfaces for content-heavy pages.
+  PMI was one of the best organized and best structured projects I worked on early in my career. It showed me what it looks like when a design system is treated as a product, and it taught me how to work inside a clear, well-considered framework. Those lessons continue to influence how I approach front-end development and system design.
 
 links:
-  - label: "PMI Agile Certification Overview"
-    url: "https://www.pmi.org/certifications/agile-acp?gad_campaignid=21784826064&gbraid=0AAAAADkaZHu3l9j1xQG5OHP9M7-yCdDtG"
+  - label: "Visit PMI"
+    url: "https://www.pmi.org/"

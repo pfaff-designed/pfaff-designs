@@ -6,7 +6,6 @@ import { AIAnswerProvider } from "@/components/ai/AIAnswerContext";
 import { SectionProvider } from "@/components/ai/SectionContext";
 import { AiModalProvider, AiModalHost, AiHoverPillHost, FloatingAiButton } from "@/components/ai-modal";
 import { CommandPaletteProvider } from "@/components/cmdk/CommandPaletteProvider";
-import { CursorIndicator } from "@/components/utility/CursorIndicator";
 import { ToastProvider } from "@/components/molecules/Toast";
 
 export const metadata: Metadata = {
@@ -42,11 +41,9 @@ export default function RootLayout({
             {/* Global AI hover pill host - tracks cursor/touch on AI-interactive regions */}
             <AiHoverPillHost />
             {/* Global floating AI button - mobile-only FAB in bottom-right */}
-            <FloatingAiButton />
+            {/* <FloatingAiButton /> */}
             {/* Global command palette - Cmd+K / Ctrl+K */}
             <CommandPaletteProvider />
-            {/* Global cursor indicator - ⌘K follows cursor */}
-            <CursorIndicator />
           </AiModalProvider>
         </ToastProvider>
       </body>

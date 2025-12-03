@@ -43,6 +43,9 @@ export default function About() {
               body={section.body}
               imageSrc={section.imageSrc}
               imageAlt={section.imageAlt}
+              imageObjectFit={section.imageObjectFit}
+              imageAspectRatio={section.imageAspectRatio}
+              imageLightbox={section.imageLightbox}
               containerSize={section.variant === "text-with-image" ? "wide" : "default"}
             />
           ))}

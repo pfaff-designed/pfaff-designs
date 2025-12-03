@@ -202,6 +202,107 @@ export function loadGlobalKB(): GlobalKB {
   };
 }
 
+/**
+ * Format global about sections as a string for copywriter prompt
+ * Combines data from about-global.yaml and identity_longform.YAML
+ */
+export function formatGlobalAboutSections(): string {
+  try {
+    console.log("[KB] Loading global about sections...");
+    const aboutGlobal = loadYAML<any>("identity/about-global.yaml");
+    const identityLongform = loadYAML<any>("identity/identity-long-form.YAML");
+    
+    console.log("[KB] aboutGlobal loaded:", !!aboutGlobal, aboutGlobal ? Object.keys(aboutGlobal) : "null");
+    console.log("[KB] identityLongform loaded:", !!identityLongform, identityLongform ? Object.keys(identityLongform) : "null");
+    
+    const parts: string[] = [];
+    
+    // Add sections from about-global.yaml
+    if (aboutGlobal?.sections && Array.isArray(aboutGlobal.sections)) {
+      console.log("[KB] Found", aboutGlobal.sections.length, "sections in about-global.yaml");
+      parts.push("=== ABOUT SECTIONS ===\n");
+      aboutGlobal.sections.forEach((section: any) => {
+        if (section.title) parts.push(`\n[${section.title}]`);
+        if (section.body) parts.push(section.body);
+        if (section.content) {
+          if (typeof section.content === "object") {
+            parts.push(JSON.stringify(section.content, null, 2));
+          } else {
+            parts.push(String(section.content));
+          }
+        }
+      });
+    } else {
+      console.warn("[KB] No sections found in about-global.yaml or sections is not an array");
+      console.warn("[KB] aboutGlobal structure:", aboutGlobal ? JSON.stringify(Object.keys(aboutGlobal)) : "null");
+    }
+    
+    // Add sections from identity_longform.YAML
+    if (identityLongform) {
+      parts.push("\n\n=== IDENTITY & BACKGROUND ===\n");
+      
+      if (identityLongform.profile?.professional_identity) {
+        parts.push("\n[Professional Identity]");
+        parts.push(identityLongform.profile.professional_identity);
+      }
+      
+      if (identityLongform.education) {
+        parts.push("\n[Education]");
+        if (identityLongform.education.summary) {
+          parts.push(identityLongform.education.summary);
+        }
+        if (Array.isArray(identityLongform.education.items)) {
+          identityLongform.education.items.forEach((item: any) => {
+            parts.push(`- ${item.degree} in ${item.field}, ${item.institution}`);
+          });
+        }
+      }
+      
+      if (identityLongform.skills) {
+        parts.push("\n[Skills]");
+        Object.entries(identityLongform.skills).forEach(([key, value]) => {
+          if (value) parts.push(`\n${key}: ${value}`);
+        });
+      }
+      
+      if (identityLongform.values && Array.isArray(identityLongform.values)) {
+        parts.push("\n[Values]");
+        identityLongform.values.forEach((value: any) => {
+          if (value.name && value.description) {
+            parts.push(`- ${value.name}: ${value.description}`);
+          }
+        });
+      }
+      
+      if (identityLongform.personal_philosophy) {
+        parts.push("\n[Personal Philosophy]");
+        parts.push(identityLongform.personal_philosophy);
+      }
+      
+      if (identityLongform.working_style) {
+        parts.push("\n[Working Style]");
+        parts.push(identityLongform.working_style);
+      }
+    }
+    
+    const result = parts.join("\n");
+    console.log("[KB] Formatted global about sections:", result.length, "characters");
+    if (result.length === 0) {
+      console.warn("[KB] ⚠️ WARNING: formatGlobalAboutSections returned empty string!");
+    } else {
+      console.log("[KB] Preview (first 200 chars):", result.substring(0, 200));
+    }
+    return result;
+  } catch (error) {
+    console.error("[KB] ❌ Failed to format global about sections:", error);
+    console.error("[KB] Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    return ""; // Return empty string on error to avoid breaking the copywriter
+  }
+}
+
 // ---------- Projects ----------
 
 interface ProjectFiles {

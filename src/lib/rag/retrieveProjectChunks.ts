@@ -8,9 +8,13 @@ const supabase = createClient(
 
 export type RetrievedChunk = {
   id: string;
-  project_id: string;
-  content: string;
-  similarity: number;
+  projectId?: string;
+  source: "project_longform" | "project_facts" | "about_global" | "identity_longform" | string;
+  sectionId?: string;
+  sectionType?: string; // e.g. "context" | "problem" | "solution" | "process" | "outcomes"
+  tags?: string[];
+  text: string;         // the actual content
+  score?: number;       // similarity score, if available
 };
 
 /**
@@ -75,14 +79,27 @@ export async function retrieveProjectChunks(
       throw error;
     }
 
-    const chunks = (data ?? []) as RetrievedChunk[];
+    // Transform Supabase data to enriched RetrievedChunk format
+    const chunks: RetrievedChunk[] = (data ?? []).map((item: any) => ({
+      id: item.id || String(Math.random()),
+      projectId: item.project_id || item.project_slug || undefined,
+      source: item.source || "project_longform", // Default if not specified
+      sectionId: item.section_id || undefined,
+      sectionType: item.section_type || undefined,
+      tags: item.tags || undefined,
+      text: item.content || item.text || "",
+      score: item.similarity !== undefined ? item.similarity : item.score,
+    }));
+
     console.log("[RAG] Retrieved chunks", {
       count: chunks.length,
       chunksPreview: chunks.slice(0, 2).map(c => ({
         id: c.id,
-        project_id: c.project_id,
-        contentLength: c.content?.length || 0,
-        similarity: c.similarity,
+        projectId: c.projectId,
+        source: c.source,
+        sectionType: c.sectionType,
+        textLength: c.text?.length || 0,
+        score: c.score,
       })),
     });
 
@@ -111,7 +128,8 @@ export function buildContextFromChunks(chunks: RetrievedChunk[]): string {
 
   return chunks
     .map((chunk, index) => {
-      return `[Chunk ${index + 1} from ${chunk.project_id}]\n${chunk.content}`;
+      const source = chunk.projectId || chunk.source || "unknown";
+      return `[Chunk ${index + 1} from ${source}${chunk.sectionType ? ` (${chunk.sectionType})` : ""}]\n${chunk.text}`;
     })
     .join("\n\n---\n\n");
 }
