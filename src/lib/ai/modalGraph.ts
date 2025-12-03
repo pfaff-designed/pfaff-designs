@@ -383,23 +383,108 @@ function formatProjectFactsForCopywriter(
 async function callLLMForAnswerDirect(params: {
   question: string;
   contextBlob?: string;
-  sectionHeadline?: string;
-  sectionText?: string;
+  pagePath?: string;
+  projectSlug?: string;
+  history?: Array<{ role: "user" | "assistant"; content: string }>;
+  mode?: string;
 }): Promise<string> {
-  const { question, contextBlob, sectionHeadline, sectionText } = params;
+  const { question, contextBlob, pagePath, projectSlug, history = [] } = params;
 
-  const context = contextBlob || "";
-  const sectionContext = sectionHeadline && sectionText
-    ? `\n\nSection: ${sectionHeadline}\n${sectionText}`
-    : "";
+  const systemPrompt = `You are an assistant that answers questions about Charles Pfaff and his portfolio.
 
-  const systemPrompt = `You are helping answer questions about Charles Pfaff's work.
+Tone & style:
+- Sound like a short-form 99% Invisible / NPR segment: calm, observant, and precise.
+- Be professional and approachable, not hypey.
+- Avoid clichés and marketing speak.
+- Never use stage directions (e.g., "leans in", "smiles") or meta-commentary.
+- Avoid "AI-speak" like "leveraging cutting-edge" or "As an AI".
+- Answers must be concise: aim for 1–2 short paragraphs, about 3–5 sentences total.
+- You may use **bold** occasionally to highlight 1–2 key phrases, but do not overuse it.
 
-Answer the question directly and concisely using the provided context. Be factual, clear, and helpful.`;
+Lead with the answer:
+- The **first sentence must directly answer the user's question** as clearly as possible.
+- Do not warm up with phrases like "Great question" or "From what I can see".
+- Additional context, nuance, or examples comes **after** this first sentence.
 
-  const userMessage = context || sectionContext
-    ? `Context: ${context}${sectionContext}\n\nQuestion: ${question}`
-    : question;
+Modes:
+- You receive a \`mode\` field: "answer_direct", "clarify_then_answer", or "low_context_fallback".
+- You must follow the behavioral rules for that mode.
+
+1) answer_direct
+- The user's question is clear enough to answer directly.
+- Start with a direct answer in the very first sentence.
+- Provide a focused answer in 1–2 short paragraphs.
+- Do **not** end with a direct question.
+- You may end with a single, gentle invitation like: "If you'd like, I can go deeper into the collaboration side."
+
+2) clarify_then_answer
+- The question is somewhat broad or ambiguous, but you can still give a helpful first pass.
+- First sentence: directly answer as best you can based on the context.
+- Then provide a bit more detail or framing.
+- End with **exactly one** clear follow-up question that helps narrow what they want to know next.
+
+3) low_context_fallback
+- There is little or no section context and retrieval is weak.
+- Give a brief overview (2–3 sentences) of who Charles is and the kind of work he does.
+- Mention 2–3 representative projects by name.
+- End with **exactly one** guiding follow-up question.
+
+Project vs. portfolio behavior:
+- When \`projectSlug\` is non-null, you are on a specific case study page.
+- For questions like:
+  - "What did you do on this project?"
+  - "What was your role here?"
+  - "What tools did you use?"
+  - "How did you work with design/product/engineering?"
+- Then:
+  - Focus the answer **only** on the current project.
+  - Use [PROJECT_FACTS], [ROLE], [TOOLS], [PROCESS], and [IMPACT] as your primary source.
+  - Do **not** start by talking about other projects.
+  - Do **not** pivot to generic portfolio summaries.
+
+- Only bring in other projects when the user explicitly asks for comparisons or "other examples".
+- The [PORTFOLIO_FACTS] section is mainly for portfolio-wide questions (e.g., "How does this portfolio use AI?", "What kind of work does Charles do overall?").
+
+Portfolio questions:
+- On the homepage ("/") or when \`projectSlug\` indicates the portfolio itself:
+  - Answer questions about how the portfolio uses AI (RAG pipeline, two-agent workflow, deterministic UI, command palette, conversational modal).
+  - Keep the explanation short and concrete.
+  - You may end with a light invitation like: "If you'd like, I can unpack how the command palette works with the AI layer."
+
+Grounding & accuracy:
+- Stay consistent with the structured context you see.
+- When projects are mentioned, stick to the provided names and roles (e.g., Capital One Travel, Coca-Cola AI work, Project Management Institute, Tanger, generative-UI portfolio).
+- Do not invent new clients, roles, or technologies that are not implied by the context.
+- If the context is thin, give a modest, grounded answer and use the mode rules (especially clarify_then_answer and low_context_fallback).
+
+Formatting:
+- Use plain paragraphs for most answers.
+- Use bullet points only when the user explicitly asks for a list or when the question is naturally list-like (e.g., "What tools did you use?").
+- Keep everything easy to scan for a recruiter or hiring manager.`;
+
+  // Format history summary
+  const historySummary = history.length > 0
+    ? history
+        .map((msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`)
+        .join("\n")
+    : "(no prior turns)";
+
+  // Build user message with MODE included
+  const userMessage = `
+QUESTION:
+${question ?? ""}
+
+MODE: ${params.mode ?? "answer_direct"}
+
+PAGE PATH: ${pagePath ?? "(none)"}
+PROJECT SLUG: ${projectSlug ?? "(none)"}
+
+CONTEXT:
+${contextBlob ?? "(no extra context provided)"}
+
+HISTORY:
+${historySummary}
+`.trim();
 
   try {
     const response = await anthropic.messages.create({
@@ -434,40 +519,108 @@ Answer the question directly and concisely using the provided context. Be factua
 async function callLLMForClarifyThenAnswer(params: {
   question: string;
   contextBlob?: string;
-  sectionHeadline?: string;
-  sectionText?: string;
-  allProjects?: Array<{
-    slug: string;
-    name: string;
-    client?: string;
-    role?: string;
-    summary?: string;
-  }>;
+  pagePath?: string;
+  projectSlug?: string;
+  history?: Array<{ role: "user" | "assistant"; content: string }>;
+  mode?: string;
 }): Promise<string> {
-  const { question, contextBlob, sectionHeadline, sectionText, allProjects = [] } = params;
+  const { question, contextBlob, pagePath, projectSlug, history = [] } = params;
 
-  const context = contextBlob || "";
-  const sectionContext = sectionHeadline && sectionText
-    ? `\n\nSection: ${sectionHeadline}\n${sectionText}`
-    : "";
+  const systemPrompt = `You are an assistant that answers questions about Charles Pfaff and his portfolio.
 
-  // Get project list for context
-  const projectsList = allProjects.length > 0
-    ? `\n\nAvailable projects: ${allProjects.map(p => p.name).join(", ")}`
-    : "";
+Tone & style:
+- Sound like a short-form 99% Invisible / NPR segment: calm, observant, and precise.
+- Be professional and approachable, not hypey.
+- Avoid clichés and marketing speak.
+- Never use stage directions (e.g., "leans in", "smiles") or meta-commentary.
+- Avoid "AI-speak" like "leveraging cutting-edge" or "As an AI".
+- Answers must be concise: aim for 1–2 short paragraphs, about 3–5 sentences total.
+- You may use **bold** occasionally to highlight 1–2 key phrases, but do not overuse it.
 
-  const systemPrompt = `You are helping answer questions about Charles Pfaff's work.
+Lead with the answer:
+- The **first sentence must directly answer the user's question** as clearly as possible.
+- Do not warm up with phrases like "Great question" or "From what I can see".
+- Additional context, nuance, or examples comes **after** this first sentence.
 
-For ambiguous questions:
-1. If the question is clear enough, answer it directly
-2. If clarification would help, ask one brief clarifying question
-3. Provide helpful context about what information is available
+Modes:
+- You receive a \`mode\` field: "answer_direct", "clarify_then_answer", or "low_context_fallback".
+- You must follow the behavioral rules for that mode.
 
-Keep responses concise and helpful.`;
+1) answer_direct
+- The user's question is clear enough to answer directly.
+- Start with a direct answer in the very first sentence.
+- Provide a focused answer in 1–2 short paragraphs.
+- Do **not** end with a direct question.
+- You may end with a single, gentle invitation like: "If you'd like, I can go deeper into the collaboration side."
 
-  const userMessage = context || sectionContext || projectsList
-    ? `Context: ${context}${sectionContext}${projectsList}\n\nQuestion: ${question}`
-    : question;
+2) clarify_then_answer
+- The question is somewhat broad or ambiguous, but you can still give a helpful first pass.
+- First sentence: directly answer as best you can based on the context.
+- Then provide a bit more detail or framing.
+- End with **exactly one** clear follow-up question that helps narrow what they want to know next.
+
+3) low_context_fallback
+- There is little or no section context and retrieval is weak.
+- Give a brief overview (2–3 sentences) of who Charles is and the kind of work he does.
+- Mention 2–3 representative projects by name.
+- End with **exactly one** guiding follow-up question.
+
+Project vs. portfolio behavior:
+- When \`projectSlug\` is non-null, you are on a specific case study page.
+- For questions like:
+  - "What did you do on this project?"
+  - "What was your role here?"
+  - "What tools did you use?"
+  - "How did you work with design/product/engineering?"
+- Then:
+  - Focus the answer **only** on the current project.
+  - Use [PROJECT_FACTS], [ROLE], [TOOLS], [PROCESS], and [IMPACT] as your primary source.
+  - Do **not** start by talking about other projects.
+  - Do **not** pivot to generic portfolio summaries.
+
+- Only bring in other projects when the user explicitly asks for comparisons or "other examples".
+- The [PORTFOLIO_FACTS] section is mainly for portfolio-wide questions (e.g., "How does this portfolio use AI?", "What kind of work does Charles do overall?").
+
+Portfolio questions:
+- On the homepage ("/") or when \`projectSlug\` indicates the portfolio itself:
+  - Answer questions about how the portfolio uses AI (RAG pipeline, two-agent workflow, deterministic UI, command palette, conversational modal).
+  - Keep the explanation short and concrete.
+  - You may end with a light invitation like: "If you'd like, I can unpack how the command palette works with the AI layer."
+
+Grounding & accuracy:
+- Stay consistent with the structured context you see.
+- When projects are mentioned, stick to the provided names and roles (e.g., Capital One Travel, Coca-Cola AI work, Project Management Institute, Tanger, generative-UI portfolio).
+- Do not invent new clients, roles, or technologies that are not implied by the context.
+- If the context is thin, give a modest, grounded answer and use the mode rules (especially clarify_then_answer and low_context_fallback).
+
+Formatting:
+- Use plain paragraphs for most answers.
+- Use bullet points only when the user explicitly asks for a list or when the question is naturally list-like (e.g., "What tools did you use?").
+- Keep everything easy to scan for a recruiter or hiring manager.`;
+
+  // Format history summary
+  const historySummary = history.length > 0
+    ? history
+        .map((msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`)
+        .join("\n")
+    : "(no prior turns)";
+
+  // Build user message with MODE included
+  const userMessage = `
+QUESTION:
+${question ?? ""}
+
+MODE: ${params.mode ?? "clarify_then_answer"}
+
+PAGE PATH: ${pagePath ?? "(none)"}
+PROJECT SLUG: ${projectSlug ?? "(none)"}
+
+CONTEXT:
+${contextBlob ?? "(no extra context provided)"}
+
+HISTORY:
+${historySummary}
+`.trim();
 
   try {
     const response = await anthropic.messages.create({
@@ -512,8 +665,10 @@ async function callLLMForLowContext(params: {
     role?: string;
     summary?: string;
   }>;
+  history?: Array<{ role: "user" | "assistant"; content: string }>;
+  mode?: string;
 }): Promise<string> {
-  const { question, contextBlob, pagePath, projectSlug, allProjects = [] } = params;
+  const { question, contextBlob, pagePath, projectSlug, allProjects = [], history = [] } = params;
 
   // Get top 2-3 projects for context
   const topProjects = allProjects.slice(0, 3).map((p) => {
@@ -531,27 +686,103 @@ async function callLLMForLowContext(params: {
     ? `${contextBlob}${projectsContext}`
     : `Charles is a design-minded engineer who works with RAG and generative UI.${projectsContext}`;
 
-  // Confident, portfolio-aware prompt for low context - aligned with Phase 8 rubric
-  const systemPrompt = [
-    "You are helping a recruiter or hiring manager understand Charles Pfaff and his AI-powered portfolio.",
-    "You are in LOW CONTEXT FALLBACK mode.",
-    "You MAY NOT apologize for limited context or say that you do not have enough information.",
-    "Use the provided context, including [PORTFOLIO_FACTS] and the project list, as truth.",
-    "",
-    "Your job:",
-    "- In 2–3 sentences, describe how this portfolio and Charles's work use AI (RAG, multi-agent orchestration, generative UI, deterministic JSON components).",
-    "- In 1–2 sentences, mention 2–3 representative projects by name (for example: Capital One Travel, PMI, Tanger, Coca-Cola AI concept, the pfaff.design portfolio).",
-    "- End with exactly ONE warm, guiding follow-up question.",
-    "",
-    "If the question is about 'this portfolio' or 'this site', focus on the portfolio's AI architecture and behavior — not just a generic biography.",
-    "Avoid generic AI marketing language and avoid phrases like 'cutting-edge' unless grounded in the given context.",
-  ].join("\n");
+  const systemPrompt = `You are an assistant that answers questions about Charles Pfaff and his portfolio.
+
+Tone & style:
+- Sound like a short-form 99% Invisible / NPR segment: calm, observant, and precise.
+- Be professional and approachable, not hypey.
+- Avoid clichés and marketing speak.
+- Never use stage directions (e.g., "leans in", "smiles") or meta-commentary.
+- Avoid "AI-speak" like "leveraging cutting-edge" or "As an AI".
+- Answers must be concise: aim for 1–2 short paragraphs, about 3–5 sentences total.
+- You may use **bold** occasionally to highlight 1–2 key phrases, but do not overuse it.
+
+Lead with the answer:
+- The **first sentence must directly answer the user's question** as clearly as possible.
+- Do not warm up with phrases like "Great question" or "From what I can see".
+- Additional context, nuance, or examples comes **after** this first sentence.
+
+Modes:
+- You receive a \`mode\` field: "answer_direct", "clarify_then_answer", or "low_context_fallback".
+- You must follow the behavioral rules for that mode.
+
+1) answer_direct
+- The user's question is clear enough to answer directly.
+- Start with a direct answer in the very first sentence.
+- Provide a focused answer in 1–2 short paragraphs.
+- Do **not** end with a direct question.
+- You may end with a single, gentle invitation like: "If you'd like, I can go deeper into the collaboration side."
+
+2) clarify_then_answer
+- The question is somewhat broad or ambiguous, but you can still give a helpful first pass.
+- First sentence: directly answer as best you can based on the context.
+- Then provide a bit more detail or framing.
+- End with **exactly one** clear follow-up question that helps narrow what they want to know next.
+
+3) low_context_fallback
+- There is little or no section context and retrieval is weak.
+- Give a brief overview (2–3 sentences) of who Charles is and the kind of work he does.
+- Mention 2–3 representative projects by name.
+- End with **exactly one** guiding follow-up question.
+
+Project vs. portfolio behavior:
+- When \`projectSlug\` is non-null, you are on a specific case study page.
+- For questions like:
+  - "What did you do on this project?"
+  - "What was your role here?"
+  - "What tools did you use?"
+  - "How did you work with design/product/engineering?"
+- Then:
+  - Focus the answer **only** on the current project.
+  - Use [PROJECT_FACTS], [ROLE], [TOOLS], [PROCESS], and [IMPACT] as your primary source.
+  - Do **not** start by talking about other projects.
+  - Do **not** pivot to generic portfolio summaries.
+
+- Only bring in other projects when the user explicitly asks for comparisons or "other examples".
+- The [PORTFOLIO_FACTS] section is mainly for portfolio-wide questions (e.g., "How does this portfolio use AI?", "What kind of work does Charles do overall?").
+
+Portfolio questions:
+- On the homepage ("/") or when \`projectSlug\` indicates the portfolio itself:
+  - Answer questions about how the portfolio uses AI (RAG pipeline, two-agent workflow, deterministic UI, command palette, conversational modal).
+  - Keep the explanation short and concrete.
+  - You may end with a light invitation like: "If you'd like, I can unpack how the command palette works with the AI layer."
+
+Grounding & accuracy:
+- Stay consistent with the structured context you see.
+- When projects are mentioned, stick to the provided names and roles (e.g., Capital One Travel, Coca-Cola AI work, Project Management Institute, Tanger, generative-UI portfolio).
+- Do not invent new clients, roles, or technologies that are not implied by the context.
+- If the context is thin, give a modest, grounded answer and use the mode rules (especially clarify_then_answer and low_context_fallback).
+
+Formatting:
+- Use plain paragraphs for most answers.
+- Use bullet points only when the user explicitly asks for a list or when the question is naturally list-like (e.g., "What tools did you use?").
+- Keep everything easy to scan for a recruiter or hiring manager.`;
+
+  // Format history summary
+  const historySummary = history.length > 0
+    ? history
+        .map((msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`)
+        .join("\n")
+    : "(no prior turns)";
+
+  // Build user message with MODE included
+  const userMessage = `
+QUESTION:
+${question ?? ""}
+
+MODE: ${params.mode ?? "low_context_fallback"}
+
+PAGE PATH: ${pagePath ?? "(none)"}
+PROJECT SLUG: ${projectSlug ?? "(none)"}
+
+CONTEXT:
+${context ?? "(no extra context provided)"}
+
+HISTORY:
+${historySummary}
+`.trim();
 
   try {
-    const userMessage = context
-      ? `Context: ${context}\n\nQuestion: ${question}`
-      : question;
-
     const response = await anthropic.messages.create({
       model: "claude-3-5-haiku-20241022",
       max_tokens: 300,
@@ -579,23 +810,14 @@ async function callLLMForLowContext(params: {
 
 /**
  * Determine if we should use the copywriter for this question
- * Copywriter acts as a refinement layer for tone, not a separate branch
+ * DISABLED: Copywriter should NOT refine conversational answers in ModalGraph
+ * Copywriter should ONLY generate structured YAML for Orchestrator (UI blocks)
  */
 function shouldUseCopywriter(
   state: ModalGraphState,
   baseAnswerText: string | null
 ): boolean {
-  if (!baseAnswerText || !baseAnswerText.trim()) return false;
-
-  // Prefer copywriter for portfolio-wide / explanatory questions
-  if (state.projectSlug === "pfaff-designs-portfolio") return true;
-
-  // Also use copywriter for clarify_then_answer, where we want a strong narrative tone
-  if (state.mode === "clarify_then_answer") return true;
-
-  // Do NOT use copywriter for low_context_fallback on normal project pages
-  if (state.mode === "low_context_fallback") return false;
-
+  // Copywriter is disabled for conversational answers in Phase 10+
   return false;
 }
 
@@ -693,15 +915,168 @@ function isPortfolioQuestion(question: string): boolean {
   return (
     q.includes("portfolio") ||
     q.includes("this site") ||
+    q.includes("this page") ||
     q.includes("this website") ||
     q.includes("this experience") ||
     q.includes("this interface") ||
     q.includes("pfaff.design") ||
     q.includes("your site") ||
-    q.includes("how does this") ||
-    q.includes("what is this") ||
-    q.includes("behind the scenes")
+    q.includes("how does this use ai") ||
+    q.includes("how does this work") ||
+    q.includes("how does the ai work") ||
+    q.includes("command palette") ||
+    q.includes("cmd+k") ||
+    q.includes("cmd k") ||
+    q.includes("composer") ||
+    q.includes("keyboard shortcut") ||
+    q.includes("inline chat") ||
+    q.includes("ai modal") ||
+    q.includes("ai-powered")
   );
+}
+
+/**
+ * Detect if a question is portfolio-level (about the portfolio/site itself)
+ * Used to determine when to include [PORTFOLIO_FACTS] on project pages
+ */
+function isPortfolioLevelQuestion(question: string): boolean {
+  const q = question.toLowerCase();
+  
+  return (
+    isPortfolioQuestion(question) ||
+    q.includes("how does this portfolio use ai") ||
+    q.includes("how does this site use ai") ||
+    q.includes("what kind of work does charles do overall") ||
+    q.includes("what kind of work does he do") ||
+    q.includes("rag pipeline") ||
+    q.includes("two-agent workflow") ||
+    q.includes("generative ui") ||
+    q.includes("deterministic ui")
+  );
+}
+
+/**
+ * Detect if a portfolio question is trivially direct (short, highly specific)
+ * These should route to answer_direct instead of clarify_then_answer
+ */
+function isTriviallyDirectPortfolioQuestion(question: string): boolean {
+  const q = question.toLowerCase();
+
+  const directPhrases = [
+    "what tech does this use",
+    "what tech stack does this use",
+    "what models power this",
+    "how does cmd+k work",
+    "how does the command palette work",
+    "how does this ai work",
+    "what powers this ai",
+    "how does this portfolio use ai",
+    "how does this site use ai"
+  ];
+
+  if (question.length <= 80) {
+    if (directPhrases.some((phrase) => q.includes(phrase))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Detect if a question is a site support request
+ * Examples: "Something is broken", "How do I use this?", "Why doesn't this load?"
+ */
+function isSiteSupportRequest(question: string): boolean {
+  const q = question.toLowerCase();
+
+  return (
+    q.includes("broken") ||
+    q.includes("not working") ||
+    q.includes("doesn't work") ||
+    q.includes("doesn't load") ||
+    q.includes("won't load") ||
+    q.includes("error") ||
+    q.includes("bug") ||
+    q.includes("how do i use") ||
+    q.includes("how to use") ||
+    q.includes("how does this work") ||
+    q.includes("what is this") ||
+    q.includes("help me") ||
+    q.includes("i need help")
+  );
+}
+
+/**
+ * Detect if a question is feedback or a comment
+ * Examples: "This is cool", "I love this", "This is confusing"
+ */
+function isFeedbackOrComment(question: string): boolean {
+  const q = question.toLowerCase();
+
+  return (
+    q.includes("this is cool") ||
+    q.includes("this is great") ||
+    q.includes("i love this") ||
+    q.includes("this is awesome") ||
+    q.includes("this is confusing") ||
+    q.includes("this is interesting") ||
+    q.includes("nice") ||
+    q.includes("cool") ||
+    q.startsWith("i like") ||
+    q.startsWith("i don't like") ||
+    q.startsWith("this sucks") ||
+    q.startsWith("this is bad")
+  );
+}
+
+/**
+ * Detect if a question is about a specific case study/project
+ */
+function isCaseStudyQuestion(question: string | null | undefined, projectSlug?: string | null, projectName?: string): boolean {
+  if (!question) return false;
+  const q = question.toLowerCase();
+
+  // Must be on a project page (has projectSlug or projectName)
+  if (!projectSlug && !projectName) return false;
+
+  // Phrases that strongly imply "this project" case-study intent
+  const strongSignals = [
+    "this project",
+    "this work",
+    "this case study",
+    "on this page",
+    "on this one",
+  ];
+
+  // Phrases that indicate role / contribution / tools / collaboration
+  const roleSignals = [
+    "what did you do",
+    "what was your role",
+    "what did charles do",
+    "what did he do",
+    "your role here",
+    "how did you work",
+    "how did you collaborate",
+    "who did you work with",
+    "what tools did you use",
+    "what stack did you use",
+    "how did you do this",
+    "what did you build",
+    "what did you do here",
+    "what did you do on this",
+  ];
+
+  const hasStrongSignal = strongSignals.some((p) => q.includes(p));
+  const hasRoleSignal = roleSignals.some((p) => q.includes(p));
+
+  // Also check for explicit project name mention
+  if (projectName) {
+    const name = projectName.toLowerCase();
+    if (q.includes(name)) return true;
+  }
+
+  return Boolean((projectSlug || projectName) && (hasStrongSignal || hasRoleSignal));
 }
 
 // ============================================================
@@ -929,14 +1304,11 @@ Charles worked as a front-end engineer and technologist on the redesign of PMI.o
 }
 
 async function buildContextBlobNode(state: ModalGraphState): Promise<Partial<ModalGraphState>> {
-  // Build a readable, layered history summary
-  const historySummary =
-    state.history && state.history.length > 0
-      ? state.history
-          .map((m, i) => `${i + 1}. ${m.role.toUpperCase()}: ${m.content}`)
-          .join("\n")
-      : "(no prior messages)";
-
+  const question = state.question || "";
+  const isOnHomePage = state.pagePath === "/" || state.projectSlug === "pfaff-designs-portfolio";
+  const isOnProjectPage = !!state.projectSlug && !isOnHomePage;
+  const isPortfolioLevel = isPortfolioLevelQuestion(question);
+  
   // Build a structured contextBlob
   let blob = [
     `PAGE PATH: ${state.pagePath || "(not provided)"}`,
@@ -945,67 +1317,98 @@ async function buildContextBlobNode(state: ModalGraphState): Promise<Partial<Mod
     `SECTION TEXT: ${state.sectionText || "(no section text provided)"}`,
   ].join("\n");
 
-  // Always add portfolio facts, regardless of projectSlug
-  // This makes portfolio AI architecture available from any page
-  blob += "\n\n[PORTFOLIO_FACTS]\n";
-  blob += "This portfolio is an AI-powered experience that uses a RAG pipeline and a two-agent workflow (Copywriter + Orchestrator) to generate recruiter-friendly content.\n";
-  blob += "The system retrieves structured knowledge about Charles's projects, synthesizes it into clear case studies, and renders them via a deterministic, JSON-driven UI using a whitelisted component registry.\n";
-  blob += "It also powers a conversational AI modal, a global Cmd+K command palette, and generative-UI layouts that adapt to the user's questions.";
-
-  if (state.retrievedChunks && state.retrievedChunks.length > 0) {
-    const chunksText = state.retrievedChunks.map((chunk) => chunk.text).join("\n\n");
-    blob += `\n\n--- PROJECT CONTEXT ---\n${chunksText}`;
-  }
-
-  // Enrich with projectFacts
-  if (state.projectFacts) {
-    const { name, client, role, summary, tools, otherProjects } = state.projectFacts;
-    blob += "\n\n--- PROJECT FACTS ---\n";
-    if (name) blob += `Name: ${name}\n`;
-    if (client) blob += `Client: ${client}\n`;
-    if (role) blob += `Role: ${role}\n`;
-    if (summary) blob += `Summary: ${summary}\n`;
-    if (tools && tools.length) {
-      blob += `Tools: ${tools.join(", ")}\n`;
-    }
-    if (otherProjects && otherProjects.length) {
-      blob += "\nOther projects:\n";
-      for (const p of otherProjects) {
-        blob += `- ${p.name}`;
-        if (p.client) blob += ` for ${p.client}`;
-        if (p.role) blob += ` — ${p.role}`;
-        blob += "\n";
+  const debugNotes = [...(state.debugNotes ?? [])];
+  
+  // On homepage: prioritize [PORTFOLIO_FACTS], only show project details when explicitly referenced
+  if (isOnHomePage) {
+    blob += "\n\n[PORTFOLIO_FACTS]\n";
+    blob += "This portfolio is an AI-powered experience that uses a RAG pipeline and a two-agent workflow (Copywriter + Orchestrator) to generate recruiter-friendly content.\n";
+    blob += "The system retrieves structured knowledge about Charles's projects, synthesizes it into clear case studies, and renders them via a deterministic, JSON-driven UI using a whitelisted component registry.\n";
+    blob += "It also powers a conversational AI modal, a global Cmd+K command palette, and generative-UI layouts that adapt to the user's questions.";
+    debugNotes.push("build_context_blob: homepage - prioritized [PORTFOLIO_FACTS]");
+    
+    // Only include project details if question explicitly references projects
+    const questionRefsProjects = question.toLowerCase().includes("project") || 
+                                 question.toLowerCase().includes("work") ||
+                                 question.toLowerCase().includes("case study");
+    
+    if (questionRefsProjects && state.allProjects && state.allProjects.length > 0) {
+      blob += "\n\n--- PROJECTS ---\n";
+      for (const p of state.allProjects.slice(0, 5)) {
+        const parts: string[] = [];
+        parts.push(p.name);
+        if (p.client && p.name !== p.client) parts.push(`(${p.client})`);
+        if (p.role) parts.push(`— ${p.role}`);
+        blob += `- ${parts.join(" ")}\n`;
       }
+      debugNotes.push("build_context_blob: included projects (homepage, question references projects)");
     }
   }
+  // On project pages: prioritize [PROJECT_FACTS], suppress [PORTFOLIO_FACTS] unless portfolio-level question
+  else if (isOnProjectPage) {
+    // Add retrieved chunks (project context) first
+    if (state.retrievedChunks && state.retrievedChunks.length > 0) {
+      const chunksText = state.retrievedChunks.map((chunk) => chunk.text).join("\n\n");
+      blob += `\n\n[PROJECT_FACTS]\n${chunksText}`;
+      debugNotes.push(`build_context_blob: included ${state.retrievedChunks.length} retrieved chunks`);
+    }
 
-  // Add all projects section
-  if (state.allProjects && state.allProjects.length > 0) {
-    blob += "\n\n--- OTHER PROJECTS ---\n";
-    for (const p of state.allProjects) {
-      const parts: string[] = [];
-      parts.push(p.name);
-      if (p.client && p.name !== p.client) parts.push(`(${p.client})`);
-      if (p.role) parts.push(`— ${p.role}`);
-      blob += `- ${parts.join(" ")}\n`;
+    // Enrich with projectFacts
+    if (state.projectFacts) {
+      const { name, client, role, summary, tools } = state.projectFacts;
+      if (!blob.includes("[PROJECT_FACTS]")) {
+        blob += "\n\n[PROJECT_FACTS]\n";
+      }
+      if (name) blob += `Name: ${name}\n`;
+      if (client) blob += `Client: ${client}\n`;
+      if (role) blob += `Role: ${role}\n`;
+      if (summary) blob += `Summary: ${summary}\n`;
+      if (tools && tools.length) {
+        blob += `Tools: ${tools.join(", ")}\n`;
+      }
+      debugNotes.push("build_context_blob: enriched with projectFacts");
+    }
+
+    // Only add [PORTFOLIO_FACTS] if question is portfolio-level
+    if (isPortfolioLevel) {
+      blob += "\n\n[PORTFOLIO_FACTS]\n";
+      blob += "This portfolio is an AI-powered experience that uses a RAG pipeline and a two-agent workflow (Copywriter + Orchestrator) to generate recruiter-friendly content.\n";
+      blob += "The system retrieves structured knowledge about Charles's projects, synthesizes it into clear case studies, and renders them via a deterministic, JSON-driven UI using a whitelisted component registry.\n";
+      blob += "It also powers a conversational AI modal, a global Cmd+K command palette, and generative-UI layouts that adapt to the user's questions.";
+      debugNotes.push("build_context_blob: included [PORTFOLIO_FACTS] (portfolio-level question)");
+    } else {
+      debugNotes.push("build_context_blob: suppressed [PORTFOLIO_FACTS] (project page, non-portfolio question)");
+    }
+
+    // Add other projects only if explicitly asked
+    const questionAsksForOtherProjects = question.toLowerCase().includes("other") ||
+                                        question.toLowerCase().includes("another") ||
+                                        question.toLowerCase().includes("different") ||
+                                        question.toLowerCase().includes("compare");
+    
+    if (questionAsksForOtherProjects && state.allProjects && state.allProjects.length > 0) {
+      blob += "\n\n--- OTHER PROJECTS ---\n";
+      const otherProjects = state.allProjects.filter(p => p.slug !== state.projectSlug).slice(0, 3);
+      for (const p of otherProjects) {
+        const parts: string[] = [];
+        parts.push(p.name);
+        if (p.client && p.name !== p.client) parts.push(`(${p.client})`);
+        if (p.role) parts.push(`— ${p.role}`);
+        blob += `- ${parts.join(" ")}\n`;
+      }
+      debugNotes.push(`build_context_blob: included ${otherProjects.length} other projects (explicitly requested)`);
     }
   }
-
-  // Add history section
-  blob += `\n\n--- CONVERSATION HISTORY ---\n${historySummary}`;
-
-  const debugNotes = [
-    ...(state.debugNotes ?? []),
-    `build_context_blob: length=${blob.length}`,
-  ];
-
-  if (state.projectFacts) {
-    debugNotes.push("build_context_blob: enriched with projectFacts");
+  // Fallback: neither homepage nor project page
+  else {
+    blob += "\n\n[PORTFOLIO_FACTS]\n";
+    blob += "This portfolio is an AI-powered experience that uses a RAG pipeline and a two-agent workflow (Copywriter + Orchestrator) to generate recruiter-friendly content.\n";
+    blob += "The system retrieves structured knowledge about Charles's projects, synthesizes it into clear case studies, and renders them via a deterministic, JSON-driven UI using a whitelisted component registry.\n";
+    blob += "It also powers a conversational AI modal, a global Cmd+K command palette, and generative-UI layouts that adapt to the user's questions.";
+    debugNotes.push("build_context_blob: fallback - included [PORTFOLIO_FACTS]");
   }
 
-  if (state.allProjects && state.allProjects.length > 0) {
-    debugNotes.push(`build_context_blob: included ${state.allProjects.length} other projects`);
-  }
+  debugNotes.push(`build_context_blob: length=${blob.length}`);
 
   // Preserve history
   return {
@@ -1020,41 +1423,30 @@ async function buildContextBlobNode(state: ModalGraphState): Promise<Partial<Mod
 async function conversationPolicyNode(state: ModalGraphState): Promise<Partial<ModalGraphState>> {
   const scores = computeContextScores(state);
   const q = state.question.toLowerCase().trim();
+  const question = state.question ?? "";
 
-  // Check for portfolio questions FIRST, before other routing logic
-  const portfolioQuestion = isPortfolioQuestion(state.question ?? "");
+  // Compute context flags
+  const projectSlug = state.projectSlug;
+  const projectFacts = state.projectFacts;
+  const allProjects = state.allProjects ?? [];
+  const retrievedChunks = state.retrievedChunks ?? [];
+  const sectionHeadline = state.sectionHeadline;
+  const sectionText = state.sectionText;
 
-  if (portfolioQuestion) {
-    // Choose between answer_direct vs clarify_then_answer based on simplicity
-    const isShort = q.length <= 140; // short, direct questions
+  const hasProjectContext = !!projectSlug && !!projectFacts;
+  const hasAnyContext =
+    hasProjectContext ||
+    !!state.contextBlob ||
+    allProjects.length > 0;
 
-    const chosenMode: ConversationMode = isShort
-      ? "answer_direct"
-      : "clarify_then_answer";
+  const debugNotes = [...(state.debugNotes ?? [])];
+  debugNotes.push("[conversation_policy] inspecting question + context for routing");
 
-    const debugNotes = [
-      ...(state.debugNotes ?? []),
-      `[conversation_policy] portfolioQuestion=true mode=${chosenMode}`,
-    ];
+  let mode: ConversationMode | undefined = undefined;
+  let modeAlreadyDecided = false;
 
-    return {
-      ...state,
-      mode: chosenMode,
-      debugNotes,
-    };
-  }
-
-  // Continue with existing routing logic for non-portfolio questions
-  const isSimpleFact =
-    q.startsWith("what is ") ||
-    q.startsWith("who ") ||
-    q.startsWith("when ") ||
-    q.startsWith("where ") ||
-    q.includes("tools you use") ||
-    q.includes("what tools") ||
-    q.includes("skills") ||
-    q.includes("tech stack");
-
+  // Handle existing special cases first (tools/projects questions)
+  // These set modeAlreadyDecided = true and return early
   const askingForOtherProjects =
     q.includes("other projects") ||
     q.includes("what else have you worked on") ||
@@ -1062,38 +1454,182 @@ async function conversationPolicyNode(state: ModalGraphState): Promise<Partial<M
     q.includes("show me more work") ||
     q.includes("other work");
 
-  let mode: ConversationMode;
-  let policyNote = "";
+  const toolsQ =
+    q.includes("tools") ||
+    q.includes("tech stack") ||
+    q.includes("technologies") ||
+    q.includes("stack did you use") ||
+    q.includes("what did you use");
 
-  if (!scores.hasSectionContext && !scores.hasRetrieved) {
-    mode = "low_context_fallback";
-    policyNote = "[conversation_policy] No section context + no retrieved chunks → low_context_fallback";
-  } else if (askingForOtherProjects || scores.crossProjectDrift) {
+  const projectsQ =
+    q.includes("other projects") ||
+    q.includes("worked on") ||
+    q.includes("another project") ||
+    q.includes("different project") ||
+    q.includes("highlight a specific one") ||
+    q.includes("tell me about his other work");
+
+  // Keep existing deterministic paths - they return early
+  if (toolsQ && !projectsQ && projectSlug && allProjects.length > 0) {
+    const current = allProjects.find((p) => p.slug === projectSlug);
+    const tools = current?.tools ?? [];
+    if (tools.length > 0) {
+      mode = "answer_direct";
+      modeAlreadyDecided = true;
+      debugNotes.push("[conversation_policy] deterministic tools answer");
+      return {
+        ...state,
+        mode,
+        debugNotes,
+      };
+    }
+  }
+
+  if (projectsQ && !toolsQ && allProjects.length > 0) {
+    const others = allProjects.filter((p) => p.slug !== projectSlug);
+    const top = others.slice(0, 3);
+    if (top.length > 0) {
     mode = "clarify_then_answer";
-    policyNote = "[conversation_policy] Cross-project / list-other-projects signal → clarify_then_answer";
-  } else if (isSimpleFact && (scores.hasSectionContext || scores.topScore > 0.5)) {
+      modeAlreadyDecided = true;
+      debugNotes.push("[conversation_policy] project-list question");
+      return {
+        ...state,
+        mode,
+        debugNotes,
+      };
+    }
+  }
+
+  // 3.1 Case-study questions on a project page → answer_direct
+  // IMPORTANT: This ensures case-study questions NEVER fall into low_context_fallback
+  if (!modeAlreadyDecided) {
+    // Check if we're on a project page (has projectSlug or work page path)
+    const onProjectPage = !!projectSlug || (state.pagePath && state.pagePath.match(/^\/work\/[^/]+/));
+    
+    if (onProjectPage) {
+      const projectName = projectFacts?.name ?? projectFacts?.client;
+      const caseStudy = isCaseStudyQuestion(question, projectSlug, projectName);
+
+      // If we're on a project page AND it's a case study question, force answer_direct
+      if (caseStudy) {
     mode = "answer_direct";
-    policyNote = "[conversation_policy] Simple factual question with context → answer_direct";
+        modeAlreadyDecided = true;
+        debugNotes.push(
+          "[conversation_policy] project context + case-study question → answer_direct"
+        );
+      }
+    }
+  }
+
+  // 3.2 Portfolio questions on / or portfolio project → answer_direct
+  if (!modeAlreadyDecided) {
+    const onPortfolioPage =
+      state.pagePath === "/" ||
+      projectSlug === "pfaff-designs-portfolio";
+
+    const portfolioQuestion = isPortfolioQuestion(question);
+
+    if (onPortfolioPage && portfolioQuestion) {
+      mode = "answer_direct";
+      modeAlreadyDecided = true;
+      debugNotes.push(
+        "[conversation_policy] portfolioQuestion=true on portfolio page → answer_direct"
+      );
+    }
+  }
+
+  // Portfolio questions not on portfolio page → clarify_then_answer (unless trivially direct)
+  if (!modeAlreadyDecided) {
+    const portfolioQuestion = isPortfolioQuestion(question);
+    if (portfolioQuestion) {
+      if (isTriviallyDirectPortfolioQuestion(question)) {
+        mode = "answer_direct";
   } else {
     mode = "clarify_then_answer";
-    policyNote = "[conversation_policy] Ambiguous question → clarify_then_answer";
+      }
+      modeAlreadyDecided = true;
+      debugNotes.push(
+        `[conversation_policy] portfolioQuestion=true mode=${mode}`
+      );
+    }
   }
 
-  const debugNotes = [
-    ...(state.debugNotes ?? []),
-    policyNote,
-  ];
-
-  // Track execution steps (optional tracking)
-  if (!("executionSteps" in state)) {
-    (state as any).executionSteps = [];
+  // Site Support Requests
+  if (!modeAlreadyDecided) {
+    const siteSupportRequest = isSiteSupportRequest(question);
+    if (siteSupportRequest) {
+      mode = "answer_direct";
+      modeAlreadyDecided = true;
+      debugNotes.push("[conversation_policy] site_support_request → answer_direct");
   }
-  (state as any).executionSteps.push("conversation_policy");
+  }
 
-  // Preserve all state fields
+  // Feedback or Comments
+  if (!modeAlreadyDecided) {
+    const feedbackOrComment = isFeedbackOrComment(question);
+    if (feedbackOrComment) {
+      mode = "answer_direct";
+      modeAlreadyDecided = true;
+      debugNotes.push("[conversation_policy] feedback_or_comment → answer_direct");
+    }
+  }
+
+  // Personal/General Questions
+  if (!modeAlreadyDecided) {
+    const isPersonalQuestion =
+      q.includes("who is charles") ||
+      q.includes("what does he do") ||
+      q.includes("what kind of work") ||
+      q.includes("what does charles") ||
+      q.includes("tell me about charles") ||
+      q.includes("about yourself") ||
+      q.includes("your background") ||
+      q.includes("who are you");
+
+    if (isPersonalQuestion) {
+      mode = "clarify_then_answer";
+      modeAlreadyDecided = true;
+      debugNotes.push("[conversation_policy] personal/general question → clarify_then_answer");
+    }
+  }
+
+  // 3.3 Relax low-context fallback (ONLY when truly empty)
+  if (!modeAlreadyDecided) {
+    const hasChunks = retrievedChunks.length > 0;
+    const hasSectionContext = !!sectionHeadline || !!sectionText;
+    const portfolioQuestion = isPortfolioQuestion(question);
+    const projectName = projectFacts?.name ?? projectFacts?.client;
+    const caseStudyQuestion = isCaseStudyQuestion(question, projectSlug, projectName);
+    const onProjectPage = !!projectSlug || (state.pagePath && state.pagePath.match(/^\/work\/[^/]+/));
+
+    // Only use low_context_fallback when we truly have almost no signal
+    // Exclude: portfolio questions, case study questions on project pages, any context
+    if (
+      !hasAnyContext &&
+      !hasChunks &&
+      !hasSectionContext &&
+      !portfolioQuestion &&
+      !(onProjectPage && caseStudyQuestion)
+    ) {
+      mode = "low_context_fallback";
+      modeAlreadyDecided = true;
+      debugNotes.push(
+        "[conversation_policy] no projectFacts, no contextBlob, no chunks → low_context_fallback"
+      );
+    }
+  }
+
+  // Default to clarify_then_answer if we have some context but haven't decided yet
+  if (!modeAlreadyDecided) {
+    mode = "clarify_then_answer";
+    debugNotes.push(
+      "[conversation_policy] defaulting to clarify_then_answer with available context"
+    );
+  }
+
   return {
     ...state,
-    mode,
+    mode: mode!,
     debugNotes,
   };
 }
@@ -1212,6 +1748,8 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
         pagePath,
         projectSlug,
         allProjects: state.allProjects ?? [],
+        history: state.history ?? [],
+        mode: state.mode,
       });
       baseDebugNote = "[generate_answer] handled low_context_fallback via LLM";
     } else if (mode === "answer_direct") {
@@ -1219,8 +1757,10 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
       baseAnswerText = await callLLMForAnswerDirect({
         question,
         contextBlob,
-        sectionHeadline,
-        sectionText,
+        pagePath,
+        projectSlug,
+        history: state.history ?? [],
+        mode: state.mode,
       });
       baseDebugNote = "[generate_answer] handled answer_direct via LLM";
     } else if (mode === "clarify_then_answer") {
@@ -1228,9 +1768,10 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
       baseAnswerText = await callLLMForClarifyThenAnswer({
         question,
         contextBlob,
-        sectionHeadline,
-        sectionText,
-        allProjects: state.allProjects ?? [],
+        pagePath,
+        projectSlug,
+        history: state.history ?? [],
+        mode: state.mode,
       });
       baseDebugNote = "[generate_answer] handled clarify_then_answer via LLM";
     } else {
@@ -1239,167 +1780,46 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
       baseAnswerText = await callLLMForClarifyThenAnswer({
         question,
         contextBlob,
-        sectionHeadline,
-        sectionText,
-        allProjects: state.allProjects ?? [],
+        pagePath,
+        projectSlug,
+        history: state.history ?? [],
       });
       baseDebugNote = `[generate_answer] unknown mode ${mode}, used clarify_then_answer`;
     }
+    
+    // Add debug note indicating unified tone rules were applied
+    debugNotes.push("[generate_answer] applied unified tone rules");
   } catch (err) {
     console.error("[generate_answer] Base LLM call failed:", err);
     baseAnswerText = "Something went wrong while generating that answer. I can still help though—try asking again or narrowing the question.";
     baseDebugNote = "[generate_answer] base LLM call failed, returned fallback message";
   }
 
-  // Step 3: Layer copywriter on top if appropriate
+  // Step 3: Copywriter is disabled for conversational answers
+  // Copywriter should ONLY generate structured YAML for Orchestrator (UI blocks), NOT conversational text
   const useCopywriter = shouldUseCopywriter(state, baseAnswerText);
-  debugNotes.push(
-    `[generate_answer] shouldUseCopywriter=${useCopywriter} slug=${state.projectSlug || "(none)"} mode=${mode || "(none)"}`
-  );
-
+    debugNotes.push(
+    `[generate_answer] copywriter disabled for chat`
+    );
+    
   if (useCopywriter) {
-    try {
-      console.log("[ModalGraph] Using copywriter path for question:", question.substring(0, 100));
-      
-      // Detect "about yourself" type questions
-      const questionLower = question.toLowerCase();
-      const isAboutQuestion = 
-        questionLower.includes("about yourself") ||
-        questionLower.includes("tell me about you") ||
-        questionLower.includes("who are you") ||
-        questionLower.includes("your background") ||
-        questionLower.includes("your story");
-      
-      if (isAboutQuestion) {
-        console.log("[ModalGraph] Detected 'about yourself' question - will prioritize globalAboutSections");
-      }
-      
-      // Convert modal graph chunks to copywriter format
-      const retrievedChunksForCopywriter = convertModalChunksToRetrievedChunks(state.retrievedChunks);
-      console.log("[ModalGraph] Converted chunks:", retrievedChunksForCopywriter.length);
-      
-      // Build context string from chunks using RAG helper
-      const contextFromChunks = buildContextFromChunks(retrievedChunksForCopywriter);
-      console.log("[ModalGraph] Context from chunks length:", contextFromChunks.length);
-      
-      // Load global about sections
-      const globalAboutSections = formatGlobalAboutSections();
-      console.log("[ModalGraph] Global about sections length:", globalAboutSections?.length || 0);
-      
-      // For "about yourself" or general questions with no project context, use globalAboutSections as primary context
-      let combinedContext = contextFromChunks;
-      
-      // If we have globalAboutSections, include it in the context
-      if (globalAboutSections && globalAboutSections.length > 0) {
-        if (isAboutQuestion && combinedContext.length === 0) {
-          console.log("[ModalGraph] Using globalAboutSections as primary context for 'about yourself' question");
-          combinedContext = globalAboutSections;
-        } else if (combinedContext.length > 0) {
-          combinedContext = `${combinedContext}\n\n--- About & Background ---\n${globalAboutSections}`;
-        } else {
-          combinedContext = globalAboutSections;
-        }
-      }
-      
-      // Also include contextBlob if available
-      if (contextBlob && contextBlob.length > 0) {
-        combinedContext = combinedContext.length > 0
-          ? `${combinedContext}\n\n--- Additional Context ---\n${contextBlob}`
-          : contextBlob;
-      }
-      
-      console.log("[ModalGraph] Final combined context length:", combinedContext.length);
-
-      // Format project facts
-      const projectShortFacts = formatProjectFactsForCopywriter(facts);
-      console.log("[ModalGraph] Project facts:", projectShortFacts !== "{}" ? "provided" : "empty");
-
-      // Build copywriter input
-      const copywriterInput: CopywriterInput = {
-        question: question || "",
-        context: combinedContext || "",
-        sectionTitle: sectionHeadline || "",
-        sectionBody: sectionText || "",
-        projectShortFacts: projectShortFacts && projectShortFacts !== "{}" ? projectShortFacts : undefined,
-        retrievedChunks: retrievedChunksForCopywriter && retrievedChunksForCopywriter.length > 0 ? retrievedChunksForCopywriter : undefined,
-        globalAboutSections: globalAboutSections && globalAboutSections.length > 0 ? globalAboutSections : undefined,
-        projectId: state.projectSlug || null,
-      };
-
-      // Validate required fields
-      if (!copywriterInput.question || copywriterInput.question.trim().length === 0) {
-        throw new Error("Question is required for copywriter");
-      }
-      
-      // Ensure context is never empty - use globalAboutSections if available
-      if (!copywriterInput.context || copywriterInput.context.trim().length === 0) {
-        console.warn("[ModalGraph] ⚠️ Warning: No context from chunks, checking globalAboutSections...");
-        if (globalAboutSections && globalAboutSections.length > 0) {
-          console.log("[ModalGraph] ✅ Using globalAboutSections as primary context (", globalAboutSections.length, "chars)");
-          copywriterInput.context = globalAboutSections;
-        } else {
-          console.error("[ModalGraph] ❌ No globalAboutSections available either!");
-          copywriterInput.context = `Question: ${question}\n\nContext: Limited context available. Please ask about a specific project or topic.`;
-        }
-      } else {
-        console.log("[ModalGraph] ✅ Context provided (", copywriterInput.context.length, "chars)");
-      }
-
-      // Call copywriter
-      const copywriterOutput = await runCopywriter(copywriterInput);
-
-      console.log("[ModalGraph] Copywriter returned:", {
-        blocksCount: copywriterOutput.answer_blocks.length,
-        firstBlockHeading: copywriterOutput.answer_blocks[0]?.heading?.substring(0, 50),
-      });
-
-      // Extract answer from copywriter output, with baseAnswerText as fallback
-      const primaryBlock = copywriterOutput.answer_blocks?.[0];
-      const finalAnswerText =
-        primaryBlock?.body ??
-        primaryBlock?.heading ??
-        baseAnswerText ??
-        "I'm having trouble generating a detailed answer right now.";
-
-      const updatedHistory = [
-        ...history,
-        { role: "assistant" as const, content: finalAnswerText },
-      ];
-
-      return {
-        ...state,
-        answerText: finalAnswerText,
-        history: updatedHistory,
-        debugNotes: [
-          ...debugNotes,
-          baseDebugNote,
-          `[generate_answer] used copywriter refinement; blocks=${copywriterOutput.answer_blocks?.length ?? 0}`,
-        ],
-      };
-
-    } catch (err: any) {
-      console.error("[ModalGraph] ❌ Copywriter failed, using base answer:", err);
-      console.error("[ModalGraph] Error details:", {
-        message: err?.message,
-        stack: err?.stack,
-        name: err?.name,
-      });
-      // Fall back to the base answer (LLM path for that mode)
-      const updatedHistory = [
-        ...history,
-        { role: "assistant" as const, content: baseAnswerText },
-      ];
-      return {
-        ...state,
-        answerText: baseAnswerText,
-        history: updatedHistory,
-        debugNotes: [
-          ...debugNotes,
-          baseDebugNote,
-          "[generate_answer] copywriter failed, used base answer",
-        ],
-      };
-    }
+    // This should never execute since shouldUseCopywriter always returns false
+    // But if it does, log and return base answer
+    debugNotes.push("[generate_answer] copywriter disabled for chat");
+    const updatedHistory = [
+      ...history,
+      { role: "assistant" as const, content: baseAnswerText },
+    ];
+    return {
+      ...state,
+      answerText: baseAnswerText,
+      history: updatedHistory,
+      debugNotes: [
+        ...debugNotes,
+        baseDebugNote,
+        "[generate_answer] copywriter was disabled, used base answer",
+      ],
+    };
   }
 
   // Step 4: If we don't use copywriter, return the base answer

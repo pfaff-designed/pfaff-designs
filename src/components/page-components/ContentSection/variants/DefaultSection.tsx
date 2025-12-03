@@ -62,7 +62,7 @@ export const DefaultSection: React.FC<DefaultSectionProps> = ({
           <ContentBlock
             headline={headline || ""}
             items={contentBlockItems}
-            headlineVariant="display"
+            headlineVariant="hero"
             className="max-w-none"
             headlineClassName={headline ? "mb-0 text-[4rem] leading-[4.5rem] tracking-[0.04em] uppercase text-left w-full" : "hidden"}
             eyebrowClassName="w-full md:w-[7.25rem]"

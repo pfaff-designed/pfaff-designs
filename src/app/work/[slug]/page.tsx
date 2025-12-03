@@ -84,20 +84,28 @@ export default function CaseStudyPage() {
             // Use heroSummary and truncate to 30 words
             const heroBody = truncateToWords(caseStudy.heroSummary || "", 30);
             
+            // Normalize year format to "year-year" format
+            const normalizeYearFormat = (timeframe: string | undefined): string | undefined => {
+              if (!timeframe) return undefined;
+              
+              // Replace " to " with "-"
+              let normalized = timeframe.replace(/\s+to\s+/gi, "-");
+              
+              // Replace en-dash (U+2013) or em-dash (U+2014) with regular hyphen
+              normalized = normalized.replace(/[–—]/g, "-");
+              
+              // Trim any extra whitespace
+              normalized = normalized.trim();
+              
+              return normalized;
+            };
+            
+            const formattedYear = normalizeYearFormat(caseStudy.timeframe);
+            
             return (
               <ContentSection
                 variant="full-width"
-                eyebrow={
-                  slug === "capital-one-travel" 
-                    ? "Scaling Capital One Travel One Lounge at a Time" 
-                    : slug === "coca-cola-creative-technology"
-                    ? "Exploring a hydration-aware vending concept"
-                    : slug === "tanger-outlets"
-                    ? "Contributing to a large architectural redesign through front-end development and middleware integration"
-                    : slug === "pfaff-designs"
-                    ? "Building a portfolio that tells a story and reveals the structure behind it"
-                    : `Case Study · ${caseStudy.client}`
-                }
+                eyebrow={formattedYear}
                 headline={caseStudy.projectName}
                 body={heroBody}
                 imageSrc={validHeroImageUrl}

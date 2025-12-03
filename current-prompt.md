@@ -1,194 +1,153 @@
-# Cursor Task — Upgrade Conversation Policy for Portfolio Questions & Tighten Low-Context Prompt
+# Modal Graph Patch — Lead-with-Answer + ContextBlob Tightening
 
-You’re working in the `pfaff-designs` repo.
-We’ve recently:
-- Injected `[PORTFOLIO_FACTS]` into every `contextBlob`.
-- Added a dedicated `low_context_fallback` branch in `generate_answer`.
-- Gated Copywriter refinement to safer modes.
+## Goal
 
-This helped, but portfolio questions like:
+Tighten the modal graph so that:
 
-> "How does this portfolio use AI?"
+1. **Every answer leads with the answer**  
+   - First sentence directly answers the user’s question.
+   - Total length stays short (1–2 paragraphs, ~3–5 sentences).
+   - Tone stays in the “short-form 99% Invisible / NPR” space.
 
-still sometimes behave like generic low-context queries, especially when asked from project pages like `/work/capital-one-travel`.
+2. **Context is disciplined in `build_context_blob`**  
+   - On project pages, bias strongly toward that project’s facts and narrative.
+   - On the home/portfolio page, bias toward `[PORTFOLIO_FACTS]`.
+   - Only mix in other stuff when the question explicitly asks for it.
 
-We want to more explicitly privilege **portfolio / site questions** in `conversation_policy` and tighten the behavior of `low_context_fallback` answers so they feel like the rubric we defined in Phase 8.
-
-Please make the changes below.
-
----
-
-## 1. Upgrade `conversation_policy` for Portfolio Questions
-
-**Goal:** When a user clearly asks about **the portfolio/site itself**, the agent should:
-- Treat the question as **portfolio-wide**, regardless of the current page.
-- Prefer `answer_direct` or `clarify_then_answer` (instead of automatically falling into `low_context_fallback`).
-- Use the existing `[PORTFOLIO_FACTS]` context to talk about:
-  - RAG pipeline
-  - Copywriter + Orchestrator workflow
-  - Deterministic JSON UI / component registry
-  - Cmd+K command palette & conversational modal
-
-### Steps
-
-1. Open the `conversation_policy` node file.
-   - Look for debug messages like `"[conversation_policy]"` or logic that sets `state.mode`.
-
-2. Introduce a small helper or inline logic to detect **portfolio/site questions** from the raw question text:
-
-   ```ts
-   function isPortfolioQuestion(question: string): boolean {
-     const q = question.toLowerCase();
-
-     return (
-       q.includes("portfolio") ||
-       q.includes("this site") ||
-       q.includes("this website") ||
-       q.includes("this experience") ||
-       q.includes("this interface") ||
-       q.includes("pfaff.design") ||
-       q.includes("your site")
-     );
-   }
-   ```
-
-   (If you prefer, you can inline this instead of a separate function.)
-
-3. At the top of the `conversation_policy` logic (before the usual `mode` selection heuristics), compute:
-
-   ```ts
-   const portfolioQuestion = isPortfolioQuestion(state.question ?? "");
-   ```
-
-4. If `portfolioQuestion` is `true`, override the mode selection with a simple heuristic **before** the low-context rules run. For example:
-
-   ```ts
-   if (portfolioQuestion) {
-     // Choose between answer_direct vs clarify_then_answer based on simplicity
-     const q = (state.question ?? "").trim();
-     const isShort = q.length <= 140; // short, direct questions
-
-     const chosenMode: ConversationMode = isShort
-       ? "answer_direct"
-       : "clarify_then_answer";
-
-     return {
-       ...state,
-       mode: chosenMode,
-       debugNotes: [
-         ...(state.debugNotes ?? []),
-         `[conversation_policy] portfolioQuestion=true mode=${chosenMode}`,
-       ],
-     };
-   }
-   ```
-
-   Notes:
-   - Do **not** introduce a new `effectiveProjectSlug` or change existing state shape.
-   - The presence of `[PORTFOLIO_FACTS]` in `contextBlob` is already enough for `generate_answer` to talk about the portfolio.
-   - This block should **run before** any generic `low_context_fallback` decision.
-
-5. Keep all existing routing logic for non-portfolio questions intact. Only add this early portfolio-question override.
+Do **not** re-enable copywriter for chat. Keep copywriter disabled for the modal graph answer path.
 
 ---
 
-## 2. Tighten the `low_context_fallback` System Prompt
+## Files to Touch
 
-**Goal:** Make low-context answers feel closer to the Phase 8 behavioral spec:
-- Warm, recruiter-friendly tone.
-- No AI-speak (no "As an AI…", no "leveraging cutting-edge technologies" boilerplate).
-- Clear structure:
-  - 2–3 sentences on how the portfolio/Charles’s work use AI.
-  - 1–2 sentences tying in 2–3 **named projects**.
-  - Exactly **one** warm follow-up question.
-- Never apologize for limited context.
+You’ll be working in the file that defines the modal graph and answer node, for example:
 
-This applies **especially** when a portfolio question still ends up in `low_context_fallback` (e.g., homepage with minimal context).
+- `src/lib/ai/modalGraphApp.ts`  
+  or  
+- `src/lib/ai/modal-graph.ts`
 
-### Steps
+Use the actual file(s) from the repo that contain:
 
-1. Open the `generate_answer` node file.
-   - Find the `if (state.mode === "low_context_fallback") { ... }` branch you added earlier.
+- `buildContextBlobNode` (or similar “build_context_blob” logic)
+- `generateAnswerNode` and the `anthropic.messages.create` (or equivalent) call
 
-2. Update the `system` message content in the Anthropic (or equivalent) call to reflect the stronger rubric.
-   - Keep the existing structure (array of strings joined with `"\n"`), but expand it along these lines:
-
-   ```ts
-   text: [
-     "You are helping a recruiter or hiring manager understand Charles Pfaff and his AI-powered portfolio.",
-     "You are in LOW CONTEXT FALLBACK mode.",
-     "You MAY NOT apologize for limited context or say that you do not have enough information.",
-     "Use the provided context, including [PORTFOLIO_FACTS] and the project list, as truth.",
-     "",
-     "Your job:",
-     "- In 2–3 sentences, describe how this portfolio and Charles's work use AI (RAG, multi-agent orchestration, generative UI, deterministic JSON components).",
-     "- In 1–2 sentences, mention 2–3 representative projects by name (for example: Capital One Travel, PMI, Tanger, Coca-Cola AI concept, the pfaff.design portfolio).",
-     "- End with exactly ONE warm, guiding follow-up question.",
-     "",
-     "If the question is about 'this portfolio' or 'this site', focus on the portfolio's AI architecture and behavior — not just a generic biography.",
-     "Avoid generic AI marketing language and avoid phrases like 'cutting-edge' unless grounded in the given context.",
-   ].join("\n"),
-   ```
-
-3. Ensure the branch still:
-   - Returns early with a new state that includes the `answerText`.
-   - Appends a debug note like `"[generate_answer] handled low_context_fallback via LLM"`.
-   - Uses the existing error fallback message if the LLM call fails.
-
-4. Do **not** change the Copywriter gating logic in this step. We still want `low_context_fallback` on normal project pages to **skip** Copywriter refinement (as previously implemented).
+If names differ slightly, adapt accordingly but keep the behavior the same.
 
 ---
 
-## 3. Sanity Check: Portfolio Questions From Anywhere
+## 1. Update the SYSTEM_PROMPT to “lead with the answer”
 
-After implementing 1 & 2, please sanity-check behavior using the dev harness at `/api/dev/modal-graph` (or equivalent test harness) with POST bodies like:
+### 1.1 Replace SYSTEM_PROMPT with:
 
-```json
-{
-  "question": "How does this portfolio use AI?",
-  "pagePath": "/work/capital-one-travel",
-  "projectSlug": "capital-one-travel",
-  "history": []
-}
+```
+const SYSTEM_PROMPT = `
+You are an assistant that answers questions about Charles Pfaff and his portfolio.
+
+Tone & style:
+- Sound like a short-form 99% Invisible / NPR segment: calm, observant, and precise.
+- Be professional and approachable, not hypey.
+- Avoid clichés and marketing speak.
+- Never use stage directions (e.g., "leans in", "smiles") or meta-commentary.
+- Avoid "AI-speak" like "leveraging cutting-edge" or "As an AI".
+- Answers must be concise: aim for 1–2 short paragraphs, about 3–5 sentences total.
+- You may use **bold** occasionally to highlight 1–2 key phrases, but do not overuse it.
+
+Lead with the answer:
+- The **first sentence must directly answer the user’s question** as clearly as possible.
+- Do not warm up with phrases like "Great question" or "From what I can see".
+- Additional context, nuance, or examples comes **after** this first sentence.
+
+Modes:
+- You receive a \`mode\` field: "answer_direct", "clarify_then_answer", or "low_context_fallback".
+- You must follow the behavioral rules for that mode.
+
+1) answer_direct
+- The user’s question is clear enough to answer directly.
+- Start with a direct answer in the very first sentence.
+- Provide a focused answer in 1–2 short paragraphs.
+- Do **not** end with a direct question.
+- You may end with a single, gentle invitation like: "If you’d like, I can go deeper into the collaboration side."
+
+2) clarify_then_answer
+- The question is somewhat broad or ambiguous, but you can still give a helpful first pass.
+- First sentence: directly answer as best you can based on the context.
+- Then provide a bit more detail or framing.
+- End with **exactly one** clear follow-up question that helps narrow what they want to know next.
+
+3) low_context_fallback
+- There is little or no section context and retrieval is weak.
+- Give a brief overview (2–3 sentences) of who Charles is and the kind of work he does.
+- Mention 2–3 representative projects by name.
+- End with **exactly one** guiding follow-up question.
+
+Project vs. portfolio behavior:
+- When \`projectSlug\` is non-null, you are on a specific case study page.
+- For questions like:
+  - "What did you do on this project?"
+  - "What was your role here?"
+  - "What tools did you use?"
+  - "How did you work with design/product/engineering?"
+- Then:
+  - Focus the answer **only** on the current project.
+  - Use [PROJECT_FACTS], [ROLE], [TOOLS], [PROCESS], and [IMPACT] as your primary source.
+  - Do **not** start by talking about other projects.
+  - Do **not** pivot to generic portfolio summaries.
+
+- Only bring in other projects when the user explicitly asks for comparisons or "other examples".
+- The [PORTFOLIO_FACTS] section is mainly for portfolio-wide questions (e.g., "How does this portfolio use AI?", "What kind of work does Charles do overall?").
+
+Portfolio questions:
+- On the homepage ("/") or when \`projectSlug\` indicates the portfolio itself:
+  - Answer questions about how the portfolio uses AI (RAG pipeline, two-agent workflow, deterministic UI, command palette, conversational modal).
+  - Keep the explanation short and concrete.
+  - You may end with a light invitation like: "If you’d like, I can unpack how the command palette works with the AI layer."
+
+Grounding & accuracy:
+- Stay consistent with the structured context you see.
+- When projects are mentioned, stick to the provided names and roles (e.g., Capital One Travel, Coca-Cola AI work, Project Management Institute, Tanger, generative-UI portfolio).
+- Do not invent new clients, roles, or technologies that are not implied by the context.
+- If the context is thin, give a modest, grounded answer and use the mode rules (especially clarify_then_answer and low_context_fallback).
+
+Formatting:
+- Use plain paragraphs for most answers.
+- Use bullet points only when the user explicitly asks for a list or when the question is naturally list-like (e.g., "What tools did you use?").
+- Keep everything easy to scan for a recruiter or hiring manager.
+`;
 ```
 
-and:
+---
 
-```json
-{
-  "question": "What is this site doing with AI behind the scenes?",
-  "pagePath": "/",
-  "projectSlug": "pfaff-designs-portfolio",
-  "history": []
-}
+## 2. Tighten `build_context_blob` logic
+
+Implement:
+
+- On project pages: prioritize `[PROJECT_FACTS]`, suppress `[PORTFOLIO_FACTS]` unless the question is portfolio-level.
+- On homepage: prioritize `[PORTFOLIO_FACTS]`, only show project details when explicitly referenced.
+- Add helper:
+
+```
+function isPortfolioLevelQuestion(question) { ... }
 ```
 
-Confirm that:
-- `conversation_policy` sets `mode` to either `answer_direct` or `clarify_then_answer` when `isPortfolioQuestion` is true.
-- `generate_answer` produces:
-  - A clear explanation of how the portfolio uses AI (RAG, Copywriter + Orchestrator, JSON UI, Cmd+K, modal).
-  - 2–3 named projects.
-  - Exactly one follow-up question.
-  - No apologies about context or "I do not have enough information".
+- Assemble `contextBlob` according to rules above.
+- Keep debug notes (e.g., `build_context_blob: length=...`).
 
 ---
 
-## Checklist (Cursor, please verify before you’re done)
+## 3. Keep copywriter disabled for chat
 
-- [ ] `conversation_policy` now detects portfolio/site questions via `isPortfolioQuestion` (or equivalent) based on the raw question text.
-- [ ] For portfolio questions, `conversation_policy`:
-  - [ ] Sets `mode` to `answer_direct` for short, direct questions.
-  - [ ] Sets `mode` to `clarify_then_answer` for longer / more complex questions.
-  - [ ] Logs a debug note like `[conversation_policy] portfolioQuestion=true mode=...`.
-- [ ] Non-portfolio questions still follow the existing mode routing logic.
-- [ ] The `low_context_fallback` system prompt has been updated to:
-  - [ ] Forbid apologies / "not enough context" language.
-  - [ ] Require 2–3 sentences on how the portfolio and work use AI.
-  - [ ] Require 2–3 named projects.
-  - [ ] Require exactly one warm follow-up question.
-- [ ] For portfolio questions tested via `/api/dev/modal-graph`, the final `answerText`:
-  - [ ] Talks concretely about the portfolio’s AI system (RAG, agents, JSON UI, command palette).
-  - [ ] Mentions at least 2 projects (e.g., Capital One Travel, PMI, Tanger, Coca-Cola, pfaff.design portfolio).
-  - [ ] Ends with a single, friendly follow-up question.
-  - [ ] Does **not** include "I don't have enough context" or similar language.
-- [ ] No public types or external interfaces consumed by the UI were broken.
+Ensure:
+
+```
+state.debugNotes?.push("[generate_answer] copywriter disabled for chat");
+```
+
+And all paths avoid invoking the copywriter pipeline.
+
+---
+
+## 4. QA Checklist
+
+Include all QA steps from the earlier message (home page tests, project tests, low-context tests, etc.).
+
+```

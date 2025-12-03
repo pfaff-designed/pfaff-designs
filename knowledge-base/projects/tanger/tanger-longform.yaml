@@ -8,34 +8,47 @@ meta:
 
 project:
   client: "Tanger"
-  title: "Tanger"
+  title: "Tanger Digital Experience Refresh"
   role: "Front-End Engineer"
   year: "2022"
-  one_liner: "Tanger was redesigning its entire platform, and the work reached deep into the system architecture. I contributed by building front-end components, fixing bugs, and helping wire the middleware that translated third-party deal data into predictable formats for the UI."
+  one_liner: "Charles contributed to Tanger's digital refresh by building fast, accessible UI components that supported a modernized shopping and discovery experience across Tanger locations."
+
+project_facts: |
+  Client: Tanger
+  Project: Tanger Digital Experience Refresh
+  Role: Front-End Engineer
+  Summary: Charles contributed to Tanger's digital refresh by building fast, accessible UI components that supported a modernized shopping and discovery experience across Tanger locations.
+  Team: Product managers, UX designers, front-end and platform engineers
 
 context: |
-  Tanger was going through more than a visual refresh. Behind the scenes, the team was rebuilding the architecture that powered the entire site. The old platform relied on static pages with inconsistent structures. The new approach required a flexible system built around structured content, reusable components, and integrations with external data sources.
-
-  It was the kind of project where the real progress happened underneath the surface. The front end could only succeed if the architecture behind it was stable and consistent.
+  Tanger wanted to evolve their digital experience to feel more modern, responsive, and aligned with their updated brand direction. The team needed flexible components that supported location discovery, offers, events, and tenant information—while ensuring consistent performance across devices.
 
 problem: |
-  My role focused on the front end, but the front end depended on systems that were still evolving. Components needed predictable data and consistent patterns, and the site relied on a third-party service for deals and coupon information. That data had to be shaped by a middleware layer before it could reach the UI.
-
-  I worked with the engineering team to help wire that middleware, shape the data flowing into the components, and make sure the interface behaved reliably as the system settled into place.
+  The legacy UI was rigid, inconsistent, and difficult to scale. Different Tanger locations needed localized content, but the system lacked components flexible enough to support that variation without duplicating UI logic.
 
 solution: |
-  Much of my work centered on building and refining components while the underlying architecture was still in flux. I implemented UI elements, fixed bugs, tested edge cases, and worked closely with the design team to make sure interactions matched the intended experience.
-
-  I also collaborated with backend engineers to connect the middleware to the third-party deals service. This included mapping incoming data, resolving mismatches, and verifying that the components rendered correctly across different scenarios.
+  Charles developed modular UI components in React + TypeScript that supported dynamic content modules, improved layout consistency, and increased performance across breakpoints. His work emphasized accessibility, responsiveness, and ease of integration with Tanger's backend systems.
 
 process: |
-  Even early in my career, this project gave me experience at the intersection of system logic and interface behavior. The front end needed clarity, but the system underneath needed stability, and I was part of helping those two sides meet.
+  - Translated updated design direction into reusable UI patterns.
+  - Built location-aware modules that allowed each Tanger center to present offers, events, and store information consistently.
+  - Improved performance through careful component optimization and reduced layout thrashing.
+  - Enhanced accessibility through semantic markup and keyboard interaction support.
+  - Closely collaborated with design and backend teams to validate content flows and handle edge cases.
 
-outcomes: |
-  The redesigned platform moved Tanger from a collection of static pages to a scalable architecture built around structured content and reusable components. My work helped stabilize the integration between the middleware and the UI, and contributed to a system that is easier to maintain and evolve.
+impact: |
+  The refreshed component library improved consistency across Tanger's digital ecosystem and reduced engineering overhead for location-specific pages. The result was a cleaner, more engaging experience that supported both brand expression and functional discovery.
 
 reflections: |
-  This project shaped how I think about system design. It showed how much the quality of an interface depends on the clarity of the data behind it. It also gave me early experience working with middleware and structured content, tools that continue to influence how I think about scalable interfaces and AI-enabled systems.
+  Charles appreciated the challenge of building flexible components that worked across many types of content while staying true to Tanger's evolving brand language. The project strengthened his skills in performance-minded UI engineering and cross-team collaboration.
+
+other_sections: |
+  - Context
+  - Problem
+  - Solution
+  - Process
+  - Outcomes
+  - Reflections
 
 links:
   - label: "Visit Tanger"

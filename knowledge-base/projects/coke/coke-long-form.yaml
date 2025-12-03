@@ -7,62 +7,47 @@ project:
   client: "Coca-Cola"
   industry: "Brand, Creative Technology, Innovation"
   role: "Creative Technologist / Applied AI Researcher"
-  one_liner: "Explored the feasibility of a hydration-aware vending concept through research, data modeling, and a working prototype."
+  one_liner: "Charles explored and prototyped a hydration-aware vending concept using research, simulated data modeling, and system-interpretation logic. He built a working prototype that demonstrated how hydration readings could responsibly translate into product recommendations."
+
+project_facts: |
+  Client: Coca-Cola
+  Project: Hydration-Aware Vending Exploration
+  Role: Creative Technologist / Applied AI Researcher
+  Summary: Charles explored and prototyped a hydration-aware vending concept using research, simulated data modeling, and system-interpretation logic. He built a working prototype that demonstrated how hydration readings could responsibly translate into product recommendations.
+  Team: Innovation strategists, product designers, technical directors
 
 context: |
-  Anyone who has trained seriously knows dehydration does not hit all at once. It shows up as small changes: a little fatigue, a dip in focus, the sense that something is off even if you cannot name it. Most people rely on instinct to catch those moments, not instruments.
-
-  Coca-Cola wanted to explore a vending concept that could help people before they reached that point. The idea was to read a simple hydration signal, interpret it responsibly, and recommend a product that matched the person’s condition.
-
-  My role was to figure out how that experience could work in practice. I researched how hydration is measured, evaluated existing detection hardware, created simulated data based on the science, and shaped how the system should interpret that information. From there, I built a prototype flow that let the team see the idea as something real rather than theoretical.
+  Coca-Cola wanted to understand whether a vending machine could identify a simple hydration signal and offer an appropriate product recommendation before a person felt noticeably dehydrated. The challenge involved grounding the concept in real scientific behavior while acknowledging hardware limitations.
 
 problem: |
-  The idea was simple to describe but difficult to evaluate without real hardware. Hydration sits at the intersection of fluid levels, electrolyte balance, activity, and environmental factors. Even when you simplify the problem, you still have questions about what a reading represents and how confidently you can act on it.
-
-  The team also needed clarity on the near-term feasibility as well as the far-future potential of the concept. A prototype had to balance scientific grounding, practical limitations, and creative direction.
+  Hydration is difficult to measure outside clinical environments. The team needed clarity on which signals were realistic, how reliable they might be, and whether a consumer-friendly experience could be responsibly designed around them. Without real sensors, evaluating the concept required a believable data model and interpretation logic.
 
 solution: |
-  I developed a simplified but science-informed hydration model, created simulated sensor data, and designed interpretation rules that translated hydration states into product recommendations. I then built an interactive prototype that demonstrated how the experience might unfold, giving the team a way to evaluate the idea through interaction rather than description.
+  Charles developed a simplified but science-informed hydration classification model, built simulated datasets that reflected natural variation, and designed interpretation rules mapping hydration levels to Coca-Cola's product categories. He then built an interactive prototype that let stakeholders experience the idea as a functioning flow rather than an abstract concept.
 
 process: |
-  I began by researching how dehydration is classified and measured. Some methods are accurate but impractical outside clinical settings. Others are more feasible but noisy. I mapped out which signals could reasonably be used in a consumer environment and identified hardware that could approximate them.
+  - Researched how dehydration is measured and classified across clinical and consumer contexts.
+  - Identified feasible sensing methods, excluding solutions unrealistic for consumer hardware.
+  - Created simulated hydration data representing mild, moderate, and more significant dehydration levels, including natural noise.
+  - Designed interpretation logic that emphasized responsible recommendations and conservative thresholds.
+  - Built an interactive prototype demonstrating end-to-end system behavior, pacing, tone, and edge cases.
+  - Explored a far-future "Freestyle-like" machine vision for real-time nutrient/electrolyte mixing.
 
-  Since there were no real sensors for the exploration, I generated simulated hydration data based on the research. This included ranges for mild, moderate, and more significant dehydration, with added variation to reflect natural noise. The goal was believability, not precision.
-
-  With the data model in place, I shaped the system’s interpretation rules. This included how conservative recommendations should be, how hydration states mapped to Coca-Cola’s product set, and how the system should behave when readings were unclear.
-
-  Once the logic felt stable, I built a prototype that showed the experience end-to-end. It let the team explore pacing, tone, and edge cases and understand how the concept behaved in practice.
-
-outcomes: |
-  The exploration helped Coca-Cola understand what an AI-assisted hydration experience might look like and how it might function in a real environment. It revealed which ideas felt intuitive, which needed more clarity, and where hardware limitations would shape future directions.
-
-  The prototype gave leadership a concrete way to evaluate the concept. Instead of reacting to static mockups, they could interact with a working flow and see how the system responded to different hydration conditions.
+impact: |
+  The exploration clarified the feasibility of a hydration-aware vending experience.
+  The prototype gave leadership a concrete way to evaluate the idea, revealing which UX patterns felt intuitive and which scientific assumptions needed refinement.
+  It also provided a flexible technical model the team could evolve as sensor opportunities matured.
 
 reflections: |
-  I enjoyed the mix of research, feasibility work, and prototyping. It required thinking across disciplines and shaping an experience that felt grounded even without real hardware. The project strengthened my ability to model system behavior and build prototypes that help teams make decisions when the path forward is not fully defined.
+  Charles strengthened his ability to combine research, feasibility modeling, AI reasoning, and prototyping into an experience that supports decision-making in ambiguous problem spaces. The work balanced scientific grounding with creative possibility, helping envision both near-term and long-term future states.
 
-  The work also involved imagining a far-future version of the system. One direction envisioned a machine similar to a Coke Freestyle unit that could mix electrolytes, vitamins, and other nutrients in real time based on a person’s hydration indicators. This vision set a long-term north star, while the prototype focused on near-term feasibility.
-
-technical_notes:
-  hydration_classification: |
-    The prototype used a simplified hydration classification model that divided dehydration into mild, moderate, and more significant ranges. These categories were based on research into relative fluid loss and electrolyte imbalance. Each simulated reading included natural variation to reflect the noise expected in real sensor environments. The purpose was not medical precision but a believable signal for early concept evaluation.
-
-  hardware_feasibility: |
-    The research evaluated hydration detection methods such as electrical impedance and optical skin readings. Clinical approaches like blood sodium analysis were excluded because they are impractical for consumer environments. The goal was to identify sensor types that could approximate hydration levels well enough to support concept testing.
-
-  simulated_data_model: |
-    Since no real sensors were present, all hydration readings were simulated. The dataset included patterns representing mild, moderate, and more significant dehydration, along with expected natural variation. Borderline cases were intentionally incorporated to test how the interpretation logic behaved when signals were ambiguous.
-
-  interpretation_logic: |
-    The interpretation rules favored conservative recommendations. When hydration readings were ambiguous or near a threshold, the system defaulted to gentler product categories or withheld a recommendation. Each hydration level mapped to a subset of Coca-Cola hydration products aligned with expected electrolyte needs. The mapping was intentionally simple and easy to adjust as the concept evolved.
-
-  prototype_architecture: |
-    The prototype was structured so that hydration thresholds, product mappings, and interpretation rules could be updated independently of the flow. This allowed the team to test alternative concepts quickly. The interaction model simulated the core steps of the system: receiving a reading, interpreting it, and recommending a product.
-
-  prompt_design: |
-    The system relied on structured prompts that emphasized responsible interpretation, avoidance of medical language, and consistent outputs. The instructions guided the model to treat hydration readings as signals requiring careful interpretation rather than certainty.
-
-  future_vision: |
-    One part of the exploration involved imagining a far-future system capable of mixing electrolytes, vitamins, and nutrients in real time based on a person’s condition. This direction was intentionally treated as long-term vision rather than an immediate goal. The prototype focused on evaluating the feasibility and experience of the early-stage concept.
+other_sections: |
+  - Context
+  - Problem
+  - Solution
+  - Process
+  - Outcomes
+  - Reflections
+  - Technical Notes (hydration classification, feasibility, simulated data modeling, interpretation logic, future vision)
 
 links: []
