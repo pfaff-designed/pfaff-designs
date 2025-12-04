@@ -5,8 +5,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { Composer } from "@/components/molecules/Composer";
 import type { QueryResponse, AISuggestion, PageContext } from "@/lib/ai/queryTypes";
 import { getCaseStudyBySlug } from "@/lib/caseStudies/data";
-import { useAIAnswer } from "@/components/ai/AIAnswerContext";
-import { useSection } from "@/components/ai/SectionContext";
+import { useAIAnswer } from "@/components/organisms/ai/AIAnswerContext";
+import { useSection } from "@/components/organisms/ai/SectionContext";
 
 export const GlobalComposer: React.FC = () => {
   const router = useRouter();

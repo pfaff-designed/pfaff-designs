@@ -7,7 +7,7 @@ import { Container } from "@/components/layout/Container";
 import { aboutPageData } from "@/lib/pages/about/data";
 import { Renderer } from "@/components/utility/Renderer";
 import { TypingIndicator } from "@/components/ui/TypingIndicator";
-import { useAIAnswer } from "@/components/ai/AIAnswerContext";
+import { useAIAnswer } from "@/components/organisms/ai/AIAnswerContext";
 
 export default function About() {
   const { state } = useAIAnswer();

@@ -14,7 +14,7 @@ import { MediaFigure } from "@/components/molecules/MediaFigure";
 import { SideBySideMedia } from "@/components/molecules/SideBySideMedia";
 import { MediaGallery } from "@/components/molecules/MediaGallery";
 import { AnswerBlock } from "@/components/page-components/AnswerBlock";
-import { CaseStudyHero } from "@/components/templates/CaseStudyHero";
+import { CaseStudyHero } from "@/components/page-components/CaseStudyHero";
 
 export type ComponentType = React.ComponentType<any>;
 

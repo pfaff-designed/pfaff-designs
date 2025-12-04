@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { modalGraphApp, type ModalGraphState } from "@/lib/ai/modalGraph";
 import { getCaseStudyBySlug } from "@/lib/caseStudies/data";
-import type { AiModalAction } from "@/components/ai-modal/AiActionsRow";
+import type { AiModalAction } from "@/components/organisms/ai-modal/AiActionsRow";
 import type { CaseStudyPage } from "@/lib/caseStudies/types";
 
 // ============================================================
