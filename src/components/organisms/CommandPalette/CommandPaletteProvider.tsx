@@ -4,8 +4,8 @@ import * as React from "react";
 import { CommandPalette } from "./CommandPalette";
 import { useCommandPalette } from "@/lib/cmdk/useCommandPalette";
 import { useInlineChat } from "@/lib/inline-chat/useInlineChat";
-import { InlineChatWindow } from "@/components/inline-chat";
-import { useAiModal } from "@/components/ai-modal/AiModalContext";
+import { InlineChatWindow } from "@/components/organisms/inline-chat";
+import { useAiModal } from "@/components/organisms/ai-modal/AiModalContext";
 import { usePathname } from "next/navigation";
 
 // Feature flag: Set to false to disable inline chat and use AI modal instead

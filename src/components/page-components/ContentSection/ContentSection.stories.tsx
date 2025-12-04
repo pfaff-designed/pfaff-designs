@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { ContentSection } from "./ContentSection";
-import { AiModalProvider, AiModalHost, AiHoverPillHost } from "@/components/ai-modal";
+import { AiModalProvider, AiModalHost, AiHoverPillHost } from "@/components/organisms/ai-modal";
 
 const meta: Meta<typeof ContentSection> = {
   title: "Page Components/ContentSection",

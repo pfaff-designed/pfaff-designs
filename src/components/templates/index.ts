@@ -1,3 +1,2 @@
-export { CaseStudyHero } from "./CaseStudyHero";
-export type { CaseStudyHeroProps } from "./CaseStudyHero";
+// CaseStudyHero moved to page-components/CaseStudyHero
 

@@ -3,6 +3,9 @@ import { Input, type InputProps } from "@/components/atoms/Input";
 import { Button } from "@/components/atoms/Button";
 import { cn } from "@/lib/utils";
 
+// NOTE: Potentially unused component - verify usage before removing
+// See: docs/repo-audit-2024-12-04.md section 6.1
+
 export interface InputWithButtonProps extends Omit<InputProps, "className"> {
   buttonText?: string;
   onButtonClick?: () => void;

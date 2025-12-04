@@ -2,6 +2,10 @@ import * as React from "react";
 import { ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// TODO: Component size violation - 330 lines exceeds molecule limit (250 lines)
+// Consider: Moving to ai-modal/ or utility/ directory, or splitting into smaller molecules
+// See: docs/repo-audit-2024-12-04.md section 4.1
+
 export interface ComposerProps {
   placeholder?: string;
   onSubmit?: (query: string) => void;

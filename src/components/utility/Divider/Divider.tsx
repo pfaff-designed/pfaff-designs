@@ -2,6 +2,9 @@ import * as React from "react";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
+// NOTE: Potentially unused component - verify usage before removing
+// See: docs/repo-audit-2024-12-04.md section 6.1
+
 export interface DividerProps extends React.ComponentProps<typeof Separator> {
   tone?: "light" | "dark";
 }

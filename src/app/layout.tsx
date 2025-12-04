@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Header } from "@/components/page-components/Header";
-import { Footer } from "@/components/page-components/Footer";
-import { AIAnswerProvider } from "@/components/ai/AIAnswerContext";
-import { SectionProvider } from "@/components/ai/SectionContext";
-import { AiModalProvider, AiModalHost, AiHoverPillHost, FloatingAiButton } from "@/components/ai-modal";
-import { CommandPaletteProvider } from "@/components/cmdk/CommandPaletteProvider";
+import { Header } from "@/components/organisms/Header";
+import { Footer } from "@/components/organisms/Footer";
+import { AIAnswerProvider } from "@/components/organisms/ai/AIAnswerContext";
+import { SectionProvider } from "@/components/organisms/ai/SectionContext";
+import { AiModalProvider, AiModalHost, AiHoverPillHost, FloatingAiButton } from "@/components/organisms/ai-modal";
+import { CommandPaletteProvider } from "@/components/organisms/CommandPalette/CommandPaletteProvider";
 import { ToastProvider } from "@/components/molecules/Toast";
 
 export const metadata: Metadata = {

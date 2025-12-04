@@ -8,7 +8,7 @@ import type { UseInlineChatReturn } from "@/lib/inline-chat/useInlineChat";
 
 // Feature flag: Set to false to disable inline chat and use AI modal instead
 const ENABLE_INLINE_CHAT = false;
-import { useAiModal } from "@/components/ai-modal/AiModalContext";
+import { useAiModal } from "@/components/organisms/ai-modal/AiModalContext";
 import { motion } from "framer-motion";
 import { CommandPaletteContainer } from "./CommandPaletteContainer";
 import { CommandPaletteContent } from "./CommandPaletteContent";

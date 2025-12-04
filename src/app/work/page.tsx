@@ -8,7 +8,7 @@ import { Section } from "@/components/layout/Section";
 import { Container } from "@/components/layout/Container";
 import { Renderer } from "@/components/utility/Renderer";
 import { TypingIndicator } from "@/components/ui/TypingIndicator";
-import { useAIAnswer } from "@/components/ai/AIAnswerContext";
+import { useAIAnswer } from "@/components/organisms/ai/AIAnswerContext";
 import { ProjectCardGrid } from "@/components/molecules/ProjectCardGrid";
 import { useRouter } from "next/navigation";
 
