@@ -19,7 +19,7 @@ export const aboutPageData: AboutPageData = {
     {
       eyebrow: "What I Do",
       headline: "What I Do",
-      body: "I build front-end systems and interfaces that adapt to context and feel like they've always worked that way.<br><br>My work usually sits where design, engineering, and retrieval-based AI meet. It is the part of the project where small decisions make a big difference and where the system needs enough structure for the AI to behave predictably.<br><br>I've worked with teams at Capital One, Coca-Cola, PMI, Tanger, and others on projects where the interface carries part of the experience instead of just displaying content.",
+      body: "I build front-end systems and interfaces that adapt to context and feel like they've always worked that way.<br><br>My work usually sits where design, engineering, and retrieval-based AI meet. It is the part of the project where small decisions make a big difference and where the system needs enough structure for the AI to behave predictably.<br><br>I've worked with teams at Capital One, Coca-Cola, PMI, and others on projects where the interface carries part of the experience instead of just displaying content.",
       variant: "2-column-image-left",
       imageSrc: getPublicStorageURL(SUPABASE_MEDIA_BUCKET, "what-i-do-2.png"),
       imageAlt: "Collaborative design and engineering process",

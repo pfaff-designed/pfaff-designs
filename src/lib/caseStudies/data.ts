@@ -18,10 +18,10 @@ export const caseStudies: CaseStudyPage[] = [
       "Front-End Engineer",
     sections: [
       {
-        id: "context",
+        id: "overview",
         eyebrow: "Context",
         heading: "Creating Structure Inside a Changing System",
-        body: "Capital One Travel evolved through many short development cycles, often with different teams contributing at different times. That history left the interface with a mix of patterns that did not always follow the same rules. My work happened inside that environment across several iterations of the product. The lounge expansion was one example, but the larger effort was about building new pieces that fit naturally within the system that was already in place.\n\nWhen new lounges opened, each page needed its own content and layout, but it also had to feel like part of the same experience. The challenge was working within the patterns that existed while strengthening the areas where the system had started to drift.",
+        body: "Capital One Travel evolved through many short development cycles, often with different teams contributing at different times. My work happened inside that environment across several iterations of the product. The lounge expansion was one example, but the larger effort was about building new pieces that fit naturally within the system that was already in place.\n\nWhen new lounges opened, each page needed its own content and layout, but it also had to feel like part of the same experience. The challenge was working within the patterns that existed while strengthening the areas where the system had started to drift.",
       },
       {
         id: "role",
@@ -30,7 +30,7 @@ export const caseStudies: CaseStudyPage[] = [
         body: "My role was to build components and layouts that could support the platform as it expanded. Sometimes that meant shaping new pages for lounge launches. Other times it meant refining existing patterns so future contributors could work more smoothly. Across the different iterations I worked on, the through-line was the same. I needed to understand how the system behaved, which parts were reliable, and where updates would make the experience more consistent.\n\nThe work was not about producing large, complex features. It was about making thoughtful adjustments to the interface so new additions felt natural, and so the system became a little easier to work with over time.",
       },
       {
-        id: "approach",
+        id: "process",
         eyebrow: "Approach",
         heading: "Working With What the System Already Gives You",
         body: "Each cycle of work began with reading the existing system. The product had gone through many updates, so the first step was understanding which patterns were still solid and which ones had started to drift. I spent time tracing components, checking how they behaved across the site, and identifying the inconsistencies that caused friction for design, QA, and engineering.\n\nRather than rebuilding everything, I looked for ways to use the structure that was already there. When launching a new lounge page, the question was how to build it so it fit the system and would not create more complexity for the next launch. This often meant adjusting layout primitives, tightening spacing rules, or reusing established interactions so the new work felt native to the interface.\n\nAcross the different iterations, the approach stayed consistent. Smooth the rough edges, strengthen the reusable pieces, and leave the system more predictable than it was before.",
@@ -42,7 +42,7 @@ export const caseStudies: CaseStudyPage[] = [
         body: "The work made the site easier to update as new lounges and new content rolled out. The templates and components we put in place reduced the amount of one-off development needed for each launch, and the interface began behaving more consistently across different pages.\n\nSmall improvements added up. Aligning spacing rules reduced design and engineering drift. Reusing interaction patterns gave QA fewer variations to track. Cleaning up older components made the system more predictable for anyone working in it later.\n\nOver time, the experience became steadier. New additions fit more naturally, and the product handled expansion without creating extra friction for the teams involved.",
       },
       {
-        id: "takeaway",
+        id: "extras",
         eyebrow: "Takeaway",
         heading: "Seeing the System as Part of the Work",
         body: "Working on Capital One Travel gave me a clearer sense of how much the small engineering decisions shape the long-term health of a product. Details like how a layout scales, how a component handles edge cases, or how patterns stay aligned across pages can determine whether a system grows smoothly or becomes harder to maintain. When those details are handled well, people do not think about them. The experience simply works.\n\nThis project helped me understand the value of building with the future in mind. It showed me how much I care about creating systems that stay stable as a product grows.",
@@ -98,13 +98,13 @@ export const caseStudies: CaseStudyPage[] = [
       "Front-End Engineer",
     sections: [
       {
-        id: "context",
+        id: "overview",
         eyebrow: "Context",
         heading: "A redesign that reached beneath the surface",
         body: "Tanger was going through more than a visual refresh. Behind the scenes, the team was rebuilding the architecture that powered the entire site. The old platform relied on static pages with inconsistent structures. The new approach required a flexible system built around structured content, reusable components, and integrations with external data sources.\n\nIt was the kind of project where the real progress happened underneath the surface. The front end could only succeed if the architecture behind it was stable and consistent.",
       },
       {
-        id: "problem",
+        id: "overview",
         eyebrow: "Problem",
         heading: "Building the interface while the system took shape",
         body: "My role focused on the front end, but the front end depended on systems that were still evolving. Components needed predictable data and consistent patterns, and the site relied on a third-party service for deals and coupon information. That data had to be shaped by a middleware layer before it could reach the UI.\n\nI worked with the engineering team to help wire that middleware, shape the data flowing into the components, and make sure the interface behaved reliably as the system settled into place.",
@@ -116,7 +116,7 @@ export const caseStudies: CaseStudyPage[] = [
         body: "Much of my work centered on building and refining components while the underlying architecture was still in flux. I implemented UI elements, fixed bugs, tested edge cases, and worked closely with the design team to make sure interactions matched the intended experience.\n\nI also collaborated with backend engineers to connect the middleware to the third-party deals service. This included mapping incoming data, resolving mismatches, and verifying that the components rendered correctly across different scenarios.\n\nEven early in my career, this project gave me experience at the intersection of system logic and interface behavior. The front end needed clarity, but the system underneath needed stability, and I was part of helping those two sides meet.",
       },
       {
-        id: "outcomes",
+        id: "impact",
         eyebrow: "Outcomes",
         heading: "A stronger system and a clearer understanding of architecture",
         body: "The redesigned platform moved Tanger from a collection of static pages to a scalable architecture built around structured content and reusable components. My work helped stabilize the integration between the middleware and the UI, and contributed to a system that is easier to maintain and evolve.\n\nThis project shaped how I think about system design. It showed how much the quality of an interface depends on the clarity of the data behind it. It also gave me early experience working with middleware and structured content, tools that continue to influence how I think about scalable interfaces and AI-enabled systems.",
@@ -135,7 +135,7 @@ export const caseStudies: CaseStudyPage[] = [
       "Creative Technologist / Applied AI Researcher",
     sections: [
       {
-        id: "context",
+        id: "overview",
         eyebrow: "Context",
         heading: "The idea was simple to describe but difficult to evaluate without building full hardware",
         body: "The idea was simple to describe but difficult to evaluate without building full hardware. Hydration sits at the intersection of fluid levels, electrolyte balance, activity, and environmental factors. Even when you simplify the problem, you still have questions about what a reading represents and how confidently you can act on it.\n\nWe also explored where the concept could go in the far future. One vision imagined a machine similar to a Coke Freestyle unit that could mix electrolytes, vitamins, and other nutrients based on what a person needed in the moment. This level of personalization is many years beyond what current technology can support, but it helped shape the creative direction and provided a clear north star for the experience.\n\nThe near-term challenge was more practical. The team needed a way to explore the concept today without custom sensors or production systems. We needed a model of dehydration that was grounded in real science but simple enough to use in a prototype. We also needed a clear interpretation layer: if the system read a hydration indicator, how should it decide what the user needed, and how should that recommendation be presented so it felt responsible and helpful?",
@@ -159,7 +159,7 @@ export const caseStudies: CaseStudyPage[] = [
         body: "The project helped Coca-Cola understand what an AI-assisted hydration experience might look like and how it might function in a real environment. It revealed which ideas felt intuitive, which needed more clarity, and where hardware limitations would shape what was eventually possible.\n\nThe prototype gave leadership a concrete way to evaluate the concept. Instead of reacting to static mockups, they could click through a working flow and see how the system behaved at each step. This made it easier to determine which directions were promising and where further exploration was needed.",
       },
       {
-        id: "reflections",
+        id: "extras",
         eyebrow: "Reflections",
         heading: "Creating structure for exploration",
         body: "I enjoyed the mix of research, feasibility work, and prototyping. It required thinking across disciplines and shaping an experience that felt grounded even without real hardware. The project strengthened my ability to model system behavior and build prototypes that help teams make decisions when the path forward is not fully defined.\n\nThe work reminded me that early exploration is often about creating enough structure to make an idea feel real, then refining it as you learn more. That balance is where I do some of my best work.",
@@ -210,33 +210,33 @@ export const caseStudies: CaseStudyPage[] = [
     url: undefined,
     timeframe: "2024–2025",
     heroSummary:
-      "Pfaff.design is a portfolio built to solve a familiar problem. The work I do sits between UX, engineering, and applied AI, but those layers are hard to show in a traditional format. This site pairs a clear narrative with an embedded agent that lets people explore the reasoning, structure, and technical detail beneath the surface.",
+      "Pfaff.design started as a simple portfolio refresh and became an experiment in how to communicate complex work. My projects live at the intersection of UX, engineering, and applied AI, and those layers rarely fit neatly into screenshots. I wanted a portfolio that could tell a story on the surface and also open up into a deeper conversation when someone wanted to go further.",
     roleSummary:
       "Design Engineer / Applied AI Technologist",
     sections: [
       {
-        id: "context",
+        id: "overview",
         eyebrow: "Context",
-        heading: "A portfolio that needed to do more than show screens",
-        body: "Every portfolio tells a story, but a lot of the real work happens underneath it.\n\nThe research, the choices, and the systems that hold everything together rarely fit inside a clean set of screenshots.\n\nI wanted to build a portfolio that did not hide that part of the work. Something where the surface stayed simple to read, and the structure underneath was still available for anyone who wanted to explore it.\n\nPfaff.design became the place to try that.",
+        heading: "A portfolio that had to communicate more than finished screens",
+        body: "Most portfolios show the end result. They show the interface, the visuals, the polished story.\n\nBut the work I do doesn't live only on the surface. It lives in the reasoning behind it. How decisions were made, how systems behave, and why certain choices matter.\n\nThose layers are hard to show in a traditional format. They're easier to explain in a conversation, where you can follow someone's curiosity and reveal the structure behind the work.\n\nPfaff.design became a way to bring that conversational quality into a portfolio. A place where the narrative stays clean and readable, and the deeper explanation is always available, not buried.",
       },
       {
-        id: "idea",
+        id: "overview",
         eyebrow: "Idea",
-        heading: "Let the story stay simple, and let the structure stay accessible",
-        body: "The idea for the site grew out of a simple question: how do you let people read the story while still giving them access to everything underneath it?\n\nI knew the portfolio needed to work for different kinds of readers. Some people want a quick overview. Others want the details. A few want the technical depth. I wanted the site to support all of those paths without turning into something confusing or slow.\n\nThat is why the foundation is a static site. It keeps the experience fast and familiar, and it lets the case studies stay focused on clear narrative. On top of that, the site includes an embedded agent that can answer questions, surface extra context, and reveal the deeper structure when someone wants it.\n\nIt created a balance I had not seen in a traditional portfolio. You can skim the work like any normal site, or you can treat it like a conversation and follow the threads that matter to you.",
+        heading: "Keep the story simple, let the conversation go deeper",
+        body: "I knew this site needed to work for different readers.\n\nSome skim.\n\nSome explore.\n\nSome ask follow-up questions.\n\nInstead of forcing everyone into the same format, I built the portfolio around the idea of choice. The surface stays straightforward and fast, but beneath it is an embedded agent that lets people ask questions, pull up supporting detail, or follow threads the way they would if we were talking in person.\n\nIt turned the portfolio into something more flexible.\n\nYou can browse it like any normal site, or you can treat it like a conversation and go deeper into the reasoning, structure, or technical decisions behind the work. It gives people different ways of understanding what I do, without overwhelming the narrative itself.",
       },
       {
         id: "process",
         eyebrow: "Process",
         heading: "Exploring the limits of generative UI, then choosing clarity",
-        body: "I started with planning, research, and a long list of questions about how a generative front end should behave. I explored a version of the site that was fully generative. Every answer came from the model, and every layout was created on the fly. The prototype worked, but it also revealed a problem. Generative interfaces are interesting when people want to spend time with them, but a portfolio needs to get information across quickly.\n\nThat is what pushed the project in a different direction. I shifted to a static site that holds the primary narrative and built a structured system underneath it. The content lives in a knowledge base written in YAML and JSON, which are simple text-based formats for organizing information. They let me define the important pieces of each project in a way that is easy for both humans and the agent to understand.\n\nOnce that content layer was in place, I added intent routing, schemas, and a small orchestration layer. The agent can figure out when to give a quick answer, when to generate a structured layout, or when to offer a deeper dive. It also knows what it should not invent.\n\nMost of the work in this phase happened quietly in the background. Designing schemas, testing prompts, rewriting pathways, and building guardrails so the system stayed predictable. The goal was not to automate the site. The goal was to create something that felt steady and conversational at the same time.",
+        body: "I started with planning, research, and a long list of questions about how a generative front end should behave, and more importantly, how it should communicate. I explored a version of the site that was fully generative. Every answer came from the model, and every layout was created on the fly. The prototype worked, but it also revealed a problem. Generative interfaces are interesting when people want to spend time with them, but a portfolio needs to get information across quickly.\n\nThat is what pushed the project in a different direction. I shifted to a static site that holds the primary narrative and built a structured system underneath it. The content lives in a knowledge base written in YAML and JSON, which are simple text-based formats for organizing information. They let me define the important pieces of each project in a way that is easy for both humans and the agent to understand.\n\nOnce that content layer was in place, I added intent routing, schemas, and a small orchestration layer. The agent can figure out when to give a quick answer, when to generate a structured layout, or when to offer a deeper dive. It also knows what it should not invent.\n\nMost of the work in this phase happened quietly in the background. Designing schemas, testing prompts, rewriting pathways, and building guardrails so the system stayed predictable. The goal was not to automate the site. The goal was to create something that felt steady and conversational at the same time.",
       },
       {
-        id: "outcomes",
+        id: "impact",
         eyebrow: "Outcomes",
-        heading: "A portfolio that reflects how I think",
-        body: "The finished site does two things at once. It tells a clear story about the work, and it also gives people a way to explore the structure behind it. Most portfolios flatten that distinction. This one makes space for both.\n\nThe static pages give readers the overview they expect, and the embedded agent lets them go deeper when they want to understand how something was built, why certain decisions were made, or what tools and processes shaped the project. That mix feels closer to how I work in real life.\n\nThe build taught me a lot about working with AI in a controlled way. The constraints, the schemas, and the routing logic matter as much as the model itself. The most interesting parts of the project were not the flashy features, but the small structural choices that made the system predictable and easy to reason about.\n\nIn the end, Pfaff.design became more than a portfolio. It became a place to test ideas about clarity, interaction, and AI-assisted systems. It reflects how I think, how I solve problems, and how I like to work with technology. And it leaves room for future versions of the site to become even more adaptive.",
+        heading: "A portfolio shaped around conversation",
+        body: "The site now works on two levels. On the surface, it tells a clear story about the work. Beneath it, the agent reveals the structure, the decisions, and the process behind each project. It mirrors the way I talk about my work in real life. Start simple, go deeper when someone is interested.\n\nThis project also clarified how I like working with AI. The strength isn't in letting a model generate everything. It's in designing systems around it. Schemas, routing, constraints. These make the experience feel grounded, consistent, and helpful.\n\nPfaff.design became a place to explore those ideas in practice. It reflects how I think, how I communicate, and how I approach systems that need to balance clarity with depth. And it sets the foundation for future versions that explore even richer conversational patterns.",
       },
     ],
   },

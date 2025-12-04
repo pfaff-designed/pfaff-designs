@@ -315,14 +315,7 @@ interface ProjectFiles {
 }
 
 const PROJECTS: ProjectFiles[] = [
-  {
-    id: "tanger",
-    slug: "/work/tanger",
-    client: "Tanger",
-    title: "Tanger – Retail Experience",
-    longformPath: "projects/tanger/tanger-longform.yaml",
-    factsPath: "projects/tanger/tanger-facts.json",
-  },
+  // Tanger temporarily hidden
   {
     id: "coke",
     slug: "/work/coke",

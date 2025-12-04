@@ -246,11 +246,6 @@ function generateModalActions(params: {
       label: "Go to PMI case study",
     },
     {
-      patterns: [/\btanger\b/, /tanger outlet/],
-      path: "/work/tanger-outlets",
-      label: "Go to Tanger case study",
-    },
-    {
       patterns: [/capital one/, /capitalone/],
       path: "/work/capital-one-travel",
       label: "Go to Capital One case study",

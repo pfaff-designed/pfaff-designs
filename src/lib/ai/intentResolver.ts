@@ -49,10 +49,6 @@ const PROJECT_PATTERNS: { slug: string; keywords: string[] }[] = [
     keywords: ["coca cola", "coke", "coca-cola"],
   },
   {
-    slug: "tanger-outlets",
-    keywords: ["tanger", "tanger outlets"],
-  },
-  {
     slug: "pmi",
     keywords: ["pmi", "project management institute"],
   },

@@ -76,7 +76,7 @@ You will be given:
 1. RouterInput:
    - query: the user's raw text input
    - pageSlug: which page the user is currently on (e.g. "home", "about", "project/pmi")
-   - projectSlug: the current project slug if on a project page (e.g. "pmi", "coke", "tanger"), or null
+   - projectSlug: the current project slug if on a project page (e.g. "pmi", "coke"), or null
    - sectionId: optional identifier for a specific section on the page
 
 2. Retrieved KB context:
@@ -226,8 +226,8 @@ In this case:
 2. Return 1–3 navigate actions for clearly relevant project pages.
    - Each action should:
      - type: "navigate"
-     - href: the URL for that project (e.g. "/work/tanger", "/work/coke", "/work/pmi")
-     - label: short and clear (e.g. "View Tanger – Retail Experience", "View Coke – AI Vending Prototype")
+     - href: the URL for that project (e.g. "/work/coke", "/work/pmi")
+     - label: short and clear (e.g. "View Coke – AI Vending Prototype", "View PMI – Project Management Institute")
      - confidence: your confidence that this is a good "similar project" suggestion.
 
 3. Avoid "clarify" here if there are obvious candidates.
@@ -251,10 +251,10 @@ Possible output:
 {
   "actions": [
     {
-      "id": "nav_tanger_similar",
+      "id": "nav_coke_similar",
       "type": "navigate",
-      "label": "View Tanger – Retail Experience",
-      "href": "/work/tanger",
+      "label": "View Coke – AI Vending Prototype",
+      "href": "/work/coke",
       "confidence": 0.92
     },
     {

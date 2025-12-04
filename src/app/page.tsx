@@ -25,19 +25,26 @@ export default function Home() {
 
   // Map case studies to ProjectCardGrid format
   const projectCards = React.useMemo(() => {
-    // Get specific case studies: first 3 + coke + pfaff.design
-    const cokeStudy = caseStudies.find(s => s.slug === "coca-cola-creative-technology");
-    const pfaffStudy = caseStudies.find(s => s.slug === "pfaff-designs");
-    const selectedStudies = [
-      ...caseStudies.slice(0, 3),
-      ...(cokeStudy ? [cokeStudy] : []),
-      ...(pfaffStudy ? [pfaffStudy] : [])
-    ];
+    // Filter out Tanger (temporarily hidden)
+    const filteredStudies = caseStudies.filter(s => s.slug !== "tanger-outlets");
+    
+    // Get specific case studies: first 3 + coke + pfaff.design (avoiding duplicates)
+    const firstThree = filteredStudies.slice(0, 3);
+    const cokeStudy = filteredStudies.find(s => s.slug === "coca-cola-creative-technology");
+    const pfaffStudy = filteredStudies.find(s => s.slug === "pfaff-designs");
+    
+    // Build selected studies, avoiding duplicates
+    const selectedStudies = [...firstThree];
+    if (cokeStudy && !firstThree.find(s => s.slug === "coca-cola-creative-technology")) {
+      selectedStudies.push(cokeStudy);
+    }
+    if (pfaffStudy && !selectedStudies.find(s => s.slug === "pfaff-designs")) {
+      selectedStudies.push(pfaffStudy);
+    }
     
     const projectTypeMap: Record<string, string> = {
       "capital-one-travel": "Travel Platform",
       "pmi": "Certification Site",
-      "tanger-outlets": "Digital Experience",
       "coca-cola-creative-technology": "Creative Technology",
       "pfaff-designs": "Portfolio Platform",
     };

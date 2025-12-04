@@ -19,11 +19,12 @@ export default function Work() {
 
   // Map first 3 case studies to ProjectCardGrid format
   const projectCards = React.useMemo(() => {
-    const selectedStudies = caseStudies.slice(0, 3);
+    // Filter out Tanger (temporarily hidden)
+    const filteredStudies = caseStudies.filter(s => s.slug !== "tanger-outlets");
+    const selectedStudies = filteredStudies.slice(0, 3);
     const projectTypeMap: Record<string, string> = {
       "capital-one-travel": "Travel Platform",
       "pmi": "Certification Site",
-      "tanger-outlets": "Digital Experience",
     };
 
     return selectedStudies.map((study, index) => ({

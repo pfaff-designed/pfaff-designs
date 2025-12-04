@@ -1,55 +1,70 @@
-version: 1
-id: pfaff-designs
-kind: case_study
-
-meta:
-  title: "Pfaff.design"
-  slug: "/work/pfaff-designs"
+version: "1"
+kind: "project_longform"
 
 project:
+  id: "pfaff-designs"
+  title: "Pfaff.design Portfolio"
   client: "Self-initiated"
-  title: "Pfaff.design"
+  industry: "Personal Portfolio, UX, Applied AI"
   role: "Design Engineer / Applied AI Technologist"
-  year: "2024–2025"
-  one_liner: "Pfaff.design is a portfolio built to solve a familiar problem. The work I do sits between UX, engineering, and applied AI, but those layers are hard to show in a traditional format. This site pairs a clear narrative with an embedded agent that lets people explore the reasoning, structure, and technical detail beneath the surface."
+  one_liner: "A portfolio designed as both a clear narrative and a conversation, with an embedded agent that reveals the structure behind the work."
 
 context: |
-  Every portfolio tells a story, but a lot of the real work happens underneath it.
+  Pfaff.design started as a portfolio refresh and turned into an experiment in how to communicate complex work. My projects live between UX, engineering, and applied AI, and that overlap is hard to show with screenshots alone.
 
-  The research, the choices, and the systems that hold everything together rarely fit inside a clean set of screenshots.
+  A lot of the real work lives underneath the surface: the reasoning, the systems, and the decisions that shape how an experience feels. Those layers are easier to explain in a conversation than in a static case study.
 
-  I wanted to build a portfolio that did not hide that part of the work. Something where the surface stayed simple to read, and the structure underneath was still available for anyone who wanted to explore it.
-
-  Pfaff.design became the place to try that.
+  This site became a way to bring that conversational quality into a portfolio. The surface stays simple and easy to read, and the deeper structure is still available for anyone who wants to explore it.
 
 problem: |
-  The idea for the site grew out of a simple question: how do you let people read the story while still giving them access to everything underneath it?
+  Traditional portfolios are built around static narratives. They are good at showing polished screens and high-level summaries, but they are not great at revealing how the work actually came together or how different disciplines connect.
 
-  I knew the portfolio needed to work for different kinds of readers. Some people want a quick overview. Others want the details. A few want the technical depth. I wanted the site to support all of those paths without turning into something confusing or slow.
+  I needed a way to:
+  - Tell a clear story for people who are skimming.
+  - Offer more detail for people who want to dig in.
+  - Reveal technical depth and system design without overwhelming the main narrative.
+
+  In other words, I needed a portfolio that could behave more like a conversation and less like a slideshow, while still feeling fast and familiar to use.
 
 solution: |
-  That is why the foundation is a static site. It keeps the experience fast and familiar, and it lets the case studies stay focused on clear narrative. On top of that, the site includes an embedded agent that can answer questions, surface extra context, and reveal the deeper structure when someone wants it.
+  The core idea behind the site was to keep the story simple on the surface and let the conversation go deeper when someone wanted it.
 
-  It created a balance I had not seen in a traditional portfolio. You can skim the work like any normal site, or you can treat it like a conversation and follow the threads that matter to you.
+  The foundation is a static site. It keeps the experience fast, predictable, and easy to navigate, and it lets each case study read like a straightforward story. On top of that, the site includes an embedded agent that can answer questions, surface extra context, and reveal more of the structure behind the work.
+
+  The content lives in a structured knowledge base written in YAML and JSON, which are plain text formats for describing information. Each project is broken into fields like context, problem, solution, process, tools, and outcomes. That structure makes the content easy for both humans and the agent to understand and reuse.
+
+  Together, the static pages and the agent give people options. They can skim the work like a normal portfolio, or they can treat it like a conversation and follow the threads that matter to them.
 
 process: |
-  I started with planning, research, and a long list of questions about how a generative front end should behave. I explored a version of the site that was fully generative. Every answer came from the model, and every layout was created on the fly. The prototype worked, but it also revealed a problem. Generative interfaces are interesting when people want to spend time with them, but a portfolio needs to get information across quickly.
+  The project started with planning, research, and a long list of questions about how a generative front end should behave and how it should communicate.
 
-  That is what pushed the project in a different direction. I shifted to a static site that holds the primary narrative and built a structured system underneath it. The content lives in a knowledge base written in YAML and JSON, which are simple text-based formats for organizing information. They let me define the important pieces of each project in a way that is easy for both humans and the agent to understand.
+  I first explored a fully generative version of the site, where both the answers and the layouts were created on the fly. The prototype worked, but it exposed a problem. Generative interfaces are interesting when people want to spend time with them. A portfolio, especially for recruiters, needs to get the right information across quickly.
 
-  Once that content layer was in place, I added intent routing, schemas, and a small orchestration layer. The agent can figure out when to give a quick answer, when to generate a structured layout, or when to offer a deeper dive. It also knows what it should not invent.
+  That insight pushed the project in a different direction. I shifted to a static site that holds the main narrative and built a structured system underneath it.
 
-  Most of the work in this phase happened quietly in the background. Designing schemas, testing prompts, rewriting pathways, and building guardrails so the system stayed predictable. The goal was not to automate the site. The goal was to create something that felt steady and conversational at the same time.
+  I designed the knowledge base using YAML and JSON so each project could be represented as clear, typed content: context, goals, responsibilities, tools, outcomes, and reflections. On top of that, I added an intent and routing layer, schemas, and a small orchestration layer so the agent could:
+
+  - Decide when to give a short, direct answer.
+  - Assemble a more detailed, structured response.
+  - Pull from the right parts of the knowledge base without inventing new work or clients.
+
+  Most of the effort went into this invisible structure: designing schemas, testing prompts, refining how questions should be handled, and adding guardrails so the system stayed predictable and honest. The goal was not to automate the site. The goal was to make it feel steady, conversational, and easy to reason about.
 
 outcomes: |
-  The finished site does two things at once. It tells a clear story about the work, and it also gives people a way to explore the structure behind it. Most portfolios flatten that distinction. This one makes space for both.
+  The finished site works on two levels.
 
-  The static pages give readers the overview they expect, and the embedded agent lets them go deeper when they want to understand how something was built, why certain decisions were made, or what tools and processes shaped the project. That mix feels closer to how I work in real life.
+  On the surface, it tells a clear story about the work through static pages and focused case studies. Underneath, the embedded agent can explain how something was built, why certain decisions were made, or which tools and processes were involved. It mirrors how I talk about my work in person: start with the essentials, then go deeper when someone is interested.
+
+  The project also clarified how I like working with AI. The model is only one piece. The structure around it — the constraints, schemas, routing, and knowledge base — matters just as much. Those choices are what make the system feel grounded instead of noisy.
+
+  Pfaff.design became more than a portfolio. It became a place to test ideas about clarity, conversation, and AI-assisted systems in a real project that I control end to end.
 
 reflections: |
-  The build taught me a lot about working with AI in a controlled way. The constraints, the schemas, and the routing logic matter as much as the model itself. The most interesting parts of the project were not the flashy features, but the small structural choices that made the system predictable and easy to reason about.
+  Building this site reinforced how important communication is in my work. The challenge was not just to show what I have done, but to design a way for people to explore it at their own pace and depth.
 
-  In the end, Pfaff.design became more than a portfolio. It became a place to test ideas about clarity, interaction, and AI-assisted systems. It reflects how I think, how I solve problems, and how I like to work with technology. And it leaves room for future versions of the site to become even more adaptive.
+  It also reminded me that AI is most useful when it supports that kind of exploration instead of trying to replace it. The agent is not there to take over the portfolio. It is there to make it easier to ask questions, follow threads, and understand the thinking behind the work.
+
+  Pfaff.design reflects how I think about design, engineering, and applied AI. It is a working example of the kind of systems I want to keep building: clear on the surface, thoughtfully structured underneath, and open to conversation.
 
 links:
   - label: "Visit pfaff.design"

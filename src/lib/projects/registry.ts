@@ -53,18 +53,7 @@ export const PROJECTS: ProjectMeta[] = [
     heroImageId: "hero-pmi",
   },
 
-  // Tanger
-  {
-    id: "tanger-outlets",
-    slug: "tanger-outlets",
-    clientLabel: "Tanger Outlets",
-    projectTitle: "Tanger Outlets Digital Experience",
-    role: "Front-End Engineer / Technologist",
-    summary:
-      "Built component-driven, responsive UI modules to support Tanger's refreshed digital retail experience.",
-    primaryLink: "https://www.tanger.com",
-    heroImageId: "hero-tanger",
-  },
+  // Tanger temporarily hidden
 
   // Coke
   {
