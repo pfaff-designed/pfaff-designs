@@ -37,7 +37,7 @@ export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
   }> = headline || body ? [
     {
       headline: headline || "",
-      items: body ? [{ body }] : [],
+      items: body ? [{ eyebrow, body }] : [],
       headlineVariant: "headline" as const,
     }
   ] : [];
@@ -46,7 +46,7 @@ export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
     <ImageContainer
       imageSrc={imageSrc}
       alt={imageAlt}
-      aspectRatio={imageAspectRatio || (imageOnRight ? "portrait" : "landscape")}
+      aspectRatio={imageAspectRatio || "portrait"}
       objectFit={imageObjectFit}
     />
   ) : null;
@@ -65,7 +65,7 @@ export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
 
   const contentComponent = (
     <div
-      className={`flex-1 ${imageOnRight ? "pb-[6.625rem] pt-[2.1875rem]" : ""}`}
+      className={`flex-1 flex flex-col justify-centerhttps://ijwldoqqihdtwegdjjwf.supabase.co/storage/v1/object/public/media/pfaff-designs/pfaff-designs-2.jpg`}
       data-ai-interactive="content-section"
       data-ai-topic-label={topicLabel}
     >
@@ -82,7 +82,7 @@ export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
 
   const containerClasses = imageOnRight
     ? "flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-center"
-    : "flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-center";
+    : "flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-center";
 
   return (
     <div className={containerClasses}>

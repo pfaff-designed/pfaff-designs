@@ -52,7 +52,7 @@ export const caseStudies: CaseStudyPage[] = [
   {
     slug: "pmi",
     client: "PMI (Project Management Institute)",
-    projectName: "PMI - Project Management Institute",
+    projectName: "PMI",
     url: "https://www.pmi.org/certifications/agile-acp",
     timeframe: "2023",
     heroSummary:

@@ -25,14 +25,14 @@ export const MEDIA_REGISTRY: MediaItem[] = [
   {
     id: "hero-capital-one",
     bucket: "media",
-    path: "capital-one/hero.jpg",
+    path: "capital-one/DTS_Hot_&_Cold_Mark_La_Montagne_Photos_ID2623.jpg",
     alt: "Capital One Travel interface showing trip planning and booking UI.",
     aspectRatio: "16:9",
   },
   {
     id: "hero-pmi",
     bucket: "media",
-    path: "pmi/hero.jpg",
+    path: "pmi/PMI-final.jpg",
     alt: "PMI Agile certification experience with course content and navigation.",
     aspectRatio: "16:9",
   },
@@ -46,7 +46,7 @@ export const MEDIA_REGISTRY: MediaItem[] = [
   {
     id: "hero-coke",
     bucket: "media",
-    path: "coke/hero.jpg",
+    path: "coke/coke-hero.jpg",
     alt: "Conceptual UI for an AI-enabled Coca-Cola vending or retail experience.",
     aspectRatio: "16:9",
   },
@@ -60,7 +60,7 @@ export const MEDIA_REGISTRY: MediaItem[] = [
   {
     id: "hero-pfaff-designs",
     bucket: "media",
-    path: "pfaff-designs/hero.jpg",
+    path: "pfaff-designs/pfaff-designs-hero.jpg",
     alt: "Generative-UI RAG portfolio interface with chat and dynamic layout.",
     aspectRatio: "16:9",
   },
