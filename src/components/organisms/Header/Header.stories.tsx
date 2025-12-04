@@ -21,7 +21,6 @@ export const WithCustomLinks: Story = {
   args: {
     links: [
       { label: "About", href: "/about", active: false },
-      { label: "Work", href: "/work", active: true },
       { label: "Writing", href: "/writing", active: false },
     ],
   },

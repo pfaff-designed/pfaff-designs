@@ -48,24 +48,30 @@ export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
       alt={imageAlt}
       aspectRatio={imageAspectRatio || "portrait"}
       objectFit={imageObjectFit}
+      containerClassName={imageAspectRatio === "auto" ? "h-full w-full" : undefined}
     />
   ) : null;
 
   const imageComponent = imageSrc && (
-    <div className={cn("flex-1 shrink-0", imageAspectRatio === "auto" && "min-h-[20rem]")}>
+    <div className={cn("flex-1 shrink-0", imageAspectRatio === "auto" && "flex h-full")}>
       {imageLightbox ? (
-        <ImageLightbox imageSrc={imageSrc} imageAlt={imageAlt}>
+        <ImageLightbox imageSrc={imageSrc} imageAlt={imageAlt} className={imageAspectRatio === "auto" ? "h-full w-full flex-1" : "w-full"}>
           {imageContainer}
         </ImageLightbox>
       ) : (
-        imageContainer
+        <div className={imageAspectRatio === "auto" ? "h-full w-full" : "w-full"}>
+          {imageContainer}
+        </div>
       )}
     </div>
   );
 
+  // Use items-stretch for full height when aspectRatio is auto, otherwise center items
+  const shouldStretchImage = imageAspectRatio === "auto";
+
   const contentComponent = (
     <div
-      className={`flex-1 flex flex-col justify-centerhttps://ijwldoqqihdtwegdjjwf.supabase.co/storage/v1/object/public/media/pfaff-designs/pfaff-designs-2.jpg`}
+      className={cn("flex-1 flex flex-col", shouldStretchImage ? "justify-start" : "justify-center")}
       data-ai-interactive="content-section"
       data-ai-topic-label={topicLabel}
     >
@@ -79,9 +85,8 @@ export const TwoColumnImage: React.FC<TwoColumnImageProps> = ({
       ))}
     </div>
   );
-
-  const containerClasses = imageOnRight
-    ? "flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-center"
+  const containerClasses = shouldStretchImage
+    ? "flex flex-col gap-8 lg:flex-row lg:items-stretch lg:justify-center"
     : "flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-center";
 
   return (

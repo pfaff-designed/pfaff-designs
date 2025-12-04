@@ -251,9 +251,6 @@ function generateModalActions(params: {
       label: "Go to Capital One case study",
     },
     {
-      patterns: [/real estate/],
-      path: "/work/real-estate-platform",
-      label: "Go to Real Estate case study",
     },
     {
       patterns: [/portfolio/, /rag portfolio/, /generative ui/],

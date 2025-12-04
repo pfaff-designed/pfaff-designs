@@ -142,7 +142,7 @@ export const caseStudies: CaseStudyPage[] = [
       },
       {
         id: "role",
-        eyebrow: "What I Worked On",
+        eyebrow: "What I Did",
         heading: "Research, modeling, and prototyping",
         body: "I began by researching how dehydration is classified and measured. Some methods are accurate but impractical outside clinical settings. Others are more feasible but noisy. I mapped out which signals could realistically be used in a consumer environment and identified hardware that could approximate them.\n\nSince we did not have real sensors, I created simulated hydration data based on the research. This included ranges for mild, moderate, and more significant dehydration, along with natural variation that reflected the noise you would expect in real-world readings. The goal was not precision. It was believability and a responsible interpretation of the science.\n\nWith the data model in place, I shaped the system's interpretation rules. This included how conservative the recommendations should be, how hydration states mapped to Coca-Cola's product line, and how the system should behave when the data was unclear or at the edge of two categories.\n\nOnce the logic felt stable, I built a prototype that showed how the experience might unfold. It allowed the team to interact with the idea, explore edge cases, and understand the pacing and tone of the recommendations.",
       },

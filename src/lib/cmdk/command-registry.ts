@@ -1,5 +1,6 @@
 import type { Command } from "./command-types";
 import type { CommandContext } from "./command-context";
+import { caseStudies } from "@/lib/caseStudies/data";
 
 /**
  * commandRegistry
@@ -45,46 +46,46 @@ export const commandRegistry: Command[] = [
       ctx.navigate("/work");
     },
   },
-  {
-    id: "nav-capital-one",
-    kind: "nav",
-    label: "Capital One Travel",
-    description: "View the Capital One Travel case study",
-    keywords: ["capital one", "capitalone", "travel", "booking"],
-    run: (ctx) => {
-      ctx.navigate("/work/capital-one-travel");
-    },
-  },
-  {
-    id: "nav-pmi",
-    kind: "nav",
-    label: "PMI",
-    description: "View the PMI case study",
-    keywords: ["pmi", "agile", "certification", "acp", "project management"],
-    run: (ctx) => {
-      ctx.navigate("/work/pmi");
-    },
-  },
-  {
-    id: "nav-coke",
-    kind: "nav",
-    label: "Coke",
-    description: "View the Coke case study",
-    keywords: ["coca cola", "coke", "coca-cola", "creative", "technology", "ai", "vending"],
-    run: (ctx) => {
-      ctx.navigate("/work/coke");
-    },
-  },
-  {
-    id: "nav-pfaff-designs",
-    kind: "nav",
-    label: "pfaff.design",
-    description: "View the pfaff.design case study",
-    keywords: ["pfaff", "designs", "portfolio", "generative", "ai portfolio", "pfaff.design"],
-    run: (ctx) => {
-      ctx.navigate("/work/pfaff-designs");
-    },
-  },
+  // Dynamically generate case study navigation commands
+  ...caseStudies
+    .filter((study) => study.slug !== "tanger-outlets" && study.slug !== "real-estate-platform") // Exclude Tanger (blocked) and Real Estate Platform (not released)
+    .map((study) => {
+      // Generate keywords from slug, client, and project name
+      const slugKeywords = study.slug.split("-");
+      const keywords = [
+        ...slugKeywords,
+        study.client.toLowerCase(),
+        study.projectName.toLowerCase(),
+      ];
+      
+      // Add specific keywords for known case studies
+      if (study.slug === "coca-cola-creative-technology") {
+        keywords.push("coke", "coca cola", "coca-cola", "creative", "technology", "ai", "vending");
+      } else if (study.slug === "capital-one-travel") {
+        keywords.push("capital one", "capitalone", "travel", "booking");
+      } else if (study.slug === "pmi") {
+        keywords.push("agile", "certification", "acp", "project management");
+      } else if (study.slug === "pfaff-designs") {
+        keywords.push("pfaff", "designs", "portfolio", "generative", "ai portfolio", "pfaff.design");
+      }
+      
+      // Use custom label for specific case studies
+      let label = study.projectName;
+      if (study.slug === "coca-cola-creative-technology") {
+        label = "Coke";
+      }
+      
+      return {
+        id: `nav-${study.slug}`,
+        kind: "nav" as const,
+        label: label,
+        description: `View the ${study.projectName} case study`,
+        keywords: keywords.filter((k) => k.length > 0),
+        run: (ctx: CommandContext) => {
+          ctx.navigate(`/work/${study.slug}`);
+        },
+      };
+    }),
 
   // ============================================================
   // Quick AI Commands (inline chat)

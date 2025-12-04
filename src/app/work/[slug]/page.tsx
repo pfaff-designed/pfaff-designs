@@ -24,8 +24,8 @@ export default function CaseStudyPage() {
   const params = useParams();
   const slug = params.slug as string;
   
-  // Temporarily block Tanger page
-  if (slug === "tanger-outlets") {
+  // Block Tanger page (temporarily hidden) and Real Estate Platform (confidential)
+  if (slug === "tanger-outlets" || slug === "real-estate-platform") {
     notFound();
   }
   
