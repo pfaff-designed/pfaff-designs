@@ -25,7 +25,6 @@ export interface HeaderProps {
 
 const DEFAULT_LINKS: HeaderLink[] = [
   { label: "About", href: "/about" },
-  { label: "Work", href: "/work" },
 ];
 
 const Header = React.forwardRef<HTMLElement, HeaderProps>(

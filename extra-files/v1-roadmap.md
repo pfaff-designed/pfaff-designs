@@ -802,6 +802,19 @@ Tighten the overall narrative and visual rhythm.
 - Adjust spacing, alignment, and section breaks where needed
 - Confirm tone is warm, clear, and recruiter-friendly
 
+**Left to Do**
+- mobile: padding on footer needs to be fixed
+- flip where the show more/collapse and quick actions in the command palette
+- Get the AI to render quick actions to navigate user to another site
+- Remove work
+- Update Card Gallery
+- About, remove redundant eyebrows
+- increase space on case study hero
+- 2-column-image-left should appear under the section just like the 2-column-image-right
+- double check final section content padding
+- ensure footer ctas and links work
+- ensure command palette can't go lower than the footer
+
 #### 📘 Phase History (Nov 26–Dec 3)
 - Nov 26: Added as a last-mile polish step before Analytics & Insights.
 - Dec 3: Completed KB audit, naming normalization, and most content fixes; remaining work is a dedicated imagery pass for all case studies.

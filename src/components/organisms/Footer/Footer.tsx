@@ -24,11 +24,12 @@ export interface FooterProps {
   className?: string;
 }
 
+// "reachable" and "m-f / 10-4" are informational labels, not links
 const DEFAULT_LINKS: FooterLink[] = [
   { label: "reachable", href: "#" },
   { label: "m-f / 10-4", href: "#" },
-  { label: "github", href: "#" },
-  { label: "linkedin", href: "#" },
+  { label: "github", href: "https://github.com/pfaff-designed" },
+  { label: "linkedin", href: "https://www.linkedin.com/feed/" },
 ];
 
 const Footer = React.forwardRef<HTMLElement, FooterProps>(
@@ -39,7 +40,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
       phone = "703-909-5197",
       links = DEFAULT_LINKS,
       ctaLabel = "Say hi!",
-      ctaHref = "#",
+      ctaHref = "/contact",
       onCtaClick,
       className,
     },
@@ -63,8 +64,8 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
           "flex flex-col min-h-[40vh]",
           "px-4 md:px-[1.5rem] lg:px-[3rem]",
           "pt-8 md:pt-[3rem] lg:pt-[4rem]",
-          "pb-8 md:pb-16 lg:pb-16",
-          "-mb-8 md:-mb-16 lg:-mb-16",
+          "pb-0 md:pb-16 lg:pb-16",
+          "-mb-16 md:-mb-16 lg:-mb-16",
           className
         )}
       >
@@ -138,21 +139,30 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
             {/* Bottom Row: Social Links and CTA - Aligned to match phone number on all breakpoints */}
             <div className="flex flex-wrap gap-3 md:gap-[1.5rem] items-center justify-start lg:justify-end">
               {/* Social Links */}
-              {links.slice(2).map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className={cn(
-                    "flex items-center justify-center",
-                    "h-8 md:h-[2rem] pr-3 md:pr-[1rem] py-2 md:py-[0.5rem]",
-                    "rounded-[0.375rem]",
-                    "text-[var(--neutral-50)] text-sm md:text-base leading-5 md:leading-[1.25rem]",
-                    "hover:opacity-80 transition-opacity"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {links.slice(2).map((link) => {
+                // Check if link is external (starts with http:// or https://)
+                const isExternal = link.href.startsWith("http://") || link.href.startsWith("https://");
+                
+                return (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    {...(isExternal && {
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    })}
+                    className={cn(
+                      "flex items-center justify-center",
+                      "h-8 md:h-[2rem] pr-3 md:pr-[1rem] py-2 md:py-[0.5rem]",
+                      "rounded-[0.375rem]",
+                      "text-[var(--neutral-50)] text-sm md:text-base leading-5 md:leading-[1.25rem]",
+                      "hover:opacity-80 transition-opacity"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
 
               {/* CTA Button */}
               {onCtaClick ? (
@@ -164,7 +174,12 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
                   {ctaLabel}
                 </Button>
               ) : (
-                <Link href={ctaHref}>
+                <Link
+                  href={ctaHref}
+                  {...(ctaHref.startsWith("http://") || ctaHref.startsWith("https://")
+                    ? { target: "_blank", rel: "noopener noreferrer" }
+                    : {})}
+                >
                   <Button
                     variant="icon"
                     className="h-8 md:h-[2rem] px-3 md:px-[1rem] py-2 md:py-[0.5rem] rounded-full text-sm md:text-base leading-5 md:leading-[1.25rem] bg-[color:var(--accent-secondary)] text-[color:var(--neutral-50)] hover:opacity-90"
@@ -191,7 +206,7 @@ const Footer = React.forwardRef<HTMLElement, FooterProps>(
               width={1421}
               height={258}
               priority
-              className="w-full translate-y-8 md:translate-y-16 lg:translate-y-[4rem]"
+              className="w-full translate-y-0 sm:translate-y-0 md:translate-y-16"
             />
         </div>
       </footer>

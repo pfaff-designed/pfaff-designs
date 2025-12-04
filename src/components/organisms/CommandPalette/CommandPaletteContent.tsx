@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Download } from "lucide-react";
+import { ArrowDown, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/atoms/Button";
 import type { Command } from "@/lib/cmdk";
@@ -12,6 +12,7 @@ export interface CommandPaletteContentProps {
   input: string;
   onInputChange: (value: string) => void;
   onClose: () => void;
+  onSubmit: () => void;
   commands: Command[];
   activeIndex: number;
   onActiveIndexChange: (index: number) => void;
@@ -42,6 +43,7 @@ export const CommandPaletteContent = React.forwardRef<
       input,
       onInputChange,
       onClose,
+      onSubmit,
       commands,
       activeIndex,
       onActiveIndexChange,
@@ -89,71 +91,134 @@ export const CommandPaletteContent = React.forwardRef<
 
     const quickActionsContent = (
       <AnimatePresence>
-        {showQuickActions && commands.length > 0 && (
-          <motion.div
-            key="quick-actions"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            transition={{ duration: 0.18 }}
-            className="grid grid-cols-3 gap-3 auto-rows-auto mb-2 w-full"
-          >
-            {commands.map((command, index) => {
-              const isShowMore = command.id === "show-more-commands";
-              const isCollapse = command.id === "collapse-menu";
-              const isResume = command.id === "download-resume";
-              const label = command.label;
-              const columnSpan = getColumnSpan(label);
+        {showQuickActions && commands.length > 0 && (() => {
+          // Separate special commands (show-more/collapse) from regular commands
+          const specialCommands: Array<{ command: Command; originalIndex: number }> = [];
+          const regularCommands: Array<{ command: Command; originalIndex: number }> = [];
+          
+          commands.forEach((command, index) => {
+            const isShowMore = command.id === "show-more-commands";
+            const isCollapse = command.id === "collapse-menu";
+            if (isShowMore || isCollapse) {
+              specialCommands.push({ command, originalIndex: index });
+            } else {
+              regularCommands.push({ command, originalIndex: index });
+            }
+          });
+          
+          return (
+            <motion.div
+              key="quick-actions"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.18 }}
+              className="flex flex-col gap-3 mb-2 w-full"
+            >
+              {/* Special commands row (show-more/collapse) - above regular commands */}
+              {specialCommands.length > 0 && (
+                <div className="grid grid-cols-3 gap-3 auto-rows-auto w-full">
+                  {specialCommands.map(({ command, originalIndex }) => {
+                    const isShowMore = command.id === "show-more-commands";
+                    const isCollapse = command.id === "collapse-menu";
+                    const label = command.label;
+                    const columnSpan = getColumnSpan(label);
 
-              return (
-                <div
-                  key={command.id}
-                  style={{
-                    ...(columnSpan > 1
-                      ? { gridColumn: `span ${columnSpan}` }
-                      : {}),
-                  }}
-                >
-                  <Button
-                    variant="outline"
-                    isActive={index === activeIndex}
-                    onClick={() => handleCommandButtonClick(command, index)}
-                    className={cn(
-                      "justify-center text-center w-full",
-                      columnSpan === 2 && "col-span-2",
-                      columnSpan === 3 && "col-span-3",
-                      (isShowMore || isCollapse) && "opacity-70 italic",
-                    )}
-                    onMouseEnter={() => onActiveIndexChange(index)}
-                  >
-                    <span className="font-medium text-sm whitespace-nowrap flex items-center gap-1.5">
-                      {isResume && <Download className="size-3" />}
-                      {label}
-                    </span>
-                  </Button>
+                    return (
+                      <div
+                        key={command.id}
+                        style={{
+                          ...(columnSpan > 1
+                            ? { gridColumn: `span ${columnSpan}` }
+                            : {}),
+                        }}
+                      >
+                        <Button
+                          variant="outline"
+                          isActive={originalIndex === activeIndex}
+                          onClick={() => handleCommandButtonClick(command, originalIndex)}
+                          className={cn(
+                            "justify-center text-center w-full",
+                            columnSpan === 2 && "col-span-2",
+                            columnSpan === 3 && "col-span-3",
+                            "opacity-70 italic",
+                          )}
+                          onMouseEnter={() => onActiveIndexChange(originalIndex)}
+                        >
+                          <span className="font-medium text-sm whitespace-nowrap">
+                            {label}
+                          </span>
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </motion.div>
-        )}
+              )}
+              
+              {/* Regular commands row - below special commands */}
+              {regularCommands.length > 0 && (
+                <div className="grid grid-cols-3 gap-3 auto-rows-auto w-full">
+                  {regularCommands.map(({ command, originalIndex }) => {
+                    const isResume = command.id === "download-resume";
+                    const label = command.label;
+                    const columnSpan = getColumnSpan(label);
+
+                    return (
+                      <div
+                        key={command.id}
+                        style={{
+                          ...(columnSpan > 1
+                            ? { gridColumn: `span ${columnSpan}` }
+                            : {}),
+                        }}
+                      >
+                        <Button
+                          variant="outline"
+                          isActive={originalIndex === activeIndex}
+                          onClick={() => handleCommandButtonClick(command, originalIndex)}
+                          className={cn(
+                            "justify-center text-center w-full",
+                            columnSpan === 2 && "col-span-2",
+                            columnSpan === 3 && "col-span-3",
+                          )}
+                          onMouseEnter={() => onActiveIndexChange(originalIndex)}
+                        >
+                          <span className="font-medium text-sm whitespace-nowrap flex items-center gap-1.5">
+                            {isResume && <Download className="size-3" />}
+                            {label}
+                          </span>
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
     );
 
     return (
-      <div ref={ref} onKeyDown={onKeyDown} className="flex flex-col">
-        {/* Quick Actions - always render above input */}
-        {quickActionsContent}
-
+      <div 
+        ref={ref} 
+        onKeyDown={onKeyDown} 
+        className="flex flex-col"
+        style={{
+          maxHeight: "calc(100vh - 96px)",
+          overflowY: "auto",
+        }}
+      >
         {/* Command Palette - the input that expands */}
         <AnimatePresence mode="wait">
           {isOpen && (
             <motion.div
               key="palette-input"
               className={cn(
-                "rounded-full border border-[color:var(--border-subtle)]",
-                "bg-background/80 backdrop-blur-sm shadow-sm",
+                "rounded-full border border-[color:var(--accent-primary)]",
+                "bg-neutral-50 shadow-sm",
                 "overflow-hidden",
-                "px-4 py-2 flex items-center gap-2 h-[2.5rem]",
+                "px-4 py-2 flex items-center justify-center gap-2 h-[2.5rem]",
               )}
               initial={{
                 width: initialWidth,
@@ -173,23 +238,20 @@ export const CommandPaletteContent = React.forwardRef<
               }}
               onAnimationComplete={handleAnimationComplete}
             >
-              <span className="text-[10px] uppercase tracking-wide text-muted-foreground whitespace-nowrap">
-                Cmd+K
-              </span>
               <input
                 ref={inputRef}
                 value={input}
                 onChange={(e) => onInputChange(e.target.value)}
                 className="bg-transparent outline-none text-sm flex-1 min-w-0 placeholder:text-muted-foreground"
-                placeholder="Ask or search…"
+                placeholder="Ask me anything"
               />
               <button
                 type="button"
-                onClick={onClose}
-                className="flex items-center justify-center size-4 text-muted-foreground hover:text-[color:var(--text-default)] transition-colors flex-shrink-0"
-                aria-label="Close command palette"
+                onClick={onSubmit}
+                className="flex items-center justify-center size-6 rounded-full bg-[color:var(--accent-primary)] text-[color:var(--primary-foreground)] hover:opacity-90 transition-opacity flex-shrink-0 -mr-2"
+                aria-label="Submit"
               >
-                <X className="size-3" />
+                <ArrowDown className="size-3" />
               </button>
             </motion.div>
           )}
