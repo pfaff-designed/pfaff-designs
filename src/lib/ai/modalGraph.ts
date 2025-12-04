@@ -202,7 +202,11 @@ async function loadAllProjects(): Promise<
   try {
     const allProjects = await getAllProjects();
     if (allProjects.length > 0) {
-      return allProjects.map((p) => {
+      // Filter out Tanger (temporarily hidden)
+      const filteredProjects = allProjects.filter(
+        (p) => p.facts.projectId !== "tanger" && p.facts.projectId !== "tanger-outlets"
+      );
+      return filteredProjects.map((p) => {
         const tools = extractTools(p.facts.skillsUsed);
         return {
           slug: p.facts.projectId,
@@ -235,14 +239,6 @@ async function loadAllProjects(): Promise<
       role: "Front-end engineer & technologist",
       summary:
         "Redesigned PMI.org with a modular component system and improvements to IA, navigation, and template consistency across a content-heavy site.",
-      tools: ["React", "TypeScript", "Next.js", "Storybook", "Figma"],
-    },
-    {
-      slug: "tanger",
-      name: "Tanger Experience Platform",
-      client: "Tanger",
-      role: "Front-end engineer / design systems collaborator",
-      summary: "Helped build a component-driven marketing platform with reusable patterns.",
       tools: ["React", "TypeScript", "Next.js", "Storybook", "Figma"],
     },
     {
@@ -453,7 +449,8 @@ Portfolio questions:
 
 Grounding & accuracy:
 - Stay consistent with the structured context you see.
-- When projects are mentioned, stick to the provided names and roles (e.g., Capital One Travel, Coca-Cola AI work, Project Management Institute, Tanger, generative-UI portfolio).
+- When projects are mentioned, stick to the provided names and roles (e.g., Capital One Travel, Coca-Cola AI work, Project Management Institute, generative-UI portfolio).
+- **NEVER mention Tanger or Tanger Outlets** - this project is temporarily hidden and should not be referenced.
 - Do not invent new clients, roles, or technologies that are not implied by the context.
 - If the context is thin, give a modest, grounded answer and use the mode rules (especially clarify_then_answer and low_context_fallback).
 
@@ -589,7 +586,8 @@ Portfolio questions:
 
 Grounding & accuracy:
 - Stay consistent with the structured context you see.
-- When projects are mentioned, stick to the provided names and roles (e.g., Capital One Travel, Coca-Cola AI work, Project Management Institute, Tanger, generative-UI portfolio).
+- When projects are mentioned, stick to the provided names and roles (e.g., Capital One Travel, Coca-Cola AI work, Project Management Institute, generative-UI portfolio).
+- **NEVER mention Tanger or Tanger Outlets** - this project is temporarily hidden and should not be referenced.
 - Do not invent new clients, roles, or technologies that are not implied by the context.
 - If the context is thin, give a modest, grounded answer and use the mode rules (especially clarify_then_answer and low_context_fallback).
 
@@ -749,7 +747,8 @@ Portfolio questions:
 
 Grounding & accuracy:
 - Stay consistent with the structured context you see.
-- When projects are mentioned, stick to the provided names and roles (e.g., Capital One Travel, Coca-Cola AI work, Project Management Institute, Tanger, generative-UI portfolio).
+- When projects are mentioned, stick to the provided names and roles (e.g., Capital One Travel, Coca-Cola AI work, Project Management Institute, generative-UI portfolio).
+- **NEVER mention Tanger or Tanger Outlets** - this project is temporarily hidden and should not be referenced.
 - Do not invent new clients, roles, or technologies that are not implied by the context.
 - If the context is thin, give a modest, grounded answer and use the mode rules (especially clarify_then_answer and low_context_fallback).
 

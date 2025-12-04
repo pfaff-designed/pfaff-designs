@@ -52,7 +52,7 @@ The site has these main page types:
     you should usually set bestPageId to "work-index".
 
 - "case-study":
-  - A specific project page (e.g., Capital One, Tanger, PMI, Coke).
+  - A specific project page (e.g., Capital One, PMI, Coke).
   - Has sections like: overview, role, process, outcomes.
   - Use this when the question is about a single known project.
 
@@ -89,7 +89,7 @@ You MUST output a JSON object with this exact shape:
 Definitions:
 
 - primaryTopicType:
-  - "project": Specific project or client work (e.g. Capital One, Tanger, PMI, Coke).
+  - "project": Specific project or client work (e.g. Capital One, PMI, Coke).
   - "skills": Questions about skills, tools, technologies, ways of working.
   - "career": Questions about career history, roles over time, responsibilities.
   - "about": Questions about the person, their story, philosophy, background.
@@ -135,7 +135,7 @@ Definitions:
   - "brief": The user is asking for something that is mostly navigation, but a short confirmation or one-line explanation would be helpful.
     Examples:
       - "Can you show me your work page?"
-      - "Open the Tanger case study." (but still generate a brief answer)
+      - "Open the PMI case study." (but still generate a brief answer)
   - "none": The user is giving a PURE UI navigation command with NO question. Only use this for commands that don't ask for information.
     Examples:
       - "Scroll down." (pure UI command)
@@ -180,7 +180,6 @@ IMPORTANT MAPPING RULES
 
 - If the user mentions a known client or project by name:
   - "Capital One", "Capital One Travel"
-  - "Tanger", "Tanger Outlets"
   - "PMI"
   - "Coke", "Coca-Cola"
   -> Set:
@@ -335,7 +334,7 @@ Reason: Pure UI command - user just wants to scroll, no explanatory copy needed.
 
 Example 5:
 User is on WORK INDEX page (pageId: "work-index").
-User says: "Compare your work for Tanger and Capital One."
+User says: "Compare your work for PMI and Capital One."
 
 -> RoutedIntent:
 {
@@ -530,11 +529,6 @@ export async function runIntentRouter(
       primaryTopicType = "project";
       bestPageId = "case-study";
       bestProjectSlug = "coke-vending-machine";
-    } else if (lowerMessage.includes("tanger")) {
-      primaryProjectSlug = "tanger-outlets";
-      primaryTopicType = "project";
-      bestPageId = "case-study";
-      bestProjectSlug = "tanger-outlets";
     } else if (lowerMessage.includes("pmi")) {
       primaryProjectSlug = "pmi";
       primaryTopicType = "project";

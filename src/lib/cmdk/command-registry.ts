@@ -66,16 +66,6 @@ export const commandRegistry: Command[] = [
     },
   },
   {
-    id: "nav-tanger",
-    kind: "nav",
-    label: "Tanger Outlets",
-    description: "View the Tanger Outlets case study",
-    keywords: ["tanger", "outlets", "retail", "shopping"],
-    run: (ctx) => {
-      ctx.navigate("/work/tanger-outlets");
-    },
-  },
-  {
     id: "nav-coke",
     kind: "nav",
     label: "Coke",

@@ -27,7 +27,7 @@
   "projectSummary": "I worked on Capital One Travel across several phases of the product, contributing to components and pages that needed to support new content and new priorities as the platform grew. One ongoing challenge was expanding the site as Capital One opened new airport lounges. My work focused on building templates and components that made it possible to roll out new lounge pages without reinventing the structure each time. The goal was to create UI that felt cohesive, stable, and simple to extend as new locations launched.",
 
   "problem": {
-    "summary": "Capital One Travel evolved through many short development cycles, often with different teams contributing at different times. That history left the interface with a mix of patterns that did not always follow the same rules. When new lounges opened, each page needed its own content and layout, but it also had to feel like part of the same experience. The challenge was working within the patterns that existed while strengthening the areas where the system had started to drift."
+    "summary": "Capital One Travel evolved through many short development cycles, often with different teams contributing at different times.  When new lounges opened, each page needed its own content and layout, but it also had to feel like part of the same experience. The challenge was working within the patterns that existed while strengthening the areas where the system had started to drift."
   },
 
   "goals": [

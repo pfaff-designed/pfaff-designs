@@ -23,6 +23,11 @@ export default function CaseStudyPage() {
   const params = useParams();
   const slug = params.slug as string;
   
+  // Temporarily block Tanger page
+  if (slug === "tanger-outlets") {
+    notFound();
+  }
+  
   const caseStudy = getCaseStudyBySlug(slug);
   const projectMeta = getProjectBySlug(slug);
   

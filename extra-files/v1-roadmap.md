@@ -729,6 +729,10 @@ Make it easy to recover from a 404.
 ---
 
 # Phase 13 — Final Content Pass
+**Status: In Progress**  
+**Estimate: 4–6 hrs**
+**Time Spent (so far): ~3–4 hrs**
+
 ### Phase Steps
 1. Full editorial review of all website content.
 2. Review KB content for accuracy.
@@ -739,14 +743,12 @@ Make it easy to recover from a 404.
 7. Verify that all project cards display correct images.
 8. Ensure all website embeds appear correctly.
 9. Ensure all images load properly and accurately represent their intended subject.
-10. Polish typography, spacing, and section rhythm across all pages.
-11. Final editorial + visual review.
-12. ensure all case studies are present
+10. Confirm all case studies are present and linked correctly from the Work grid.
+11. Add or refine hero and inline imagery for each case study page (remaining task).
+12. Polish typography, spacing, and section rhythm across all pages.
+13. Final editorial + visual review.
 
-**Status: Not Started**  
-**Estimate: 4–6 hrs**
-
-A final polishing phase focused on editorial and visual coherence across the site.
+A final polishing phase focused on editorial and visual coherence across the site. The primary remaining task is to ensure each case study has appropriate imagery wired up and loading correctly.
 
 ---
 
@@ -800,10 +802,9 @@ Tighten the overall narrative and visual rhythm.
 - Adjust spacing, alignment, and section breaks where needed
 - Confirm tone is warm, clear, and recruiter-friendly
 
----
-
-#### 📘 Phase History (Nov 26)
-- Added as a last-mile polish step before Analytics & Insights
+#### 📘 Phase History (Nov 26–Dec 3)
+- Nov 26: Added as a last-mile polish step before Analytics & Insights.
+- Dec 3: Completed KB audit, naming normalization, and most content fixes; remaining work is a dedicated imagery pass for all case studies.
 
 ---
 

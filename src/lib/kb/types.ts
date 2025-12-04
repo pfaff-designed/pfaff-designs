@@ -24,9 +24,9 @@ export interface ProjectSection {
 }
 
 export interface ProjectKBEntry {
-  id: string;          // "tanger", "coke", "capital-one", "pmi", "pfaff-designs"
-  slug: string;        // "/work/tanger"
-  client: string;      // "Tanger", "Coca-Cola", "Capital One", etc.
+  id: string;          // "coke", "capital-one", "pmi", "pfaff-designs"
+  slug: string;        // "/work/coke"
+  client: string;      // "Coca-Cola", "Capital One", etc.
   title: string;       // Case study title
   summary?: string;    // from projectSummary in JSON
   one_liner?: string;  // canonical short description from KB
