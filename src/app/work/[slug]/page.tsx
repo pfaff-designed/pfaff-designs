@@ -4,7 +4,7 @@ import * as React from "react";
 import { useParams } from "next/navigation";
 import { notFound } from "next/navigation";
 import { getCaseStudyBySlug } from "@/lib/caseStudies/data";
-import { ContentSection } from "@/components/page-components/ContentSection";
+import { ContentSection, type ContentSectionVariant } from "@/components/page-components/ContentSection";
 import { Section } from "@/components/layout/Section";
 import { Container } from "@/components/layout/Container";
 import { Renderer } from "@/components/utility/Renderer";
@@ -18,6 +18,7 @@ import { getMediaItemById, SUPABASE_MEDIA_BUCKET } from "@/lib/media/registry";
 import { getPublicStorageURL } from "@/lib/supabase/storage";
 import { getToolsForCaseStudy } from "@/lib/caseStudies/tools";
 import Link from "next/link";
+import { getSectionImageURLSync } from "@/lib/media/sectionImages";
 
 export default function CaseStudyPage() {
   const params = useParams();
@@ -126,42 +127,105 @@ export default function CaseStudyPage() {
           })()}
 
           {/* Content Sections */}
-          <div className="pb-[6rem] md:pb-[8rem]">
+          <div className="">
             {caseStudy.sections.map((section, index) => {
               const sectionAnswer = getSectionAnswer(section.id);
               
+              // Get section image URL first to determine if we should use image variants
+              const sectionImageUrl = getSectionImageURLSync(slug, index + 1);
+              const hasValidImage = sectionImageUrl && sectionImageUrl.trim() !== "";
+              const isLastSection = index === caseStudy.sections.length - 1;
+              
+              // Determine section variant based on pattern:
+              // - Even indices (0, 2, 4...): 2-column-image-right
+              // - Odd indices (1, 3, 5...): 2-column-image-left
+              // - Last section: text-with-image (if image available)
+              // - Fall back to default if no image available
+              const getSectionVariant = (): ContentSectionVariant => {
+                // If no image, use default variant
+                if (!hasValidImage) {
+                  return "default";
+                }
+                
+                // Last section uses text-with-image if image is available
+                if (isLastSection) {
+                  return "text-with-image";
+                }
+                
+                // Alternate between right and left for other sections
+                // Even indices (0, 2, 4...) → right
+                // Odd indices (1, 3, 5...) → left
+                return index % 2 === 0 ? "2-column-image-right" : "2-column-image-left";
+              };
+              
+              const sectionVariant = getSectionVariant();
+              const shouldUseSectionImage = (sectionVariant === "2-column-image-right" || sectionVariant === "2-column-image-left" || sectionVariant === "text-with-image") && hasValidImage;
+              
               return (
                 <React.Fragment key={section.id}>
-                  <Section 
-                    id={section.id} 
-                    className="py-[4rem] md:py-[6rem]"
-                    ref={sectionRefCallback(section.id, section.heading)}
-                  >
-                    <Container>
-                      {/* Original human-authored content */}
-                      <ContentSection
-                        variant="default"
-                        eyebrow={section.eyebrow}
-                        headline={section.heading}
-                        body={section.body}
-                        sectionId={section.id}
-                        projectSlug={slug}
-                        sectionIndex={index + 1}
-                      />
-                      
-                      {/* Inline AI answer (rendered below original content) */}
-                      {sectionAnswer && (
-                        <SectionAIAnswer
+                  {sectionVariant === "text-with-image" ? (
+                    <>
+                      {/* Full-width variant handles its own Section/Container */}
+                      <div ref={sectionRefCallback(section.id, section.heading)} className="w-full max-w-none">
+                        <ContentSection
+                          variant={sectionVariant}
+                          eyebrow={section.eyebrow}
+                          headline={section.heading}
+                          body={section.body}
                           sectionId={section.id}
-                          answerId={sectionAnswer.answerId}
-                          answerLayout={sectionAnswer.answerLayout}
-                          status={sectionAnswer.status}
-                          isStreaming={sectionAnswer.status === "loading"}
-                          responseId={sectionAnswer.answerId}
+                          projectSlug={slug}
+                          sectionIndex={index + 1}
+                          imageSrc={shouldUseSectionImage ? sectionImageUrl : undefined}
+                          imageAlt={shouldUseSectionImage ? `${caseStudy.projectName} - ${section.heading}` : undefined}
                         />
-                      )}
-                    </Container>
-                  </Section>
+                        
+                        {/* Inline AI answer (rendered below original content) */}
+                        {sectionAnswer && (
+                          <SectionAIAnswer
+                            sectionId={section.id}
+                            answerId={sectionAnswer.answerId}
+                            answerLayout={sectionAnswer.answerLayout}
+                            status={sectionAnswer.status}
+                            isStreaming={sectionAnswer.status === "loading"}
+                            responseId={sectionAnswer.answerId}
+                          />
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <Section 
+                      id={section.id} 
+                      className="py-[4rem] md:py-[6rem]"
+                      ref={sectionRefCallback(section.id, section.heading)}
+                    >
+                      <Container>
+                        {/* Original human-authored content */}
+                        <ContentSection
+                          variant={sectionVariant}
+                          eyebrow={section.eyebrow}
+                          headline={section.heading}
+                          body={section.body}
+                          sectionId={section.id}
+                          projectSlug={slug}
+                          sectionIndex={index + 1}
+                          imageSrc={shouldUseSectionImage ? sectionImageUrl : undefined}
+                          imageAlt={shouldUseSectionImage ? `${caseStudy.projectName} - ${section.heading}` : undefined}
+                        />
+                        
+                        {/* Inline AI answer (rendered below original content) */}
+                        {sectionAnswer && (
+                          <SectionAIAnswer
+                            sectionId={section.id}
+                            answerId={sectionAnswer.answerId}
+                            answerLayout={sectionAnswer.answerLayout}
+                            status={sectionAnswer.status}
+                            isStreaming={sectionAnswer.status === "loading"}
+                            responseId={sectionAnswer.answerId}
+                          />
+                        )}
+                      </Container>
+                    </Section>
+                  )}
                 </React.Fragment>
               );
             })}

@@ -287,7 +287,13 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
     };
 
     // Render section image below content
+    // Don't render if image is already used in 2-column variant or text-with-image variant
     const renderSectionImage = () => {
+      // Skip rendering if image is already used in the variant (2-column layouts or text-with-image)
+      if (variant === "2-column-image-right" || variant === "2-column-image-left" || variant === "2-column-split" || variant === "text-with-image") {
+        return null;
+      }
+      
       if (!finalSectionImageSrc) {
         return null;
       }
@@ -302,7 +308,8 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
           <ImageContainer
             imageSrc={finalSectionImageSrc}
             alt={altText}
-            aspectRatio="wide"
+            aspectRatio="auto"
+            objectFit="contain"
             containerClassName="w-full"
           />
         </div>

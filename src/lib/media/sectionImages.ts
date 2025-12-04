@@ -2,11 +2,48 @@
  * Section Image Utilities
  * Helper functions to get section images from Supabase Storage
  * Images follow the pattern: project-name-ui-number.jpg
+ * Or use custom mappings defined in SECTION_IMAGE_REGISTRY
  */
 
 import { getPublicStorageURL } from "@/lib/supabase/storage";
 import { SUPABASE_MEDIA_BUCKET } from "./registry";
 import { supabase } from "@/lib/supabase/client";
+
+/**
+ * Section Image Registry
+ * Maps project slug + section index to specific image filenames
+ * Takes precedence over pattern-based lookup
+ * Use empty string to explicitly disable image for a section
+ */
+const SECTION_IMAGE_REGISTRY: Record<string, Record<number, string>> = {
+  "capital-one-travel": {
+    1: "capital-one/DTS_Reform_Franco_Dupuy_Photo_ID13615.jpg",
+    2: "capital-one/DTS_Reform_Franco_Dupuy_Photo_ID13632.jpg",
+    3: "capital-one/DTS_geometry.jpg",
+    4: "capital-one/DTS_sculpture.jpg",
+    5: "capital-one/DTS_Tradition_Chris_Abatzis_Photo_ID9181.jpg",
+  },
+  "coca-cola-creative-technology": {
+    1: "coke/coke-1.jpg",
+    2: "coke/coke-2.jpg",
+    3: "coke/coke-3.jpg",
+    4: "coke/Coke vending machine.jpeg",
+    5: "coke/coke-final.jpg",
+  },
+  "pmi": {
+    1: "pmi/PMI-1.jpg",
+    2: "pmi/PMI-2.jpg",
+    3: "pmi/PMI-3.jpg",
+    4: "pmi/PMI-4.jpg",
+    5: "pmi/PMI-final.jpg",
+  },
+  "pfaff-designs": {
+    1: "pfaff-designs/pfaff-designs-1.jpg",
+    2: "pfaff-designs/pfaff-designs-2.jpg",
+    3: "pfaff-designs/pfaff-designs-3.jpg",
+    4: "pfaff-designs/pfaff-designs-final.jpg",
+  },
+};
 
 /**
  * Get section image URL from Supabase Storage
@@ -25,13 +62,26 @@ export async function getSectionImageURL(
     return null;
   }
 
-  // Extract base project name (e.g., "capital-one-travel" -> "capital-one")
-  const baseProjectName = extractBaseProjectName(projectSlug);
-  
-  // Construct image path following pattern: {baseProjectName}/{baseProjectName}-ui-{sectionNumber}.jpg
-  const imagePath = `${baseProjectName}/${baseProjectName}-ui-${sectionNumber}.jpg`;
-
   try {
+    // Check registry first for custom image paths
+    const projectRegistry = SECTION_IMAGE_REGISTRY[projectSlug];
+    let imagePath: string;
+    
+    if (projectRegistry && projectRegistry[sectionNumber] !== undefined) {
+      imagePath = projectRegistry[sectionNumber];
+      // If explicitly set to empty string, return null to disable image
+      if (imagePath === "") {
+        return null;
+      }
+    } else {
+      // Fall back to pattern-based lookup
+      // Extract base project name (e.g., "capital-one-travel" -> "capital-one")
+      const baseProjectName = extractBaseProjectName(projectSlug);
+      
+      // Construct image path following pattern: {baseProjectName}/{baseProjectName}-ui-{sectionNumber}.jpg
+      imagePath = `${baseProjectName}/${baseProjectName}-ui-${sectionNumber}.jpg`;
+    }
+
     // Check if file exists by attempting to get public URL
     // If file doesn't exist, Supabase will still return a URL but the file won't be accessible
     const url = getPublicStorageURL(SUPABASE_MEDIA_BUCKET, imagePath);
@@ -112,6 +162,18 @@ export function getSectionImageURLSync(
   }
 
   try {
+    // Check registry first for custom image paths
+    const projectRegistry = SECTION_IMAGE_REGISTRY[projectSlug];
+    if (projectRegistry && projectRegistry[sectionNumber] !== undefined) {
+      const imagePath = projectRegistry[sectionNumber];
+      // If explicitly set to empty string, return empty to disable image
+      if (imagePath === "") {
+        return "";
+      }
+      return getPublicStorageURL(SUPABASE_MEDIA_BUCKET, imagePath);
+    }
+
+    // Fall back to pattern-based lookup
     // Extract base project name (e.g., "capital-one-travel" -> "capital-one")
     const baseProjectName = extractBaseProjectName(projectSlug);
     

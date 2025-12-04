@@ -46,16 +46,16 @@ export const aboutPageData: AboutPageData = {
     //   body: "I'm collaborative and straightforward. My background makes it easy to move between design, engineering, and strategy, I like to keep everyone aligned on what we're building. I value clear communication, shared understanding, and a steady pace. I like digging into the hard parts early and keeping the work focused.",
     //   variant: "default",
     // },
-    // {
-    //   eyebrow: "",
-    //   headline: "Let's Connect",
-    //   body: "If you think I might be a good fit for your project, feel free to get in touch.",
-    //   variant: "2-column-image-left",
-    //   imageSrc: getPublicStorageURL(SUPABASE_MEDIA_BUCKET, "laptop.svg"),
-    //   imageAlt: "Laptop illustration",
-    //   imageObjectFit: "cover",
-    //   imageAspectRatio: "auto",
-    // },
+    {
+      eyebrow: "",
+      headline: "Let's Connect",
+      body: "If you think I might be a good fit for your project, feel free to get in touch.",
+      variant: "2-column-image-left",
+      imageSrc: getPublicStorageURL(SUPABASE_MEDIA_BUCKET, "contact.jpg"),
+      imageAlt: "Contact illustration",
+      imageObjectFit: "cover",
+      imageAspectRatio: "auto",
+    },
   ],
 };
 
