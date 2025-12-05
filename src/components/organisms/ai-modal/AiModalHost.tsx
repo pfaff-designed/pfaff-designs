@@ -8,10 +8,10 @@ import { AiConversationRow, type AiConversationRowProps } from "./AiConversation
 import { AiActionsRow, type AiModalAction } from "./AiActionsRow";
 import { RelatedProjectsRow } from "./RelatedProjectsRow";
 import { useAiModal } from "./AiModalContext";
+import { trackAIAnswerShown, trackAIContactClickFromAI, trackAIQuestionAsked } from "@/lib/analytics/ai";
 import { Composer } from "@/components/molecules/Composer";
 import { TypingIndicator } from "@/components/ui/TypingIndicator";
 import type { ModalRequestBody, ModalResponseBody, RelatedProject } from "@/app/api/ai/modal/route";
-import { trackAIAnswerShown, trackAIContactClickFromAI, trackAIQuestionAsked } from "@/lib/analytics/ai";
 import { Button } from "@/components/atoms/Button";
 
 /**
@@ -86,6 +86,7 @@ export function AiModalHost() {
   
   // Local state for composer value (used for pre-filling suggested questions)
   const [composerValue, setComposerValue] = React.useState<string>("");
+  const lastAnswerModeRef = React.useRef<string | undefined>(undefined);
   
   // Message queue state for queuing user messages while AI is thinking
   const [queuedUserMessage, setQueuedUserMessage] = React.useState<string | null>(null);
@@ -198,6 +199,7 @@ export function AiModalHost() {
         // Use state.pagePath if available (from openAiModal), otherwise fallback to pathname
         const effectivePagePath = state.pagePath ?? pathname;
         const { pagePath: metaPagePath, projectSlug: metaProjectSlug } = getPageMeta();
+        const questionForTracking = trimmed;
         
         const requestBody: ModalRequestBody = {
           question: trimmed,
@@ -254,11 +256,16 @@ export function AiModalHost() {
           },
         ]);
 
+        // Track last answer mode for contact CTA
+        lastAnswerModeRef.current = data.mode ?? undefined;
+
         // Analytics: answer shown
         trackAIAnswerShown({
           pagePath: metaPagePath,
           projectSlug: metaProjectSlug,
           mode: data.mode,
+          question: questionForTracking,
+          answer: answerText,
         });
 
         // 7. Update actions if any
@@ -300,7 +307,7 @@ export function AiModalHost() {
     },
     [
       submitQuestion,
-      markAnswerReceived,
+        markAnswerReceived,
       setError,
       isThinking,
       hasError,
@@ -709,6 +716,25 @@ export function AiModalHost() {
             inputRef={composerInputRef}
             relative={isMobile}
           />
+        )}
+        renderFooter={() => (
+          <div className="w-full flex justify-end">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                const { pagePath: metaPagePath, projectSlug: metaProjectSlug } = getPageMeta();
+                trackAIContactClickFromAI({
+                  pagePath: metaPagePath,
+                  projectSlug: metaProjectSlug,
+                  mode: lastAnswerModeRef.current,
+                });
+                close();
+                router.push("/contact");
+              }}
+            >
+              Contact Charles
+            </Button>
+          </div>
         )}
       />
     </>
