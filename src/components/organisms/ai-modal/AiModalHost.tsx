@@ -6,10 +6,11 @@ import { AlertCircle } from "lucide-react";
 import { AiModal } from "./AiModal";
 import { AiConversationRow, type AiConversationRowProps } from "./AiConversationRow";
 import { AiActionsRow, type AiModalAction } from "./AiActionsRow";
+import { RelatedProjectsRow } from "./RelatedProjectsRow";
 import { useAiModal } from "./AiModalContext";
 import { Composer } from "@/components/molecules/Composer";
 import { TypingIndicator } from "@/components/ui/TypingIndicator";
-import type { ModalRequestBody, ModalResponseBody } from "@/app/api/ai/modal/route";
+import type { ModalRequestBody, ModalResponseBody, RelatedProject } from "@/app/api/ai/modal/route";
 
 /**
  * AiModalHost
@@ -68,6 +69,7 @@ export function AiModalHost() {
   // Local state for messages and actions (NOT in state machine)
   const [messages, setMessages] = React.useState<AiConversationRowProps[]>([]);
   const [actions, setActions] = React.useState<AiModalAction[]>([]);
+  const [relatedProjects, setRelatedProjects] = React.useState<RelatedProject[]>([]);
   
   // Local state for composer value (used for pre-filling suggested questions)
   const [composerValue, setComposerValue] = React.useState<string>("");
@@ -93,6 +95,7 @@ export function AiModalHost() {
     if (!isNowOpen || (!wasOpen && isNowOpen)) {
       setMessages([]);
       setActions([]);
+      setRelatedProjects([]);
       setComposerValue("");
       setQueuedUserMessage(null);
       setLastQuestion("");
@@ -206,6 +209,15 @@ export function AiModalHost() {
 
           const data: ModalResponseBody = await res.json();
 
+        // Handle navigation intent - navigate immediately and close modal
+        if (data.navigationIntent?.path) {
+          close();
+          setTimeout(() => {
+            router.push(data.navigationIntent!.path);
+          }, 200); // Small delay to let modal close animation finish
+          return;
+        }
+
         const answerText =
           data.answer?.trim() ||
           "I couldn't generate an answer for that question.";
@@ -225,7 +237,12 @@ export function AiModalHost() {
           setActions(data.actions);
         }
 
-        // 8. Notify the state machine that an answer has been received
+        // 8. Update related projects if any
+        if (data.relatedProjects && data.relatedProjects.length > 0) {
+          setRelatedProjects(data.relatedProjects);
+        }
+
+        // 9. Notify the state machine that an answer has been received
         markAnswerReceived();
         } finally {
           // Always clear timeout
@@ -266,6 +283,8 @@ export function AiModalHost() {
       state.sectionHeadline,
       state.sectionText,
       pathname,
+      close,
+      router,
     ]
   );
 
@@ -445,6 +464,15 @@ export function AiModalHost() {
 
             const data: ModalResponseBody = await res.json();
 
+            // Handle navigation intent - navigate immediately and close modal
+            if (data.navigationIntent?.path) {
+              close();
+              setTimeout(() => {
+                router.push(data.navigationIntent!.path);
+              }, 200); // Small delay to let modal close animation finish
+              return;
+            }
+
             const answerText =
               data.answer?.trim() ||
               "I couldn't generate an answer for that question.";
@@ -462,6 +490,11 @@ export function AiModalHost() {
             // Update actions if any
             if (data.actions && data.actions.length > 0) {
               setActions(data.actions);
+            }
+
+            // Update related projects if any
+            if (data.relatedProjects && data.relatedProjects.length > 0) {
+              setRelatedProjects(data.relatedProjects);
             }
 
             // Notify the state machine that an answer has been received
@@ -511,6 +544,8 @@ export function AiModalHost() {
     markAnswerReceived,
     setError,
     pathname,
+    close,
+    router,
   ]);
 
   // Clear queue when modal closes
@@ -580,6 +615,16 @@ export function AiModalHost() {
                     </span>
                   </div>
                 }
+              />
+            )}
+
+            {/* Show related projects if any */}
+            {relatedProjects.length > 0 && (
+              <RelatedProjectsRow 
+                projects={relatedProjects}
+                onLinkClick={() => {
+                  close();
+                }}
               />
             )}
 

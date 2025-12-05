@@ -33,7 +33,7 @@ export default function About() {
 
       {/* Static About Content - Show when no AI answer or idle */}
       {(!answerLayout || status === "idle") && (
-        <>
+        <div className="mb-40">
           {aboutPageData.sections.map((section, index) => (
             <ContentSection
               key={index}
@@ -49,7 +49,7 @@ export default function About() {
               containerSize={section.variant === "text-with-image" ? "wide" : "default"}
             />
           ))}
-        </>
+        </div>
       )}
     </main>
   );

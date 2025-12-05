@@ -24,7 +24,7 @@ const meta: Meta<typeof AiModal> = {
   },
   args: {
     isOpen: true,
-    headline: "Ask about this portfolio",
+    headline: "",
   },
   decorators: [
     (Story) => (
@@ -80,7 +80,7 @@ export const DefaultOpen: Story = {
     );
   },
   args: {
-    headline: "ASK ABOUT THIS PORTFOLIO",
+    headline: "",
   },
 };
 
@@ -133,7 +133,7 @@ export const ConversationWithActions: Story = {
     );
   },
   args: {
-    headline: "ASK ABOUT THIS PORTFOLIO",
+    headline: "",
   },
 };
 
@@ -207,7 +207,7 @@ export const LongConversationWithActions: Story = {
     );
   },
   args: {
-    headline: "ASK ABOUT THIS PORTFOLIO",
+    headline: "",
   },
 };
 
@@ -243,7 +243,7 @@ export const WithoutHeadline: Story = {
 export const Closed: Story = {
   args: {
     isOpen: false,
-    headline: "Ask about this portfolio",
+    headline: "",
     renderBody: () => (
       <AiConversationRow
         role="ai"
@@ -314,7 +314,7 @@ export const ConversationWithComposer: Story = {
     );
   },
   args: {
-    headline: "ASK ABOUT THIS PORTFOLIO",
+    headline: "",
   },
 };
 
@@ -375,7 +375,7 @@ export const ComposerOnly: Story = {
     );
   },
   args: {
-    headline: "ASK ABOUT THIS PORTFOLIO",
+    headline: "",
   },
 };
 
@@ -486,7 +486,7 @@ const StateMachineDemoInner = () => {
 
     // Tell state machine to open global with section context
     openGlobal({
-      headline: "Ask about this portfolio",
+      headline: "",
       source: "hover-pill",
       selectedText: "This is a generative portfolio powered by AI agents. It uses RAG to retrieve relevant project information and render custom layouts for each case study. The system includes an orchestrator agent that generates PageJSON and a copywriter agent that creates editorial content.",
     });

@@ -5,6 +5,7 @@ import type { CopywriterInput, CopywriterOutput } from "./copywriterSchemas";
 import type { RetrievedChunk } from "@/lib/rag/retrieveProjectChunks";
 import { buildContextFromChunks } from "@/lib/rag/retrieveProjectChunks";
 import { anthropic } from "./client";
+import { caseStudies } from "@/lib/caseStudies/data";
 
 // Project facts type for modal graph
 type ProjectFacts = {
@@ -199,65 +200,56 @@ async function loadAllProjects(): Promise<
     tools?: string[];
   }>
 > {
+  // Use case studies data as the source of truth for available case studies
+  // Filter out hidden projects (Tanger and Real Estate Platform)
+  const filteredCaseStudies = caseStudies.filter(
+    (study) => 
+      study.slug !== "tanger-outlets" && 
+      study.slug !== "real-estate-platform"
+  );
+
+  // Map case studies to project format
+  const projectsFromCaseStudies = filteredCaseStudies.map((study) => {
+    return {
+      slug: study.slug,
+      name: study.projectName,
+      client: study.client,
+      role: study.roleSummary,
+      summary: study.heroSummary,
+      tools: undefined, // Tools will be populated from KB if needed, but case studies are the source of truth
+    };
+  });
+
+  // Try to enrich with tools from KB if available
   try {
-    const allProjects = await getAllProjects();
-    if (allProjects.length > 0) {
-      // Filter out Tanger (temporarily hidden)
-      const filteredProjects = allProjects.filter(
-        (p) => p.facts.projectId !== "tanger" && p.facts.projectId !== "tanger-outlets"
+    const allProjectsKB = await getAllProjects();
+    if (allProjectsKB.length > 0) {
+      // Create a map of KB projects by projectId for quick lookup
+      const kbProjectsMap = new Map(
+        allProjectsKB
+          .filter((p) => p.facts.projectId && p.facts.projectId !== "tanger" && p.facts.projectId !== "tanger-outlets" && p.facts.projectId !== "real-estate-platform")
+          .map((p) => [p.facts.projectId, p])
       );
-      return filteredProjects.map((p) => {
-        const tools = extractTools(p.facts.skillsUsed);
-        return {
-          slug: p.facts.projectId,
-          name: p.facts.client || p.facts.projectId,
-          client: p.facts.client,
-          role: p.facts.role,
-          summary: p.facts.projectSummary,
-          tools: tools.length > 0 ? tools : undefined,
-        };
+
+      // Enrich case studies with tools from KB if available
+      return projectsFromCaseStudies.map((project) => {
+        const kbProject = kbProjectsMap.get(project.slug);
+        if (kbProject) {
+          const tools = extractTools(kbProject.facts.skillsUsed);
+          return {
+            ...project,
+            tools: tools.length > 0 ? tools : undefined,
+          };
+        }
+        return project;
       });
     }
   } catch (error) {
-    console.error("[loadAllProjects] Error loading from KB:", error);
+    console.error("[loadAllProjects] Error loading tools from KB:", error);
+    // Continue with case studies data even if KB fails
   }
 
-  // Fallback static list derived from existing KB
-  return [
-    {
-      slug: "capital-one-travel",
-      name: "Capital One Travel",
-      client: "Capital One",
-      role: "Front-end engineer via AKQA",
-      summary: "Modular front-end experience for airport lounges and travel rewards.",
-      tools: ["React", "TypeScript", "Next.js", "Storybook", "Figma"],
-    },
-    {
-      slug: "pmi",
-      name: "PMI.org Redesign",
-      client: "Project Management Institute",
-      role: "Front-end engineer & technologist",
-      summary:
-        "Redesigned PMI.org with a modular component system and improvements to IA, navigation, and template consistency across a content-heavy site.",
-      tools: ["React", "TypeScript", "Next.js", "Storybook", "Figma"],
-    },
-    {
-      slug: "coke-ai-vending",
-      name: "Coke AI Vending Concept",
-      client: "Coca-Cola",
-      role: "Creative technologist / prototyper",
-      summary: "Prototype for an AI-powered vending experience exploring conversational product discovery.",
-      tools: ["React", "TypeScript", "Node.js", "Figma"],
-    },
-    {
-      slug: "pfaff-design-portfolio",
-      name: "pfaff.design — Generative UI Portfolio",
-      client: "Self-initiated",
-      role: "Design-minded applied AI engineer",
-      summary: "RAG-powered generative UI portfolio blending deterministic layouts with AI-authored content.",
-      tools: ["React", "TypeScript", "Next.js", "Tailwind", "Supabase", "LangChain"],
-    },
-  ];
+  return projectsFromCaseStudies;
 }
 
 /**
@@ -294,17 +286,16 @@ async function loadProjectFactsForSlug(
     // Extract tools from skillsUsed
     const tools = extractTools(facts.skillsUsed);
 
-    // Load all other projects (excluding current)
-    const allProjects = await getAllProjects();
+    // Load all other projects (excluding current) - use case studies as source of truth
+    const allProjects = await loadAllProjects();
     const otherProjects = allProjects
-      .filter((p) => p.facts.projectId !== projectSlug)
-      .slice(0, 5) // Limit to 5 other projects
+      .filter((p) => p.slug !== projectSlug)
       .map((p) => ({
-        slug: p.facts.projectId,
-        name: p.facts.client || p.facts.projectId,
-        client: p.facts.client,
-        role: p.facts.role,
-        summary: p.facts.projectSummary,
+        slug: p.slug,
+        name: p.name,
+        client: p.client,
+        role: p.role,
+        summary: p.summary,
       }));
 
     return {
@@ -372,6 +363,28 @@ function formatProjectFactsForCopywriter(
 }
 
 
+// ============================================================
+// SHARED TONE BLOCK
+// ============================================================
+
+const TONE_BLOCK = `
+Tone & style:
+- Sound like a short-form 99% Invisible / NPR segment: calm, observant, and precise.
+- Keep answers under ~220 words total (aim for 1–3 short paragraphs).
+- Use short sentences. Be professional and approachable, not hypey.
+- Avoid clichés and marketing speak.
+- Never use stage directions (e.g., "leans in", "smiles") or meta-commentary.
+- Avoid "AI-speak" like "leveraging cutting-edge" or "As an AI".
+- You may use **bold** occasionally to highlight 1–2 key phrases, but do not overuse it.
+
+Lead with the answer (critical):
+- Start with 1–2 short paragraphs that directly answer the question before any background or context.
+- The **first sentence must directly answer the user's question** as clearly as possible.
+- Do not start with biography, portfolio overview, or meta commentary. Go straight to the answer.
+- Do not warm up with phrases like "Great question" or "From what I can see".
+- Additional context, nuance, or examples comes **after** the direct answer.
+`.trim();
+
 /**
  * Call LLM for answer_direct mode
  * Simple factual questions with good context
@@ -388,19 +401,7 @@ async function callLLMForAnswerDirect(params: {
 
   const systemPrompt = `You are an assistant that answers questions about Charles Pfaff and his portfolio.
 
-Tone & style:
-- Sound like a short-form 99% Invisible / NPR segment: calm, observant, and precise.
-- Be professional and approachable, not hypey.
-- Avoid clichés and marketing speak.
-- Never use stage directions (e.g., "leans in", "smiles") or meta-commentary.
-- Avoid "AI-speak" like "leveraging cutting-edge" or "As an AI".
-- Answers must be concise: aim for 1–2 short paragraphs, about 3–5 sentences total.
-- You may use **bold** occasionally to highlight 1–2 key phrases, but do not overuse it.
-
-Lead with the answer:
-- The **first sentence must directly answer the user's question** as clearly as possible.
-- Do not warm up with phrases like "Great question" or "From what I can see".
-- Additional context, nuance, or examples comes **after** this first sentence.
+${TONE_BLOCK}
 
 Modes:
 - You receive a \`mode\` field: "answer_direct", "clarify_then_answer", or "low_context_fallback".
@@ -425,19 +426,19 @@ Modes:
 - Mention 2–3 representative projects by name.
 - End with **exactly one** guiding follow-up question.
 
-Project vs. portfolio behavior:
-- When \`projectSlug\` is non-null, you are on a specific case study page.
-- For questions like:
-  - "What did you do on this project?"
-  - "What was your role here?"
-  - "What tools did you use?"
-  - "How did you work with design/product/engineering?"
-- Then:
-  - Focus the answer **only** on the current project.
-  - Use [PROJECT_FACTS], [ROLE], [TOOLS], [PROCESS], and [IMPACT] as your primary source.
-  - Do **not** start by talking about other projects.
-  - Do **not** pivot to generic portfolio summaries.
-
+Project vs. portfolio behavior (CRITICAL):
+- When \`projectSlug\` is set and [PROJECT_FACTS] are present, treat this as a project-specific question.
+- Focus your answer on this project first before mentioning anything else.
+- Structure your answer in this order:
+  1. Client + project name
+  2. Charles's role
+  3. What he actually did (concrete actions, not just responsibilities)
+  4. Tools / stack he used
+  5. How he worked with other disciplines (design, product, engineering)
+  6. Impact / why it mattered
+- Use [PROJECT_FACTS], [ROLE], [TOOLS], [PROCESS], and [IMPACT] as your primary source.
+- Do **not** start by talking about other projects or the broader portfolio.
+- Only mention the broader portfolio at the end if relevant: "This fits into his broader work by…"
 - Only bring in other projects when the user explicitly asks for comparisons or "other examples".
 - The [PORTFOLIO_FACTS] section is mainly for portfolio-wide questions (e.g., "How does this portfolio use AI?", "What kind of work does Charles do overall?").
 
@@ -525,19 +526,7 @@ async function callLLMForClarifyThenAnswer(params: {
 
   const systemPrompt = `You are an assistant that answers questions about Charles Pfaff and his portfolio.
 
-Tone & style:
-- Sound like a short-form 99% Invisible / NPR segment: calm, observant, and precise.
-- Be professional and approachable, not hypey.
-- Avoid clichés and marketing speak.
-- Never use stage directions (e.g., "leans in", "smiles") or meta-commentary.
-- Avoid "AI-speak" like "leveraging cutting-edge" or "As an AI".
-- Answers must be concise: aim for 1–2 short paragraphs, about 3–5 sentences total.
-- You may use **bold** occasionally to highlight 1–2 key phrases, but do not overuse it.
-
-Lead with the answer:
-- The **first sentence must directly answer the user's question** as clearly as possible.
-- Do not warm up with phrases like "Great question" or "From what I can see".
-- Additional context, nuance, or examples comes **after** this first sentence.
+${TONE_BLOCK}
 
 Modes:
 - You receive a \`mode\` field: "answer_direct", "clarify_then_answer", or "low_context_fallback".
@@ -562,19 +551,19 @@ Modes:
 - Mention 2–3 representative projects by name.
 - End with **exactly one** guiding follow-up question.
 
-Project vs. portfolio behavior:
-- When \`projectSlug\` is non-null, you are on a specific case study page.
-- For questions like:
-  - "What did you do on this project?"
-  - "What was your role here?"
-  - "What tools did you use?"
-  - "How did you work with design/product/engineering?"
-- Then:
-  - Focus the answer **only** on the current project.
-  - Use [PROJECT_FACTS], [ROLE], [TOOLS], [PROCESS], and [IMPACT] as your primary source.
-  - Do **not** start by talking about other projects.
-  - Do **not** pivot to generic portfolio summaries.
-
+Project vs. portfolio behavior (CRITICAL):
+- When \`projectSlug\` is set and [PROJECT_FACTS] are present, treat this as a project-specific question.
+- Focus your answer on this project first before mentioning anything else.
+- Structure your answer in this order:
+  1. Client + project name
+  2. Charles's role
+  3. What he actually did (concrete actions, not just responsibilities)
+  4. Tools / stack he used
+  5. How he worked with other disciplines (design, product, engineering)
+  6. Impact / why it mattered
+- Use [PROJECT_FACTS], [ROLE], [TOOLS], [PROCESS], and [IMPACT] as your primary source.
+- Do **not** start by talking about other projects or the broader portfolio.
+- Only mention the broader portfolio at the end if relevant: "This fits into his broader work by…"
 - Only bring in other projects when the user explicitly asks for comparisons or "other examples".
 - The [PORTFOLIO_FACTS] section is mainly for portfolio-wide questions (e.g., "How does this portfolio use AI?", "What kind of work does Charles do overall?").
 
@@ -686,19 +675,7 @@ async function callLLMForLowContext(params: {
 
   const systemPrompt = `You are an assistant that answers questions about Charles Pfaff and his portfolio.
 
-Tone & style:
-- Sound like a short-form 99% Invisible / NPR segment: calm, observant, and precise.
-- Be professional and approachable, not hypey.
-- Avoid clichés and marketing speak.
-- Never use stage directions (e.g., "leans in", "smiles") or meta-commentary.
-- Avoid "AI-speak" like "leveraging cutting-edge" or "As an AI".
-- Answers must be concise: aim for 1–2 short paragraphs, about 3–5 sentences total.
-- You may use **bold** occasionally to highlight 1–2 key phrases, but do not overuse it.
-
-Lead with the answer:
-- The **first sentence must directly answer the user's question** as clearly as possible.
-- Do not warm up with phrases like "Great question" or "From what I can see".
-- Additional context, nuance, or examples comes **after** this first sentence.
+${TONE_BLOCK}
 
 Modes:
 - You receive a \`mode\` field: "answer_direct", "clarify_then_answer", or "low_context_fallback".
@@ -723,19 +700,19 @@ Modes:
 - Mention 2–3 representative projects by name.
 - End with **exactly one** guiding follow-up question.
 
-Project vs. portfolio behavior:
-- When \`projectSlug\` is non-null, you are on a specific case study page.
-- For questions like:
-  - "What did you do on this project?"
-  - "What was your role here?"
-  - "What tools did you use?"
-  - "How did you work with design/product/engineering?"
-- Then:
-  - Focus the answer **only** on the current project.
-  - Use [PROJECT_FACTS], [ROLE], [TOOLS], [PROCESS], and [IMPACT] as your primary source.
-  - Do **not** start by talking about other projects.
-  - Do **not** pivot to generic portfolio summaries.
-
+Project vs. portfolio behavior (CRITICAL):
+- When \`projectSlug\` is set and [PROJECT_FACTS] are present, treat this as a project-specific question.
+- Focus your answer on this project first before mentioning anything else.
+- Structure your answer in this order:
+  1. Client + project name
+  2. Charles's role
+  3. What he actually did (concrete actions, not just responsibilities)
+  4. Tools / stack he used
+  5. How he worked with other disciplines (design, product, engineering)
+  6. Impact / why it mattered
+- Use [PROJECT_FACTS], [ROLE], [TOOLS], [PROCESS], and [IMPACT] as your primary source.
+- Do **not** start by talking about other projects or the broader portfolio.
+- Only mention the broader portfolio at the end if relevant: "This fits into his broader work by…"
 - Only bring in other projects when the user explicitly asks for comparisons or "other examples".
 - The [PORTFOLIO_FACTS] section is mainly for portfolio-wide questions (e.g., "How does this portfolio use AI?", "What kind of work does Charles do overall?").
 
@@ -1286,6 +1263,49 @@ Charles worked as a front-end engineer and technologist on the redesign of PMI.o
         projectSlug: "pmi",
       },
     ];
+  } else if (state.projectSlug === "pfaff-designs") {
+    // For Pfaff.design, provide structured project context
+    const pfaffDesignsContext = `
+[PROJECT_FACTS]
+Client: Self-initiated
+Project: Pfaff.design
+Role: Design Engineer / Applied AI Technologist
+Summary: A portfolio that treats communication as both narrative and conversation. Static pages provide clear case studies, while an embedded agent lets people ask questions, pull in extra context, and explore the structure and systems that support the work.
+
+[ROLE]
+Charles worked as a Design Engineer and Applied AI Technologist on this self-initiated project. He defined the overall concept, designed and implemented the front-end, structured the knowledge base, and designed the AI orchestration layer.
+
+[TOOLS]
+- React
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Design engineering
+- Applied AI orchestration
+- RAG and structured knowledge bases
+- UX writing and narrative design
+
+[PROCESS]
+- Started with planning, research, and questions about how a generative front end should behave and communicate.
+- Explored a fully generative version but shifted to a static site with a structured system underneath.
+- Designed the knowledge base using YAML and JSON for clear, typed content representation.
+- Built intent routing, schemas, and orchestration layer for the embedded agent.
+- Tested prompts and added guardrails to keep the system predictable and honest.
+
+[IMPACT]
+- Delivered a working portfolio that tells clear stories while also exposing structure and systems.
+- Created an embedded agent that answers questions using only curated knowledge base content.
+- Developed a practical framework for combining static narrative pages with conversational exploration.
+- Deepened experience with building AI-assisted interfaces that stay grounded and predictable.
+`.trim();
+
+    retrievedChunks = [
+      {
+        text: pfaffDesignsContext,
+        relevanceScore: 0.85,
+        projectSlug: "pfaff-designs",
+      },
+    ];
   } else {
     // For any other project, leave empty array
     retrievedChunks = [];
@@ -1304,8 +1324,8 @@ Charles worked as a front-end engineer and technologist on the redesign of PMI.o
 
 async function buildContextBlobNode(state: ModalGraphState): Promise<Partial<ModalGraphState>> {
   const question = state.question || "";
-  const isOnHomePage = state.pagePath === "/" || state.projectSlug === "pfaff-designs-portfolio";
-  const isOnProjectPage = !!state.projectSlug && !isOnHomePage;
+  const isOnHomePage = state.pagePath === "/";
+  const isOnProjectPage = !!state.projectSlug && state.pagePath !== "/";
   const isPortfolioLevel = isPortfolioLevelQuestion(question);
   
   // Build a structured contextBlob
@@ -1387,7 +1407,7 @@ async function buildContextBlobNode(state: ModalGraphState): Promise<Partial<Mod
     
     if (questionAsksForOtherProjects && state.allProjects && state.allProjects.length > 0) {
       blob += "\n\n--- OTHER PROJECTS ---\n";
-      const otherProjects = state.allProjects.filter(p => p.slug !== state.projectSlug).slice(0, 3);
+      const otherProjects = state.allProjects.filter(p => p.slug !== state.projectSlug);
       for (const p of otherProjects) {
         const parts: string[] = [];
         parts.push(p.name);
@@ -1520,11 +1540,9 @@ async function conversationPolicyNode(state: ModalGraphState): Promise<Partial<M
     }
   }
 
-  // 3.2 Portfolio questions on / or portfolio project → answer_direct
+  // 3.2 Portfolio questions on / → answer_direct
   if (!modeAlreadyDecided) {
-    const onPortfolioPage =
-      state.pagePath === "/" ||
-      projectSlug === "pfaff-designs-portfolio";
+    const onPortfolioPage = state.pagePath === "/";
 
     const portfolioQuestion = isPortfolioQuestion(question);
 
@@ -1713,11 +1731,11 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
 
   if (projectsQ && !toolsQ && allProjects.length > 0) {
     const others = allProjects.filter((p) => p.slug !== state.projectSlug);
-    const top = others.slice(0, 3);
-    if (top.length > 0) {
+    // List ALL case studies, not just 3
+    if (others.length > 0) {
       const answer = [
         "Outside of this project, Charles has worked on several others:",
-        ...top.map((p) => {
+        ...others.map((p) => {
           const client = p.client ? ` for ${p.client}` : "";
           const role = p.role ? ` (${p.role})` : "";
           const summary = p.summary ?? "";

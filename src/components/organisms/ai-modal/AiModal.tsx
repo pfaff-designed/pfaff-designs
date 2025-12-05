@@ -94,7 +94,7 @@ const useIsMobile = () => {
 export const AiModal: React.FC<AiModalProps> = ({
   isOpen,
   onClose,
-  headline = "Ask about this portfolio",
+  headline = "",
   renderBody,
   renderActions,
   renderComposer,
@@ -325,7 +325,6 @@ export const AiModal: React.FC<AiModalProps> = ({
             ref={cardRef}
             className={cn(
               "relative z-50 h-full w-full flex flex-col",
-              "bg-[color:var(--bg-default)]",
               "transition-opacity duration-[180ms] ease-[cubic-bezier(0.33,1,0.68,1)]",
               isOpen ? "opacity-100" : "opacity-0"
             )}
@@ -336,7 +335,7 @@ export const AiModal: React.FC<AiModalProps> = ({
             {/* Mobile Header (Fixed) */}
             <div
               ref={mobileHeaderRef}
-              className="flex items-center justify-between px-6 py-3 border-b border-[color:var(--border-subtle)] border-opacity-20"
+              className="relative flex items-center justify-between px-6 py-3 border-b border-[color:var(--border-subtle)] border-opacity-20"
             >
               {/* Logo - Navigate home and close modal */}
               <button
@@ -362,12 +361,12 @@ export const AiModal: React.FC<AiModalProps> = ({
               {/* AI Indicator */}
               <Sparkles className="h-4 w-4 text-[color:var(--text-muted)] opacity-60" />
 
-              {/* Close Button */}
+              {/* Close Button - Absolutely positioned in top right */}
               <button
                 onClick={onClose}
                 aria-label="Close AI assistant"
                 data-close-button
-                className="shrink-0 inline-flex items-center justify-center size-10 rounded-full p-0 text-[color:var(--text-default)] hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--text-default)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg-default)] transition-opacity cursor-pointer"
+                className="absolute top-3 right-6 shrink-0 inline-flex items-center justify-center size-10 rounded-full p-0 text-[color:var(--text-default)] opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--text-default)] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent transition-opacity cursor-pointer z-[100]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -439,7 +438,6 @@ export const AiModal: React.FC<AiModalProps> = ({
         onClick={(e) => e.stopPropagation()}
         className={cn(
           "relative z-50 w-full max-w-[920px] max-h-[80vh]",
-          "bg-[color:var(--bg-default)]",
           "overflow-y-auto",
           "transition-all duration-[180ms] ease-[cubic-bezier(0.33,1,0.68,1)]",
           "p-6 md:p-8 lg:p-12",
@@ -455,7 +453,7 @@ export const AiModal: React.FC<AiModalProps> = ({
           WebkitMaskComposite: 'source-in',
         }}
       >
-        {/* Close Button - Absolutely positioned */}
+        {/* Close Button - Absolutely positioned in top right corner */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -463,14 +461,14 @@ export const AiModal: React.FC<AiModalProps> = ({
           }}
           aria-label="Close AI assistant"
           data-close-button
-          className="absolute top-12 right-20 shrink-0 inline-flex items-center justify-center size-12 rounded-full p-0 text-[color:var(--text-default)] opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--text-default)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--bg-default)] transition-opacity cursor-pointer z-10"
+          className="absolute top-6 right-6 shrink-0 inline-flex items-center justify-center size-12 rounded-full p-0 text-[color:var(--text-default)] opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--text-default)] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent transition-opacity cursor-pointer z-[100]"
         >
           <X className="h-5 w-5" strokeWidth={2.5} />
         </button>
 
         {/* Content - styled like DefaultSection */}
         <div className="flex flex-col items-center justify-center w-full">
-          <div className="w-full max-w-[33.625rem]">
+          <div className="w-full max-w-[33.625rem] mr-24">
             {headline && (
               <Heading
                 text={headline}

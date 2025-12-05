@@ -1,56 +1,59 @@
 {
   "version": 1,
   "kind": "project_facts",
-  "projectId": "coca-cola-hydration-vending",
+  "projectId": "coca-cola-creative-technology",
   "client": "Coca-Cola",
-  "industry": "Brand, Creative Technology, Innovation",
-  "one_liner": "Explored a hydration-aware vending concept through research, data modeling, and an interactive prototype.",
+  "industry": "Brand, Creative Technology, Applied AI",
+  "one_liner": "Explored applied AI and creative technology initiatives to support brand storytelling, internal workflows, and digital experiences.",
   "timeline": {
     "year": 2023,
-    "duration": "Innovation sprint"
+    "duration": "Series of innovation sprints"
   },
   "role": "Creative Technologist / Applied AI Researcher",
   "team": {
     "company": "AKQA",
     "collaborators": [
-      "Designers",
-      "Art Directors",
-      "Creative Directors",
-      "AI/ML Experimentation Team"
+      "Brand/creative teams",
+      "Strategy partners",
+      "Engineering partners",
+      "Innovation stakeholders"
     ]
   },
-  "projectSummary": "Researched hydration detection, modeled simulated sensor data, and built an AI-assisted prototype for a hydration-aware vending experience.",
+  "projectSummary": "Charles worked with Coca-Cola on a series of applied AI and creative technology initiatives, exploring how generative models and intelligent tools could support brand storytelling, internal workflows, and new digital experiences. His work focused on turning abstract AI capabilities into tangible prototypes that were understandable and usable by non-technical teams.",
   "problem": {
-    "summary": "The team needed a grounded way to evaluate whether an AI-assisted hydration experience was feasible without access to real sensors or hardware."
+    "summary": "The team needed to move from abstract conversations about 'AI' to concrete, evaluable experiments that could demonstrate real value in creative and strategic workflows."
   },
   "goals": [
-    "Understand feasible approaches to hydration detection for consumer environments",
-    "Model simulated hydration data based on scientific research",
-    "Design interpretation logic for AI-assisted product recommendations",
-    "Prototype the end-to-end user flow for early concept evaluation",
-    "Explore both near-term feasibility and far-future product directions"
+    "Identify high-leverage use cases for applied AI in brand and creative contexts",
+    "Build prototypes that show how AI can support creative workflows",
+    "Make complex technical concepts accessible to cross-functional partners",
+    "Help stakeholders understand constraints and risks of AI implementations",
+    "Create patterns and mental models for applied AI at Coca-Cola"
   ],
   "responsibilities": [
-    "Researched hydration science and existing detection hardware",
-    "Created a simulated hydration data model with realistic variability",
-    "Designed interpretation rules mapping hydration states to product sets",
-    "Built an interactive prototype demonstrating the full experience",
-    "Collaborated with creative leadership to refine behavior and flow",
-    "Outlined far-future vision concepts such as nutrient-mixing systems"
+    "Collaborated with creative and strategy partners to identify AI use cases",
+    "Evaluated capabilities and tradeoffs of different AI models and approaches",
+    "Built prototypes and internal demos showing AI in creative workflows",
+    "Framed complex technical concepts in accessible language",
+    "Acted as bridge between AI research and brand/creative teams"
   ],
   "skillsUsed": [
     "Applied AI prototyping",
-    "Data modeling and signal interpretation",
+    "React",
+    "TypeScript",
+    "Node.js",
+    "Modern LLMs and generative tools",
+    "API-driven prototyping",
     "Creative technology research",
-    "Interaction flow design",
-    "Prompt and behavior design",
-    "Rapid prototyping"
+    "Cross-functional communication",
+    "Figma"
   ],
   "outcomes": [
-    "Delivered a working prototype that demonstrated the hydration-aware experience",
-    "Helped the team evaluate feasibility and user understanding before hardware investment",
-    "Provided clarity on which aspects of hydration detection were plausible",
-    "Established a near-term concept and a far-future vision for leadership review"
+    "Enabled stakeholders to see how AI might support real workflows",
+    "Created concrete understanding of AI constraints and risks",
+    "Helped leadership make grounded decisions about AI directions",
+    "Established clearer internal language and mental model for applied AI",
+    "Delivered prototypes and patterns for future teams to build on"
   ],
   "links": []
 }

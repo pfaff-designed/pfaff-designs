@@ -13,7 +13,7 @@ export const caseStudies: CaseStudyPage[] = [
     url: "https://capitalonetravel.com/",
     timeframe: "2023 to 2024",
     heroSummary:
-      "I worked on Capital One Travel across several phases of the product, contributing to components and pages that needed to support new content and new priorities as the platform grew. One ongoing challenge was expanding the site as Capital One opened new airport lounges. My work focused on building templates and components that made it possible to roll out new lounge pages without reinventing the structure each time. The goal was to create UI that felt cohesive, stable, and simple to extend as new locations launched.",
+      "Built templates and components that made it possible to roll out new airport lounge pages without reinventing the structure each time.",
     roleSummary:
       "Front-End Engineer",
     sections: [
@@ -56,7 +56,7 @@ export const caseStudies: CaseStudyPage[] = [
     url: "https://www.pmi.org/certifications/agile-acp",
     timeframe: "2023",
     heroSummary:
-      "PMI is a globally recognized organization in the project management and agile certification space. They needed a refreshed site for their Agile Certified Practitioner (ACP) program that communicated the value of the certification in a clear and trustworthy way.",
+      "Built components and refined patterns for PMI's redesigned certification experience using a structured design system.",
     roleSummary:
       "Engineer",
     sections: [
@@ -93,7 +93,7 @@ export const caseStudies: CaseStudyPage[] = [
     url: "https://www.tanger.com/",
     timeframe: "2022",
     heroSummary:
-      "Tanger was redesigning its entire platform, and the work reached deep into the system architecture. I contributed by building front-end components, fixing bugs, and helping wire the middleware that translated third-party deal data into predictable formats for the UI.",
+      "Built fast, accessible UI components and helped wire middleware that translated third-party deal data into predictable formats.",
     roleSummary:
       "Front-End Engineer",
     sections: [
@@ -130,7 +130,7 @@ export const caseStudies: CaseStudyPage[] = [
     url: undefined,
     timeframe: "2023",
     heroSummary:
-      "Anyone who has trained seriously knows dehydration does not hit all at once. It shows up as small changes: a little fatigue, a dip in focus, the sense that something is off even if you cannot name it. Most people rely on instinct to catch those moments, not instruments.\n\nCoca-Cola wanted to explore a vending concept that could help people before they reached that point. The idea was to read a simple hydration signal, interpret it responsibly, and recommend a product that matched the person's condition.\n\nMy role was to figure out how that experience could work in practice. I researched how hydration is measured, evaluated existing detection hardware, created simulated data based on the science, and shaped how the system should interpret that information. From there, I built a prototype flow that let the team see the idea as something real rather than theoretical.",
+      "Explored applied AI and creative technology initiatives, turning abstract capabilities into tangible prototypes for brand storytelling and internal workflows.",
     roleSummary:
       "Creative Technologist / Applied AI Researcher",
     sections: [
@@ -173,7 +173,7 @@ export const caseStudies: CaseStudyPage[] = [
     url: undefined,
     timeframe: undefined,
     heroSummary:
-      "Helped design and implement a modern real estate experience; details are anonymized due to client confidentiality. The work focused on creating flexible, user-friendly interfaces for property search, listings, and client interactions.",
+      "Built flexible, user-friendly interfaces for property search and listings; details anonymized due to client confidentiality.",
     roleSummary:
       "Front-End Engineer / Technologist",
     sections: [
@@ -210,7 +210,7 @@ export const caseStudies: CaseStudyPage[] = [
     url: undefined,
     timeframe: "2024–2025",
     heroSummary:
-      "Pfaff.design started as a simple portfolio refresh and became an experiment in how to communicate complex work. My projects live at the intersection of UX, engineering, and applied AI, and those layers rarely fit neatly into screenshots. I wanted a portfolio that could tell a story on the surface and also open up into a deeper conversation when someone wanted to go further.",
+      "A portfolio designed to tell a clear story on the surface while opening up into deeper conversations about UX, engineering, and applied AI.",
     roleSummary:
       "Design Engineer / Applied AI Technologist",
     sections: [

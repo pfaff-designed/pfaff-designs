@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { filterCommands, createCommandContext, type Command } from "@/lib/cmdk";
 import type { UseCommandPaletteReturn } from "@/lib/cmdk/useCommandPalette";
 import type { UseInlineChatReturn } from "@/lib/inline-chat/useInlineChat";
+import { detectNavigationIntent } from "@/lib/navigation/navigation-intent";
 
 // Feature flag: Set to false to disable inline chat and use AI modal instead
 const ENABLE_INLINE_CHAT = false;
@@ -226,7 +227,16 @@ export function CommandPalette({
   // Submit handler (same logic as Enter key)
   const handleSubmit = React.useCallback(() => {
     if (input.trim().length > 0 && allCommands.length === 0) {
-      // No matching commands: fall back to AI modal (inline chat disabled)
+      // Check for navigation intent before falling back to AI modal
+      const navigationIntent = detectNavigationIntent(input.trim());
+      if (navigationIntent.type !== "none" && navigationIntent.path && navigationIntent.confidence !== "low") {
+        // Navigate directly
+        closePalette();
+        router.push(navigationIntent.path);
+        return;
+      }
+
+      // No matching commands and not navigation: fall back to AI modal (inline chat disabled)
       closePalette();
       if (ENABLE_INLINE_CHAT) {
         const position = typeof window !== "undefined"
@@ -269,6 +279,7 @@ export function CommandPalette({
     projectSlug,
     inlineChat,
     openAiModal,
+    router,
   ]);
 
   // Keyboard navigation
