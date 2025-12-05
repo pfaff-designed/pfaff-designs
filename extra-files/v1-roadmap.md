@@ -426,7 +426,7 @@ Explore naive evaluation heuristics and decide whether they’re viable.
 6. Validate modal behavior end-to-end.
 
 **Status: In Progress**  
-**Time Estimate: ~12–16 hrs**  
+**Time Estimate: ~12–17 hrs**  
 **Time Spent (so far): ~8 hrs**
 
 ### 9.1 Replace Direct Copywriter Call  
@@ -988,7 +988,13 @@ Do one last full sweep to catch regressions and confirm the system is ready for 
 - Intentionally scoped to be tight and pragmatic, not a full testing framework
 
 ---
-# Phase 16 — Replace History Summary with Sliding Message Window (Option C)  
+
+---
+####
+post v1.5
+---
+
+# Phase 17 — Replace History Summary with Sliding Message Window (Option C)  
 ### Phase Steps
 1. Add history[] to modalGraph input.
 2. Build rolling window (4–6 messages).
@@ -1003,7 +1009,6 @@ Do one last full sweep to catch regressions and confirm the system is ready for 
 **Estimate: 6–8 hrs**
 
 Upgrade the conversation memory model to use a short rolling window of recent messages (Atlas-style) instead of the current history summary. This will improve contextual coherence in multi-turn conversations without compromising determinism or blowing up token usage.
-
 
 
 ## 16.1 History Window Implementation  

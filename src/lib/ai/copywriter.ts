@@ -267,7 +267,7 @@ async function callCopywriterLLM(input: CopywriterInput): Promise<CopywriterOutp
   } catch (schemaError) {
     console.error("[Copywriter] ❌ Schema validation failed:", schemaError);
     if (schemaError instanceof z.ZodError) {
-      console.error("[Copywriter] Schema validation errors:", schemaError.errors);
+      console.error("[Copywriter] Schema validation issues:", schemaError.issues);
       console.error("[Copywriter] Issues found:", schemaError.issues.map(i => ({
         path: i.path.join("."),
         message: i.message,

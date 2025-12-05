@@ -12,8 +12,8 @@ const SLUG_TO_KB_PROJECT: Record<string, string> = {
 };
 
 // Import KB facts JSON files
-import capitalOneFacts from "../../../knowledge-base/projects/capital-one/capital-one-short-form.JSON";
-import pmiFacts from "../../../knowledge-base/projects/pmi/pmi-shortform.JSON";
+import capitalOneFacts from "../../../knowledge-base/projects/capital-one/capital-one-short-form.json";
+import pmiFacts from "../../../knowledge-base/projects/pmi/pmi-shortform.json";
 import cokeFacts from "../../../knowledge-base/projects/coke/coke-facts.json";
 import pfaffDesignsFacts from "../../../knowledge-base/projects/pfaff-designs/pfaff-designs.json";
 

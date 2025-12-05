@@ -24,6 +24,7 @@ export const PageContextSchema = z.object({
     id: z.string(),
     eyebrow: z.string(),
     heading: z.string(),
+    body: z.string().optional(),
     label: z.string().optional(), // Optional label, defaults to heading if not provided
   })).optional(),
 });

@@ -238,11 +238,11 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
           <>
         {status === "loading" && lastPrompt ? (
           <p className="text-base leading-5 text-[var(--text-default)] w-[24.875rem] text-left pl-[2rem] opacity-75">
-            Thinking about: "{lastPrompt}"
+            Thinking about: &quot;{lastPrompt}&quot;
           </p>
         ) : status === "success" && lastPrompt && lastUpdatedAt ? (
           <p className="text-base leading-5 text-[var(--text-default)] w-[24.875rem] text-left pl-[2rem] opacity-50">
-            Last updated {formatRelativeTime(lastUpdatedAt)} based on: "{lastPrompt}"
+            Last updated {formatRelativeTime(lastUpdatedAt)} based on: &quot;{lastPrompt}&quot;
           </p>
         ) : displayQuery ? (
           <p className="text-base leading-5 text-[var(--text-default)] w-[24.875rem] text-left pl-[2rem] opacity-50">
