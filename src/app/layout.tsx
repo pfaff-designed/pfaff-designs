@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import "./globals.css";
 import { Header } from "@/components/organisms/Header";
 import { Footer } from "@/components/organisms/Footer";
@@ -8,6 +7,7 @@ import { SectionProvider } from "@/components/organisms/ai/SectionContext";
 import { AiModalProvider, AiModalHost, AiHoverPillHost, FloatingAiButton } from "@/components/organisms/ai-modal";
 import { CommandPaletteProvider } from "@/components/organisms/CommandPalette/CommandPaletteProvider";
 import { ToastProvider } from "@/components/molecules/Toast";
+import { PlausibleAnalytics } from "@/components/analytics/PlausibleAnalytics";
 
 export const metadata: Metadata = {
   title: "pfaff-designs",
@@ -28,12 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Script
-          defer
-          data-domain="pfaff.design"
-          src="https://plausible.io/js/script.js"
-          strategy="afterInteractive"
-        />
+        <PlausibleAnalytics />
         <ToastProvider>
           <AiModalProvider>
           <AIAnswerProvider>

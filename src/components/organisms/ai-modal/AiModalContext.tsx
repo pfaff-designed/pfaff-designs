@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { startAIModalTimer, stopAIModalTimer, trackAIModalClose, trackAIModalOpen } from "@/lib/analytics/aiModal";
 
 // ============================================================
 // TYPES
@@ -334,6 +335,28 @@ const AiModalContext = React.createContext<AiModalContextValue | null>(null);
 
 export function AiModalProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = React.useReducer(aiModalReducer, initialState);
+  const prevIsOpenRef = React.useRef(false);
+
+  // Track modal open/close and duration
+  React.useEffect(() => {
+    const wasOpen = prevIsOpenRef.current;
+    if (state.isOpen && !wasOpen) {
+      trackAIModalOpen();
+      startAIModalTimer();
+    } else if (!state.isOpen && wasOpen) {
+      trackAIModalClose();
+      stopAIModalTimer();
+    }
+    prevIsOpenRef.current = state.isOpen;
+
+    return () => {
+      if (prevIsOpenRef.current) {
+        trackAIModalClose();
+        stopAIModalTimer();
+        prevIsOpenRef.current = false;
+      }
+    };
+  }, [state.isOpen]);
 
   const value: AiModalContextValue = React.useMemo(
     () => ({
