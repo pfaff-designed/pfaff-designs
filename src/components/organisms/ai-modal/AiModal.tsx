@@ -14,6 +14,7 @@ export interface AiModalProps {
   renderBody?: () => React.ReactNode;
   renderActions?: () => React.ReactNode;
   renderComposer?: () => React.ReactNode;
+  renderFooter?: () => React.ReactNode;
 }
 
 /**
@@ -98,6 +99,7 @@ export const AiModal: React.FC<AiModalProps> = ({
   renderBody,
   renderActions,
   renderComposer,
+  renderFooter,
 }) => {
   const modalRef = React.useRef<HTMLDivElement>(null);
   const cardRef = React.useRef<HTMLDivElement>(null);
@@ -486,11 +488,12 @@ export const AiModal: React.FC<AiModalProps> = ({
         </div>
 
         {/* Composer will render separately outside modal card */}
-      </div>
+        </div>
     </div>
 
       {/* Composer - rendered separately at bottom center */}
       {renderComposer && renderComposer()}
+      {renderFooter && <div className="w-full px-6 mt-4">{renderFooter()}</div>}
     </>
   );
 };

@@ -41,6 +41,8 @@ export function trackAIAnswerShown(params: {
   pagePath: string;
   projectSlug: string | null;
   mode?: string | null;
+  question?: string;
+  answer?: string;
 }): void {
   const plausible = safePlausible();
   if (!plausible) return;
@@ -52,6 +54,8 @@ export function trackAIAnswerShown(params: {
       page_path: params.pagePath,
       project_slug: params.projectSlug,
       mode,
+      question: params.question,
+      answer: params.answer,
     },
   });
 }
@@ -59,6 +63,7 @@ export function trackAIAnswerShown(params: {
 export function trackAIContactClickFromAI(params: {
   pagePath: string;
   projectSlug: string | null;
+  mode?: string | null;
 }): void {
   const plausible = safePlausible();
   if (!plausible) return;
@@ -67,6 +72,7 @@ export function trackAIContactClickFromAI(params: {
     props: {
       page_path: params.pagePath,
       project_slug: params.projectSlug,
+      mode: params.mode ? normalizeMode(params.mode) : undefined,
     },
   });
 }
