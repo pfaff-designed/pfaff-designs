@@ -450,7 +450,7 @@ export const Renderer: React.FC<RendererProps> = ({
         style={{ height: "calc(100dvh - 12rem)" }}
       >
         <div className="p-6 text-left text-text-muted max-w-[25rem]">
-          <p>Hey 👋, my name is Charles, I'm a design-minded engineer who builds RAG based front-ends and generative ui experiences. Thanks for visiting!</p>
+          <p>Hey 👋, my name is Charles, I&apos;m a design-minded engineer who builds RAG based front-ends and generative ui experiences. Thanks for visiting!</p>
         </div>
       </div>
     );

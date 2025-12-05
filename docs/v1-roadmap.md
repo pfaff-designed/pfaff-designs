@@ -426,7 +426,7 @@ Explore naive evaluation heuristics and decide whether they’re viable.
 6. Validate modal behavior end-to-end.
 
 **Status: In Progress**  
-**Time Estimate: ~12–16 hrs**  
+**Time Estimate: ~12–17 hrs**  
 **Time Spent (so far): ~8 hrs**
 
 ### 9.1 Replace Direct Copywriter Call  
@@ -729,7 +729,7 @@ Make it easy to recover from a 404.
 ---
 
 # Phase 13 — Final Content Pass
-**Status: In Progress**  
+**Status: Complete**  
 **Estimate: 4–6 hrs**
 **Time Spent (so far): ~3–4 hrs**
 
@@ -801,6 +801,19 @@ Tighten the overall narrative and visual rhythm.
 - Pass over headlines, subheadlines, and body text
 - Adjust spacing, alignment, and section breaks where needed
 - Confirm tone is warm, clear, and recruiter-friendly
+
+**Left to Do**
+- mobile: padding on footer needs to be fixed
+- flip where the show more/collapse and quick actions in the command palette
+- Get the AI to render quick actions to navigate user to another site
+- Remove work
+- Update Card Gallery
+- About, remove redundant eyebrows
+- increase space on case study hero
+- 2-column-image-left should appear under the section just like the 2-column-image-right
+- double check final section content padding
+- ensure footer ctas and links work
+- ensure command palette can't go lower than the footer
 
 #### 📘 Phase History (Nov 26–Dec 3)
 - Nov 26: Added as a last-mile polish step before Analytics & Insights.
@@ -975,7 +988,106 @@ Do one last full sweep to catch regressions and confirm the system is ready for 
 - Intentionally scoped to be tight and pragmatic, not a full testing framework
 
 ---
-# Phase 16 — Replace History Summary with Sliding Message Window (Option C)  
+
+---
+####
+post v1.5
+---
+
+# Phase 17 — Launch & Production Rollout  
+### Phase Steps
+1. Prepare production environment and deployment target (Vercel).
+2. Wire up domain, DNS, and HTTPS.
+3. Configure environment variables and secrets for production.
+4. Run final smoke tests against the production URL.
+5. Turn on analytics and basic monitoring.
+6. Announce launch and capture first feedback.
+
+**Status: Not Started**  
+**Estimate: 4–6 hrs**
+
+Phase 17 is the moment where the portfolio moves from "local and staging" to a reliable, recruiter-ready production experience. The goal is a calm, predictable launch—no surprises for visitors, and an easy path to iterate after V1 is live.
+
+---
+
+## 17.1 Production Environment & Deployment
+**Estimated Time: 1–2 hrs**
+
+**Goal**  
+Choose a production deployment target, configure the project for repeatable deploys, and verify that the build is stable in a production-like environment.
+
+**Deliverables**
+- Vercel (or equivalent) project created and linked to the Git repo
+- Production build passing (no blocking TypeScript or runtime errors)
+- Environment-specific settings confirmed (e.g., `NEXT_PUBLIC_*` vs server-only env vars)
+- Clear deploy flow: merge to `main` → production deploy
+
+---
+
+## 17.2 Domain, DNS & HTTPS
+**Estimated Time: 1–2 hrs**
+
+**Goal**  
+Make the site reachable at its real public URL with valid HTTPS, ready for recruiters and collaborators.
+
+**Deliverables**
+- Domain selected and configured (e.g., `pfaff.design`)
+- DNS records (A/CNAME) pointing to the production host
+- Valid HTTPS certificate active
+- Basic check that canonical URLs (Home, Work, individual projects, Contact, 404) resolve correctly
+
+---
+
+## 17.3 Environment Variables & Third-Party Services
+**Estimated Time: 1 hr**
+
+**Goal**  
+Ensure all production-only secrets and integration settings are configured safely and consistently.
+
+**Deliverables**
+- Production env vars set for:
+  - LangSmith / LangGraph
+  - OpenAI / Anthropic keys (if applicable)
+  - Supabase URL and anon/service keys
+  - Postmark email settings
+  - Analytics provider keys (from Phase 14)
+- Sanity check that no secrets are committed to the repo
+- Quick round-trip verification: contact form, AI modal, and any external calls work on production
+
+---
+
+## 17.4 Production Smoke Test & Launch Checklist
+**Estimated Time: 1–1.5 hrs**
+
+**Goal**  
+Run through the site in its production environment as a recruiter or hiring manager would, and confirm that the experience feels stable, fast, and coherent.
+
+**Deliverables**
+- Final pass on:
+  - Home → Work → Case study → Contact flows
+  - Cmd+K palette, modal assistant, and any AI-powered interactions
+  - Mobile and desktop layouts for key pages
+- Confirm analytics events are firing (page views, Cmd+K, modal usage)
+- Short punchlist of truly non-blocking issues to handle post-launch
+- Personal "go live" decision recorded
+
+---
+
+## 17.5 Announcement & First Feedback Loop
+**Estimated Time: 0.5–1 hr**
+
+**Goal**  
+Soft-launch the portfolio to a small audience, gather first reactions, and treat feedback as input for the next iteration.
+
+**Deliverables**
+- Portfolio link shared with a small, trusted group (friends, peers, mentors, past collaborators)
+- Optional: a short post or email framing what this V1 is trying to demonstrate
+- A simple place to collect feedback (Notion doc, email label, or similar)
+- Notes distilled into candidates for Phase 16+ / post‑V1.5 improvements
+
+---
+
+# Phase 18 — Replace History Summary with Sliding Message Window (Option C)  
 ### Phase Steps
 1. Add history[] to modalGraph input.
 2. Build rolling window (4–6 messages).
@@ -992,8 +1104,7 @@ Do one last full sweep to catch regressions and confirm the system is ready for 
 Upgrade the conversation memory model to use a short rolling window of recent messages (Atlas-style) instead of the current history summary. This will improve contextual coherence in multi-turn conversations without compromising determinism or blowing up token usage.
 
 
-
-## 16.1 History Window Implementation  
+## 18.1 History Window Implementation  
 **Estimated Time: 2–3 hrs**
 
 **Goal**  
@@ -1005,7 +1116,7 @@ Add a bounded `history: Message[]` field to the modalGraph input and wire it end
 
 ---
 
-## 16.2 Node & Policy Updates  
+## 18.2 Node & Policy Updates  
 **Estimated Time: 2–3 hrs**
 
 **Goal**  
@@ -1021,7 +1132,7 @@ Replace the summary node with a rolling window and teach the graph to reason ove
 
 ---
 
-## 16.3 Prompt & Evaluation Updates  
+## 18.3 Prompt & Evaluation Updates  
 **Estimated Time: 2–3 hrs**
 
 **Goal**  

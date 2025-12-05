@@ -1,0 +1,5 @@
+**/*.stories.tsx
+**/*.stories.ts
+**/*.stories.mdx
+storybook-static/**
+
