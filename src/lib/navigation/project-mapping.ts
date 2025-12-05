@@ -18,7 +18,7 @@ export interface ProjectMapping {
 /**
  * Project name to slug mappings with aliases and keywords
  */
-const PROJECT_MAPPINGS: ProjectMapping[] = [
+export const PROJECT_MAPPINGS: ProjectMapping[] = [
   {
     slug: "capital-one-travel",
     label: "Capital One Travel",

@@ -45,7 +45,7 @@ export interface AiModalState {
 export type AiModalEvent =
   | { type: "OPEN_FROM_SELECTION"; payload: { selectedText: string; headline?: string } }
   | { type: "OPEN_GLOBAL"; payload?: { headline?: string; topicLabel?: string; topicId?: string; source?: AiModalSource; selectedText?: string } }
-  | { type: "OPEN_AI_MODAL"; payload: { question: string; pagePath?: string; projectSlug?: string; sectionHeadline?: string; sectionText?: string } }
+  | { type: "OPEN_AI_MODAL"; payload: { question: string; pagePath?: string; projectSlug?: string; sectionHeadline?: string; sectionText?: string; source?: AiModalSource } }
   | { type: "SET_COMPOSER_VALUE"; payload: { value: string } }
   | { type: "SUBMIT_QUESTION"; payload?: { question?: string } }
   | { type: "SET_THINKING" }

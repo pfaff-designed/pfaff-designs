@@ -48,17 +48,19 @@ export const CommandPaletteContainer = React.forwardRef<
     ref,
   ) => {
 
-    const containerRef = React.useRef<HTMLDivElement>(null);
+    const containerRef = React.useRef<HTMLDivElement | null>(null);
     const [footerHeight, setFooterHeight] = React.useState<number>(0);
     
     // Merge refs: both forward ref and internal ref
     const setRefs = React.useCallback(
       (node: HTMLDivElement | null) => {
-        containerRef.current = node;
+        (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
         if (typeof ref === "function") {
           ref(node);
-        } else if (ref) {
-          ref.current = node;
+        } else if (ref && "current" in ref) {
+          // Type assertion needed because RefObject.current is read-only in types
+          // but we need to assign it in practice
+          (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
         }
       },
       [ref],
