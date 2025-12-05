@@ -1,61 +1,75 @@
 {
-    "version": 1,
-    "kind": "project_facts",
-    "projectId": "capital-one-travel",
-    "client": "Capital One Travel",
-    "industry": "Travel, Financial Services",
-    "timeline": {
-      "year": 2023,
-      "duration": "Multi-sprint engagement"
-    },
-    "role": "Front-End Engineer / Technologist",
-    "team": {
-      "company": "AKQA",
-      "collaborators": [
-        "Designers",
-        "Art Directors",
-        "Product Owners",
-        "Back-end Engineers",
-        "QA"
-      ]
-    },
-    "projectSummary": "Developed flexible, reusable front-end components and UI patterns for Capital One Travel, supporting new booking flows, UI updates, and user experience improvements.",
-    "problem": {
-      "summary": "Capital One Travel needed to enhance parts of their booking platform with clearer UI patterns, more consistent components, and improved user flows for rewards-focused travelers."
-    },
-    "goals": [
-      "Support new booking and rewards flow updates",
-      "Improve clarity and usability across travel modules",
-      "Translate complex design requirements into stable components",
-      "Strengthen consistency across the travel experience"
-    ],
-    "responsibilities": [
-      "Building React components aligned with Capital One’s design system",
-      "Collaborating closely with designers to refine UI patterns",
-      "Translating Figma interactions into stable, predictable components",
-      "Implementing responsive layouts for travel modules",
-      "Improving clarity through front-end behavior and interaction polish",
-      "Supporting design QA and cross-browser testing"
-    ],
-    "skillsUsed": [
-      "React",
-      "TypeScript",
-      "Next.js",
-      "Design-engineering collaboration",
-      "Responsive layout",
-      "UI polish",
-      "Design system implementation",
-      "Component-driven architecture"
-    ],
-    "outcomes": [
-      "Delivered flexible UI components used across new travel booking flows",
-      "Improved clarity and interaction patterns for rewards and purchase flows",
-      "Strengthened cross-team alignment on front-end UX details"
-    ],
-    "links": [
-      {
-        "label": "Capital One Travel",
-        "url": "https://capitalonetravel.com/"
-      }
+  "version": 1,
+  "kind": "project_facts",
+  "projectId": "capital-one-travel",
+  "client": "Capital One",
+  "industry": "Financial Services, Travel",
+  "one_liner": "I worked on Capital One Travel across several phases of the product, contributing to components and pages that needed to support new content and new priorities as the platform grew. One ongoing challenge was expanding the site as Capital One opened new airport lounges. My work focused on building templates and components that made it possible to roll out new lounge pages without reinventing the structure each time. The goal was to create UI that felt cohesive, stable, and simple to extend as new locations launched.",
+  
+  "timeline": {
+    "year": 2023,
+    "duration": "2023 to 2024"
+  },
+
+  "role": "Front-End Engineer",
+
+  "team": {
+    "company": "AKQA",
+    "collaborators": [
+      "Designers",
+      "Art Directors",
+      "Product Owners",
+      "Front-end Engineers",
+      "QA"
     ]
-  }
+  },
+
+  "projectSummary": "I worked on Capital One Travel across several phases of the product, contributing to components and pages that needed to support new content and new priorities as the platform grew. One ongoing challenge was expanding the site as Capital One opened new airport lounges. My work focused on building templates and components that made it possible to roll out new lounge pages without reinventing the structure each time. The goal was to create UI that felt cohesive, stable, and simple to extend as new locations launched.",
+
+  "problem": {
+    "summary": "Capital One Travel evolved through many short development cycles, often with different teams contributing at different times.  When new lounges opened, each page needed its own content and layout, but it also had to feel like part of the same experience. The challenge was working within the patterns that existed while strengthening the areas where the system had started to drift."
+  },
+
+  "goals": [
+    "Build templates and components that supported new lounge pages",
+    "Make new work feel like part of the existing system",
+    "Work with what the system already provides",
+    "Make the product easier to extend",
+    "Strengthen reusable pieces and leave the system more predictable"
+  ],
+
+  "responsibilities": [
+    "Built components and layouts that could support the platform as it expanded",
+    "Shaped new pages for lounge launches",
+    "Refined existing patterns so future contributors could work more smoothly",
+    "Understood how the system behaved, which parts were reliable, and where updates would make the experience more consistent",
+    "Made thoughtful adjustments to the interface so new additions felt natural"
+  ],
+
+  "skillsUsed": [
+    "React",
+    "TypeScript",
+    "Next.js",
+    "Tailwind CSS",
+    "Component architecture",
+    "Responsive layout engineering",
+    "System-oriented front-end development",
+    "Cross-functional collaboration"
+  ],
+
+  "outcomes": [
+    "Made the site easier to update as new lounges and new content rolled out",
+    "Reduced the amount of one-off development needed for each launch",
+    "Improved interface consistency across different pages",
+    "Aligned spacing rules to reduce design and engineering drift",
+    "Reused interaction patterns to give QA fewer variations to track",
+    "Cleaned up older components to make the system more predictable"
+  ],
+
+  "links": [
+    {
+      "label": "Capital One Travel",
+      "url": "https://www.capitalonetravel.com/"
+    }
+  ]
+}

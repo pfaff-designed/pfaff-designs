@@ -1,39 +1,55 @@
-version: "1"
-kind: "project_longform"
+version: 1
+id: tanger
+kind: case_study
+
+meta:
+  title: "Tanger"
+  slug: "/work/tanger"
 
 project:
-  id: "tanger-outlets"
-  title: "Tanger Outlets Digital Experience"
-  client: "Tanger Outlets"
-  industry: "Retail, E-commerce"
-  role: "Front-End Engineer / Technologist"
+  client: "Tanger"
+  title: "Tanger Digital Experience Refresh"
+  role: "Front-End Engineer"
+  year: "2022"
+  one_liner: "Charles contributed to Tanger's digital refresh by building fast, accessible UI components that supported a modernized shopping and discovery experience across Tanger locations."
+
+project_facts: |
+  Client: Tanger
+  Project: Tanger Digital Experience Refresh
+  Role: Front-End Engineer
+  Summary: Charles contributed to Tanger's digital refresh by building fast, accessible UI components that supported a modernized shopping and discovery experience across Tanger locations.
+  Team: Product managers, UX designers, front-end and platform engineers
 
 context: |
-  Tanger Outlets needed an updated digital experience that better reflected their modern retail brand. The redesign spanned marketing pages, promotional modules, retail listings, and content blocks that needed to be flexible enough to support ongoing updates. The work required close collaboration between design, engineering, and client teams.
-
-  Through AKQA, I worked as a front-end engineer focused on turning Figma designs into reusable, responsive components that could adapt to many use cases across the Tanger site.
+  Tanger wanted to evolve their digital experience to feel more modern, responsive, and aligned with their updated brand direction. The team needed flexible components that supported location discovery, offers, events, and tenant information—while ensuring consistent performance across devices.
 
 problem: |
-  Tanger’s existing platform needed more consistent components, clearer layouts, and more flexible content modules. Promotions, retail content, and marketing updates all needed to be easier to support, and the experience needed to be more polished across mobile and desktop screens.
+  The legacy UI was rigid, inconsistent, and difficult to scale. Different Tanger locations needed localized content, but the system lacked components flexible enough to support that variation without duplicating UI logic.
 
 solution: |
-  I developed a set of component-driven UI modules using React and TypeScript. The work required translating design concepts into maintainable components that fit Tanger’s brand system and supported content variations. I focused heavily on responsive behavior to ensure the experience felt seamless across breakpoints.
-
-  I also collaborated with designers and art directors to refine the details—spacing, hierarchy, alignment, and micro-interactions—to bring clarity and cohesion to the experience.
+  Charles developed modular UI components in React + TypeScript that supported dynamic content modules, improved layout consistency, and increased performance across breakpoints. His work emphasized accessibility, responsiveness, and ease of integration with Tanger's backend systems.
 
 process: |
-  I began by reviewing the design specifications for each module and identifying the best architectural approach for flexibility and reuse. I then built components using predictable state handling and clear props structures.
+  - Translated updated design direction into reusable UI patterns.
+  - Built location-aware modules that allowed each Tanger center to present offers, events, and store information consistently.
+  - Improved performance through careful component optimization and reduced layout thrashing.
+  - Enhanced accessibility through semantic markup and keyboard interaction support.
+  - Closely collaborated with design and backend teams to validate content flows and handle edge cases.
 
-  Throughout implementation, I worked closely with designers to adjust interactions, refine spacing, and ensure the UI behaved as intended. On the engineering side, I partnered with backend teams to integrate dynamic content and ensure components rendered correctly with real data.
-
-  I tested everything across multiple devices to confirm that breakpoints, typography, and layout held together. The team iterated quickly, so communication and responsiveness were essential to keeping everything aligned.
-
-outcomes: |
-  The new components supported a more cohesive and modern digital experience for Tanger. Marketing teams gained flexible modules they could reuse across the site, and the updated layouts improved readability and navigation. The final work helped strengthen Tanger’s brand presence and made maintenance more efficient for future updates.
+impact: |
+  The refreshed component library improved consistency across Tanger's digital ecosystem and reduced engineering overhead for location-specific pages. The result was a cleaner, more engaging experience that supported both brand expression and functional discovery.
 
 reflections: |
-  This project sharpened my ability to create components that balance design expectations with technical constraints. It reinforced the value of reusable architecture, especially for marketing-driven platforms where content needs to evolve frequently. I enjoyed shaping UI patterns that felt intentional, clean, and reliable at scale.
+  Charles appreciated the challenge of building flexible components that worked across many types of content while staying true to Tanger's evolving brand language. The project strengthened his skills in performance-minded UI engineering and cross-team collaboration.
+
+other_sections: |
+  - Context
+  - Problem
+  - Solution
+  - Process
+  - Outcomes
+  - Reflections
 
 links:
-  - label: "Tanger Outlet"
-    url: "https://www.tanger.com/"
+  - label: "Visit Tanger"
+    url: "https://www.tanger.com"

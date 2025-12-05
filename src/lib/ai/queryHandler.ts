@@ -15,10 +15,15 @@ import {
   convertSectionsToLongform,
 } from "@/lib/kb/adapter";
 import { kbCache } from "@/lib/kb/cache";
-import { generateCopywriterYAML } from "./copywriter";
+import { runCopywriter } from "./copywriter";
+import type { CopywriterInput, CopywriterOutput } from "./copywriterSchemas";
 import { generateOrchestratorJSON } from "./orchestrator";
+import { getHeroFacts } from "@/lib/kb/CaseStudyHeroFacts";
 import { componentRegistry } from "@/lib/registry/componentRegistry";
-import { traceable } from "langsmith/traceable";
+import { retrieveProjectChunks, buildContextFromChunks } from "@/lib/rag/retrieveProjectChunks";
+// You *can* keep traceable here if you really want tracing,
+// but I'd recommend disabling it while tuning perf.
+// import { traceable } from "langsmith/traceable";
 
 /**
  * Load Knowledge Base via Supabase, falling back to legacy filesystem data.
@@ -31,11 +36,10 @@ async function loadKnowledgeBaseWithFallback(): Promise<KBData> {
     const supabaseKB = await loadSupabaseKB();
     kbData = adaptSupabaseKBToLegacy(supabaseKB);
   } catch (error) {
-    console.warn("Supabase load failed, falling back to legacy loader:", error);
+    // Supabase load failed, falling back to legacy loader
   }
 
   if (!kbData) {
-    console.warn("Supabase KB unavailable, loading legacy filesystem KB.");
     return await loadLegacyKB();
   }
 
@@ -43,19 +47,21 @@ async function loadKnowledgeBaseWithFallback(): Promise<KBData> {
   const missingIdentity = !kbData.identity;
 
   if (missingProjects || missingIdentity) {
-    console.warn("KB missing data from Supabase, merging with legacy fallback.", {
-      missingProjects,
-      missingIdentity,
-    });
     try {
       const legacyKB = await loadLegacyKB();
       kbData = {
-        projects: !missingProjects && kbData.projects ? kbData.projects : legacyKB.projects,
+        projects:
+          !missingProjects && kbData.projects
+            ? kbData.projects
+            : legacyKB.projects,
         identity: kbData.identity ?? legacyKB.identity,
-        media: kbData.media && kbData.media.length > 0 ? kbData.media : legacyKB.media,
+        media:
+          kbData.media && kbData.media.length > 0
+            ? kbData.media
+            : legacyKB.media,
       };
     } catch (legacyError) {
-      console.error("Failed to load legacy KB for fallback merge:", legacyError);
+      // Failed to load legacy KB for fallback merge
     }
   }
 
@@ -63,106 +69,131 @@ async function loadKnowledgeBaseWithFallback(): Promise<KBData> {
 }
 
 /**
- * Resolve YAML for a query using intent, caching, and Copywriter agent.
+ * Build a stable, semantic key for YAML based on intent,
+ * NOT on the raw query string.
  */
-async function getYamlForQuery(
-  query: string
-): Promise<{ yaml: string; cacheKey: string }> {
-  console.log("Resolving intent for query:", query);
-  const intent = await resolveIntent(query);
-  const yamlCacheKey = kbCache.getYAMLKey(query, intent.intent);
-  const cachedYAML = kbCache.get<string>(yamlCacheKey);
-  if (cachedYAML) {
-    console.log("Using cached YAML");
-    return { yaml: cachedYAML, cacheKey: yamlCacheKey };
-  }
-
-  const topicKey = intent.topic?.projectSlug || intent.intent;
-  let kbData = kbCache.get<KBData>(topicKey);
-
-  if (!kbData) {
-    kbData = await loadKnowledgeBaseWithFallback();
-    kbCache.set(topicKey, kbData, 5 * 60 * 1000);
-  }
-
-  if (!kbData) {
-    throw new Error("Failed to load knowledge base data.");
-  }
-
-  console.log("KB Data loaded:", {
-    projectsCount: kbData.projects?.length || 0,
-    hasIdentity: !!kbData.identity,
-    mediaCount: kbData.media?.length || 0,
-    projectIds: kbData.projects?.map((p) => p.facts.projectId) || [],
+function makeYamlCacheKey(intent: Awaited<ReturnType<typeof resolveIntent>>): string {
+  return JSON.stringify({
+    kind: intent.pageKind,
+    intent: intent.intent,
+    projectSlug: intent.topic?.projectSlug ?? null,
+    audience: intent.audience ?? "unknown",
   });
+}
 
-  // If project-specific, load targeted project data + media
-  if (intent.topic?.projectSlug) {
-    try {
-      const project = await getSupabaseProject(intent.topic.projectSlug);
-      if (project) {
-        const adaptedProject = {
-          facts: convertProjectRowToFacts(project.facts),
-          longform: convertSectionsToLongform(project.facts, project.sections),
-        };
-        kbData.projects = [adaptedProject];
+/**
+ * Get CopywriterOutput for a query using intent, caching, and Copywriter agent.
+ * NOTE: intent is passed in, so we don't call resolveIntent twice.
+ */
+async function getCopywriterOutputForQuery(
+  query: string,
+  intent: Awaited<ReturnType<typeof resolveIntent>>,
+  context: string
+): Promise<{ output: CopywriterOutput; cacheKey: string }> {
+  const cacheKey = makeYamlCacheKey(intent);
+  const cachedOutput = kbCache.get<CopywriterOutput>(cacheKey);
+  if (cachedOutput) {
+    return { output: cachedOutput, cacheKey };
+  }
 
-        if (project.media && project.media.length > 0) {
-          kbData.media = project.media.map((m) => ({
-            id: m.id,
-            project_slug: m.project_slug,
-            type: m.type,
-            role: m.role,
-            alt: m.alt,
-            caption: m.caption,
-          }));
-        }
+  // Build projectShortFacts from hero facts if projectId is known
+  let projectShortFacts: CopywriterInput["projectShortFacts"] | undefined;
+  const projectId = intent.topic?.projectSlug || null;
+  
+  if (projectId) {
+    const heroFacts = await getHeroFacts(projectId);
+    if (heroFacts) {
+      // Load additional facts from KB for outcomes and skills
+      const topicKey = projectId;
+      let kbData = kbCache.get<KBData>(topicKey);
+      if (!kbData) {
+        kbData = await loadKnowledgeBaseWithFallback();
+        kbCache.set(topicKey, kbData, 5 * 60 * 1000);
       }
-    } catch (error) {
-      const legacyProject = await getLegacyProject(intent.topic.projectSlug);
-      if (legacyProject) {
-        kbData.projects = [legacyProject];
+
+      if (kbData) {
+        const project = kbData.projects?.find((p) => p.facts.projectId === projectId);
+        projectShortFacts = {
+          client: heroFacts.client,
+          projectNameOrUrl: heroFacts.projectNameOrUrl,
+          role: heroFacts.role,
+          description: heroFacts.description,
+          yearOrTimeline: heroFacts.yearOrTimeline,
+          team: heroFacts.team,
+          keyOutcomes: project?.facts.outcomes || [],
+          keySkills: project?.facts.skillsUsed || [],
+        };
+      } else {
+        // Fallback to just hero facts
+        projectShortFacts = {
+          client: heroFacts.client,
+          projectNameOrUrl: heroFacts.projectNameOrUrl,
+          role: heroFacts.role,
+          description: heroFacts.description,
+          yearOrTimeline: heroFacts.yearOrTimeline,
+          team: heroFacts.team,
+        };
       }
     }
   }
 
-  console.log("Generating Copywriter YAML...");
-  console.log("Copywriter input:", {
-    query,
-    intent: intent.intent,
-    pageKind: intent.pageKind,
-    projectsCount: kbData.projects?.length || 0,
-    hasIdentity: !!kbData.identity,
+  const output = await runCopywriter({
+    question: query,
+    context,
+    projectId,
+    sectionTitle: "General",
+    sectionBody: "",
+    projectShortFacts,
   });
 
-  const yaml = await generateCopywriterYAML({
-    userQuery: query,
-    intent,
-    kbData,
-  });
+  kbCache.set(cacheKey, output, 10 * 60 * 1000);
 
-  console.log("Copywriter YAML generated (first 500 chars):", yaml.substring(0, 500));
-  kbCache.set(yamlCacheKey, yaml, 10 * 60 * 1000);
-
-  return { yaml, cacheKey: yamlCacheKey };
+  return { output, cacheKey };
 }
 
 /**
  * Main entry point used by /api/query
- * Wrapped with LangSmith tracing for monitoring
  */
-const handleQueryInternal = traceable(
-  async (query: string): Promise<PageJSON> => {
+export async function handleQuery(query: string): Promise<PageJSON> {
   try {
     console.time("handleQuery");
-    console.time("yaml-resolution");
-    const { yaml: yamlText, cacheKey: yamlCacheKey } = await getYamlForQuery(query);
-    console.timeEnd("yaml-resolution");
 
-    const jsonCacheKey = `${yamlCacheKey}:pagejson`;
+    // 🔹 Resolve intent ONCE
+    const intent = await resolveIntent(query);
+
+    // Retrieve relevant chunks using RAG (vector search)
+    const projectId = intent.topic?.projectSlug || null;
+    const retrievedChunks = await retrieveProjectChunks(query, {
+      projectId: projectId || undefined,
+      matchCount: 8,
+    });
+    const context = buildContextFromChunks(retrievedChunks);
+
+    console.time("copywriter-resolution");
+    let copywriterOutput: CopywriterOutput;
+    let copywriterCacheKey: string;
+    try {
+      const result = await getCopywriterOutputForQuery(
+        query,
+        intent,
+        context
+      );
+      copywriterOutput = result.output;
+      copywriterCacheKey = result.cacheKey;
+      console.timeEnd("copywriter-resolution");
+    } catch (copywriterError: any) {
+      console.timeEnd("copywriter-resolution");
+      console.error("❌ Copywriter error caught in queryHandler:", copywriterError.message);
+      console.error("Copywriter stack:", copywriterError.stack);
+      // Re-throw to be caught by outer error handler
+      throw copywriterError;
+    }
+
+    // 🔹 JSON cache key SHOULD include questionFocus,
+    // because layout depends on it
+    const jsonCacheKey = `${copywriterCacheKey}:pagejson:${intent.questionFocus}`;
     const cachedPageJSON = kbCache.get<PageJSON>(jsonCacheKey);
     if (cachedPageJSON) {
-      console.log("Using cached orchestrator PageJSON");
       console.timeEnd("handleQuery");
       return cachedPageJSON;
     }
@@ -170,28 +201,38 @@ const handleQueryInternal = traceable(
     const registrySummary = {
       components: Object.keys(componentRegistry),
       categories: Array.from(
-        new Set(Object.values(componentRegistry).map((entry) => entry.category))
+        new Set(
+          Object.values(componentRegistry).map((entry) => entry.category)
+        )
       ),
     };
 
-    console.log("Generating Orchestrator JSON...");
     console.time("orchestrator-call");
     const pageJSON = await generateOrchestratorJSON({
-      yaml: yamlText,
+      copywriterOutput,
+      intent,
       registrySummary,
+      questionFocus: intent.questionFocus,
     });
     console.timeEnd("orchestrator-call");
-    console.log("Query handling complete");
 
     kbCache.set(jsonCacheKey, pageJSON, 10 * 60 * 1000);
     console.timeEnd("handleQuery");
 
     return pageJSON;
   } catch (error) {
-    console.error("Error in handleQuery:", error);
-
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
+
+    console.error("❌ handleQuery error:", error);
+    console.error("Error stack:", error instanceof Error ? error.stack : "No stack");
+    console.error("Error name:", error instanceof Error ? error.name : typeof error);
+    
+    // Check if it's a template error
+    if (errorMessage.includes("Single '}' in template") || errorMessage.includes("template")) {
+      console.error("🔍 This is a template parsing error. Check LangSmith prompt for unescaped braces.");
+      console.error("The error likely occurred in promptLoader or copywriter template formatting.");
+    }
 
     const fallback: PageJSON = {
       version: "1",
@@ -213,18 +254,4 @@ const handleQueryInternal = traceable(
 
     return fallback;
   }
-  },
-  {
-    name: "handle-query",
-    project_name: "pr-potable-commitment-61",
-    tags: ["query-handler", "pipeline"],
-    metadata: {
-      component: "query-handler",
-    },
-  }
-);
-
-export async function handleQuery(query: string): Promise<PageJSON> {
-  return handleQueryInternal(query);
 }
-

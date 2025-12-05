@@ -6,6 +6,9 @@ import { Heading } from "@/components/atoms/Heading";
 import { BodyText } from "@/components/atoms/BodyText";
 import { Tag } from "@/components/atoms/Tag";
 
+// NOTE: Potentially unused component - verify usage before removing
+// See: docs/repo-audit-2024-12-04.md section 6.1
+
 export interface MediaCardProps extends React.HTMLAttributes<HTMLDivElement> {
   image?: {
     src: string;

@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "kind": "project_facts",
+  "projectId": "pfaff-designs",
+  "client": "Self-initiated",
+  "industry": "Personal Portfolio, UX, Applied AI",
+  "one_liner": "Designed and built a portfolio that combines clear case studies with an embedded agent, so people can explore both the story and the structure behind the work.",
+  "timeline": {
+    "year": 2024,
+    "duration": "Ongoing personal project (2024–2025)"
+  },
+  "role": "Design Engineer / Applied AI Technologist",
+  "team": {
+    "company": "Independent",
+    "collaborators": [
+      "Self-directed project"
+    ]
+  },
+  "projectSummary": "Pfaff.design is a portfolio that treats communication as both narrative and conversation. Static pages provide clear case studies, while an embedded agent lets people ask questions, pull in extra context, and explore the structure and systems that support the work.",
+  "problem": {
+    "summary": "Traditional portfolios make it hard to show work that sits between UX, engineering, and applied AI. They focus on finished visuals and short summaries, but do not easily reveal the reasoning, systems, and technical depth behind the projects."
+  },
+  "goals": [
+    "Create a portfolio that works for different types of readers: skimmers, detail-seekers, and technically curious people.",
+    "Keep the main narrative simple and fast to read while still making deeper context accessible.",
+    "Design an embedded agent that can answer questions using only structured project data, without inventing work or clients.",
+    "Use the project as a real-world testbed for applied AI patterns like intent routing, orchestration, and structured knowledge bases."
+  ],
+  "responsibilities": [
+    "Defined the overall concept for a portfolio that behaves more like a conversation than a static gallery.",
+    "Designed and implemented the front-end using React, Next.js, TypeScript, Tailwind, and a component-based layout system.",
+    "Structured the knowledge base in YAML and JSON so that each project’s content could be reused by both the site and the agent.",
+    "Designed and tested the AI orchestration layer, including intent routing, validation schemas, and guardrails for safe, grounded answers.",
+    "Configured the embedded agent to surface project details, tools, roles, and explanations in a way that feels clear and honest.",
+    "Iterated on prompts and system behavior to keep responses concise, conversational, and aligned with the tone of the site."
+  ],
+  "skillsUsed": [
+    "React",
+    "Next.js",
+    "TypeScript",
+    "Tailwind CSS",
+    "Design engineering",
+    "Applied AI orchestration",
+    "RAG and structured knowledge bases",
+    "UX writing and narrative design"
+  ],
+  "outcomes": [
+    "Delivered a working portfolio that tells clear stories while also exposing the structure and systems behind the work.",
+    "Created an embedded agent that can answer questions about roles, tools, and project details using only curated knowledge base content.",
+    "Developed a practical framework for combining static narrative pages with conversational, AI-assisted exploration.",
+    "Deepened experience with building AI-assisted interfaces that stay grounded, predictable, and easy to reason about."
+  ],
+  "links": [
+    {
+      "label": "Visit pfaff.design",
+      "url": "https://pfaff.design"
+    }
+  ]
+}

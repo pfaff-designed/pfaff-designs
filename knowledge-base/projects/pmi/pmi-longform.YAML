@@ -1,35 +1,57 @@
-version: "1"
-kind: "project_longform"
+version: 1
+id: pmi
+kind: case_study
+
+meta:
+  title: "Project Management Institute"
+  slug: "/work/pmi"
 
 project:
-  id: "pmi-agile-certification"
-  title: "PMI Agile Certification Site"
-  client: "PMI (Project Management Institute)"
-  industry: "Professional Certification, Education"
-  role: "Front-End Engineer / Technologist"
+  client: "Project Management Institute"
+  title: "PMI Website Redesign"
+  role: "Front-End Engineer"
+  year: "2022"
+  one_liner: "Built components and refined patterns for PMI's redesigned certification experience using a structured design system and Radix UI primitives."
+
+project_facts: |
+  Client: Project Management Institute
+  Project: PMI Website Redesign
+  Role: Front-End Engineer
+  Summary: Charles built components and refined patterns for PMI's redesigned certification experience using a structured design system and Radix UI primitives. He worked from precise Figma specs, translated design tokens into reliable front-end patterns, and collaborated closely with designers and engineers to ensure the system reflected the intended experience.
+  Team: PMI designer, PM, senior engineer, AKQA team
 
 context: |
-  PMI is a globally recognized organization in the project management and agile certification space. They needed a refreshed site for their Agile Certified Practitioner (ACP) program that communicated the value of the certification in a clear and trustworthy way. The experience had to support users across a wide range of backgrounds, devices, and levels of familiarity with agile methods.
-
-  The project was delivered through AKQA, where I worked alongside designers, art directors, project managers, and back-end engineers to build a responsive and accessible experience. My role centered on front-end engineering and design translation, turning Figma concepts into reliable components and layouts.
+  PMI was undergoing a brand refresh and a redesign of the user experience for people pursuing certifications. The existing site was functional but inconsistent, and the new direction required an interface that was clearer, more cohesive, and easier to navigate.
+  To support this, the team invested in a well-structured component library built on design tokens and predictable patterns. The goal was to create a system that could scale across complex content while staying consistent and easy to maintain.
 
 problem: |
-  The existing presentation of PMI’s Agile certification content felt dated and lacked clarity. Users had trouble understanding key benefits, requirements, and the value of the credential. The page also needed better responsiveness for mobile users and a more modern visual approach that aligned with PMI’s evolving brand.
+  The certification platform supports a large, global audience, and the content spans many formats and flows. The system needed to present complex information clearly, create visual and behavioral consistency across pages, translate detailed design tokens into reliable front-end patterns, and support a structured, scalable component library.
+  The challenge was to bring a carefully defined design system into code while keeping the components flexible enough to work across multiple layouts.
 
 solution: |
-  I helped build a modern, responsive front-end using React, TypeScript, and Tailwind. I translated design files into accessible components and ensured the visual experience matched PMI’s updated brand direction. The new structure made it easier for users to understand the certification and explore the content on any device.
+  Charles implemented components with Radix UI primitives and shaped them to reflect PMI's detailed design system. He worked from precise Figma specs and used design tokens to build components that behaved consistently across the site. He collaborated closely with the PMI designer, PM, and senior engineer to refine interactions and make sure the system reflected the intended patterns. He also introduced a PR checklist template that helped improve the consistency and clarity of code reviews.
 
 process: |
-  I started by reviewing the designs with the creative team to ensure that the intended interactions were feasible and could be built cleanly. As I developed the components, I collaborated closely with designers to refine spacing, hierarchy, and layout details.
+  - Built new components and refined existing patterns using Radix primitives, ensuring alignment between Figma specifications, design tokens, and front-end behavior.
+  - Worked with design to polish spacing, interactions, and visual details so that the components matched the intended experience.
+  - Addressed UI issues and verified consistent behavior across multiple content states, participating in QA and design reviews to support the stability of the system.
+  - Helped maintain a clear and predictable component library by following established patterns and reinforcing organized workflows, creating a PR checklist that supported consistent reviews across the team.
 
-  My workflow centered on modular components, predictable state handling, and strong accessibility practices. I tested all work across multiple breakpoints and worked with the back-end team to integrate dynamic content. Throughout the process, I focused on ensuring the pages felt unified, readable, and consistent across viewports.
-
-outcomes: |
-  The updated site improved clarity around PMI’s Agile certification and delivered a more modern, responsive experience. The components proved reusable and maintainable for future updates, and the final build aligned with PMI’s visual and accessibility standards. The redesign made it easier for users to understand the certification value and navigate the information confidently.
+impact: |
+  The redesign delivered a clearer and more cohesive experience for PMI's global certification audience. The structured component library created a stable foundation that could support future growth and evolving content needs.
+  This project shaped how Charles thinks about front-end engineering. It taught him how strong systems are built, how to translate design tokens into code, and how clarity in process leads to clarity in the final product.
 
 reflections: |
-  This project reinforced my approach to design-engineering collaboration. Working closely with designers helped ensure the build matched the intended experience without unnecessary complexity. It also deepened my practice of balancing clarity, readability, and accessibility in marketing-oriented pages. The work further shaped my ability to merge strong engineering with thoughtful design.
+  PMI was one of the best organized and best structured projects Charles worked on early in his career. It showed him what it looks like when a design system is treated as a product, and it taught him how to work inside a clear, well-considered framework. Those lessons continue to influence how he approaches front-end development and system design.
+
+other_sections: |
+  - Context
+  - Problem
+  - Solution
+  - Process
+  - Outcomes
+  - Reflections
 
 links:
-  - label: "PMI Agile Certification Overview"
-    url: "https://www.pmi.org/certifications/agile-acp?gad_campaignid=21784826064&gbraid=0AAAAADkaZHu3l9j1xQG5OHP9M7-yCdDtG"
+  - label: "Visit PMI"
+    url: "https://www.pmi.org/"

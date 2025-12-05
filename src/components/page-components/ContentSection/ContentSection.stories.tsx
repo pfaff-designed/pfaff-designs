@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { ContentSection } from "./ContentSection";
+import { AiModalProvider, AiModalHost, AiHoverPillHost } from "@/components/organisms/ai-modal";
 
 const meta: Meta<typeof ContentSection> = {
   title: "Page Components/ContentSection",
@@ -17,10 +18,12 @@ const meta: Meta<typeof ContentSection> = {
         "2-column-image-right",
         "2-column-image-left",
         "card-gallery",
+        "project-card-grid",
         "text-with-image",
         "annotated-visual",
         "half-and-half-column",
         "timeline",
+        "default",
       ],
     },
   },
@@ -38,7 +41,7 @@ export const FullWidth: Story = {
     eyebrow: "Subtitle",
     body: "THIS IS A HIGH LEVEL SUMMARY I helped build a travel booking platform that improved conversion by 15%.",
     projectDetails: {
-      client: "Capital One",
+      tools: ["React", "TypeScript", "Next.js"],
       role: "Developer",
       year: "2024-2025",
     },
@@ -167,5 +170,114 @@ export const Timeline: Story = {
       },
     ],
   },
+};
+
+export const Default: Story = {
+  args: {
+    variant: "default",
+    headline: "Direct Response to user Query",
+    imageSrc: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=60",
+    imageAlt: "Urban night scene with neon lights",
+    contentBlocks: [
+      {
+        eyebrow: "TOPIC",
+        body: "Content content content Content content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content content",
+      },
+      {
+        eyebrow: "TOPIC",
+        body: "Content content content Content content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content content",
+      },
+    ],
+  },
+};
+
+export const DefaultWithRichText: Story = {
+  args: {
+    variant: "default",
+    headline: "Direct Response to user Query",
+    imageSrc: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=60",
+    imageAlt: "Urban night scene with neon lights",
+    contentBlocks: [
+      {
+        eyebrow: "TOPIC",
+        body: "<p>This is a paragraph with <strong>bold text</strong>, <em>italic text</em>, and <s>strikethrough text</s>. You can also combine them like <strong><em>bold and italic</em></strong> or <strong><s>bold and strikethrough</s></strong>.</p>",
+        richText: true,
+      },
+      {
+        eyebrow: "TOPIC",
+        body: "<p>Here's another paragraph with <strong>important bold content</strong> and <em>emphasized italic text</em>. We can also have <s>removed or deprecated content</s> that shows what was changed.</p><p>Multiple paragraphs are supported. This second paragraph has <strong>bold</strong>, <em>italic</em>, and <s>strikethrough</s> formatting as well. You can mix and match formatting like <strong><em><s>all three together</s></em></strong>.</p>",
+        richText: true,
+      },
+    ],
+  },
+};
+
+export const DefaultSimple: Story = {
+  args: {
+    variant: "default",
+    headline: "Direct Response to user Query",
+    eyebrow: "TOPIC",
+    body: "Content content content Content content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content contentContent content content",
+    imageSrc: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=60",
+    imageAlt: "Urban night scene with neon lights",
+  },
+};
+
+/**
+ * Interactive Hover Test
+ * 
+ * This story demonstrates the hover-based AI pill interaction:
+ * 
+ * Desktop:
+ * - Hover over the section → pill appears at cursor
+ * - Move cursor away → pill disappears
+ * - Click pill → opens AI modal
+ * 
+ * Mobile/Touch:
+ * - Tap the section → pill appears at top-center
+ * - Tap outside → pill disappears
+ * - Tap pill → opens AI modal
+ * 
+ * The section is wrapped with AiModalProvider to enable the full interaction flow.
+ */
+export const InteractiveHoverTest: Story = {
+  args: {
+    variant: "default",
+    headline: "Design System Principles",
+    contentBlocks: [
+      {
+        eyebrow: "CONSISTENCY",
+        body: "Our design system ensures visual and functional consistency across all platforms. Every component follows the same design principles, making the experience predictable and reliable for users.",
+      },
+      {
+        eyebrow: "SCALABILITY",
+        body: "Built to grow with your product. Our modular approach allows teams to quickly build new features while maintaining design quality and brand integrity across the entire ecosystem.",
+      },
+    ],
+  },
+  render: (args) => (
+    <AiModalProvider>
+      <div style={{ padding: "2rem", minHeight: "100vh" }}>
+        <div style={{ 
+          marginBottom: "2rem", 
+          padding: "1rem", 
+          backgroundColor: "var(--bg-surface)", 
+          borderRadius: "var(--radius-md)",
+          fontFamily: "var(--font-mono)",
+          fontSize: "0.875rem"
+        }}>
+          <strong>Test Instructions:</strong>
+          <ul style={{ marginTop: "0.5rem", paddingLeft: "1.5rem" }}>
+            <li><strong>Desktop:</strong> Hover over the content section below to see the AI pill follow your cursor</li>
+            <li><strong>Mobile:</strong> Tap the content section to show the pill at the top-center of the screen</li>
+            <li><strong>Interaction:</strong> Click/tap the pill to open the AI modal with the section's headline</li>
+          </ul>
+        </div>
+        <ContentSection {...args} />
+      </div>
+      <AiModalHost />
+      <AiHoverPillHost />
+    </AiModalProvider>
+  ),
 };
 

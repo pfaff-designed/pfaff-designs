@@ -3,6 +3,9 @@ import { Textarea, type TextareaProps } from "@/components/atoms/Textarea";
 import { Button } from "@/components/atoms/Button";
 import { cn } from "@/lib/utils";
 
+// NOTE: Potentially unused component - verify usage before removing
+// See: docs/repo-audit-2024-12-04.md section 6.1
+
 export interface TextareaWithButtonProps extends Omit<TextareaProps, "className"> {
   buttonText?: string;
   onButtonClick?: () => void;

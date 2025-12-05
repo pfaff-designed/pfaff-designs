@@ -1,45 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { handleQuery } from "@/lib/ai/queryHandler";
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { query } = body;
+/**
+ * @deprecated This endpoint is deprecated. Use /api/ai/query instead.
+ * 
+ * This endpoint was used by the old pattern where pages directly called the API.
+ * The new pattern uses GlobalComposer → /api/ai/query → AIAnswerContext → pages.
+ * 
+ * Keeping GET handler for backwards compatibility if needed.
+ */
 
-    if (!query || typeof query !== "string") {
-      return NextResponse.json(
-        { error: "Query is required and must be a string" },
-        { status: 400 }
-      );
-    }
-
-    console.log("API route: Processing query:", query);
-    const pageJSON = await handleQuery(query);
-    console.log("API route: Query handler returned:", { 
-      version: pageJSON.version, 
-      pageId: pageJSON.page?.id, 
-      blocksCount: pageJSON.page?.blocks?.length 
-    });
-
-    return NextResponse.json(pageJSON);
-  } catch (error) {
-    console.error("Error in query API route:", error);
-    
-    // Log full error details
-    if (error instanceof Error) {
-      console.error("Error name:", error.name);
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
-    }
-    
-    return NextResponse.json(
-      {
-        error: "Failed to process query",
-        message: error instanceof Error ? error.message : String(error),
-        details: error instanceof Error ? error.stack : undefined,
-      },
-      { status: 500 }
-    );
-  }
+export async function GET() {
+  const hasKey = !!process.env.LANGCHAIN_API_KEY;
+  // NEVER return the key to the client – just a boolean
+  return NextResponse.json({
+    langchainKeyPresent: hasKey,
+  });
 }
+
+/**
+ * @deprecated POST handler is deprecated. Use /api/ai/query instead.
+ * This endpoint always returns null answerLayout and should not be used.
+ */
+export async function POST(req: NextRequest) {
+  return NextResponse.json(
+    { 
+      error: "This endpoint is deprecated. Use /api/ai/query instead.",
+      answerLayout: null,
+      suggestions: [],
+    },
+    { status: 410 } // 410 Gone - indicates resource is permanently unavailable
+  );
+}
+
 

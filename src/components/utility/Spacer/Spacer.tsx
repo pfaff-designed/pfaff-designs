@@ -1,6 +1,9 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
+// NOTE: Potentially unused component - verify usage before removing
+// See: docs/repo-audit-2024-12-04.md section 6.1
+
 export interface SpacerProps extends React.HTMLAttributes<HTMLDivElement> {
   // Modular spacing: 12, 24, 36, 48, 72, 96, 144px
   size?: 3 | 6 | 9 | 12 | 18 | 24 | 36;

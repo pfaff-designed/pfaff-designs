@@ -1,17 +1,19 @@
 import * as React from "react";
 import { Section } from "@/components/layout/Section";
 import { Container } from "@/components/layout/Container";
-import { Heading } from "@/components/atoms/Heading";
-import { BodyText } from "@/components/atoms/BodyText";
-import type { ContentBlockItem } from "@/components/molecules/ContentBlock";
+import { ImageContainer } from "@/components/atoms/ImageContainer";
+import { cn } from "@/lib/utils";
+import { getSectionImageURLSync } from "@/lib/media/sectionImages";
 import {
   FullWidth,
   TwoColumnImage,
   CardGallery,
+  ProjectCardGrid,
   TextWithImage,
   AnnotatedVisual,
   HalfAndHalfColumn,
   Timeline,
+  DefaultSection,
 } from "./variants";
 
 export type ContentSectionVariant =
@@ -20,10 +22,12 @@ export type ContentSectionVariant =
   | "2-column-image-right"
   | "2-column-image-left"
   | "card-gallery"
+  | "project-card-grid"
   | "text-with-image"
   | "annotated-visual"
   | "half-and-half-column"
-  | "timeline";
+  | "timeline"
+  | "default";
 
 export interface ContentSectionProps {
   variant: ContentSectionVariant;
@@ -33,11 +37,53 @@ export interface ContentSectionProps {
   eyebrow?: string;
   imageSrc?: string;
   imageAlt?: string;
+  imageObjectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
+  imageAspectRatio?: "auto" | "square" | "video" | "portrait" | "landscape" | "wide";
+  imageLightbox?: boolean;
+  isAI?: boolean;
+  sectionId?: string; // For scroll-to behavior (e.g., "overview", "process", "impact")
   // Special props for specific variants
+  contentBlocks?: Array<{
+    eyebrow?: string;
+    body: string;
+    richText?: boolean;
+  }>;
   galleryImages?: Array<{
     url: string;
     alt?: string;
   }>;
+  projectCards?: [
+    {
+      id: string;
+      projectName: string;
+      client: string;
+      projectType: string;
+      disabled?: boolean;
+      variant?: "dark" | "light";
+      fillColor?: "primary" | "secondary" | "yellow" | "dark" | "light" | "default";
+      onClick?: () => void;
+    },
+    {
+      id: string;
+      projectName: string;
+      client: string;
+      projectType: string;
+      disabled?: boolean;
+      variant?: "dark" | "light";
+      fillColor?: "primary" | "secondary" | "yellow" | "dark" | "light" | "default";
+      onClick?: () => void;
+    },
+    {
+      id: string;
+      projectName: string;
+      client: string;
+      projectType: string;
+      disabled?: boolean;
+      variant?: "dark" | "light";
+      fillColor?: "primary" | "secondary" | "yellow" | "dark" | "light" | "default";
+      onClick?: () => void;
+    }
+  ];
   annotations?: Array<{
     x: number;
     y: number;
@@ -58,14 +104,20 @@ export interface ContentSectionProps {
   rightLabel?: string;
   rightContent?: string;
   projectDetails?: {
-    client?: string;
+    tools?: string[];
     role?: string;
     year?: string;
   };
+  projectUrl?: string;
   sectionVariant?: "light" | "dark" | "default";
   containerSize?: "default" | "narrow" | "wide";
   className?: string;
   children?: React.ReactNode;
+  // Section image props (for images below sections)
+  sectionImageSrc?: string;
+  sectionImageAlt?: string;
+  projectSlug?: string; // Auto-fetch section image if provided with sectionIndex
+  sectionIndex?: number; // 1-based section index for auto-fetching
 }
 
 const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
@@ -77,7 +129,14 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
       eyebrow,
       imageSrc,
       imageAlt = "",
+      imageObjectFit,
+      imageAspectRatio,
+      imageLightbox,
+      isAI = false,
+      sectionId,
+      contentBlocks,
       galleryImages,
+      projectCards,
       annotations,
       timelineItems,
       leftImageSrc,
@@ -89,13 +148,34 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
       rightLabel,
       rightContent,
       projectDetails,
+      projectUrl,
       sectionVariant = "default",
       containerSize = "default",
       className,
       children,
+      sectionImageSrc,
+      sectionImageAlt,
+      projectSlug,
+      sectionIndex,
     },
     ref
   ) => {
+    // Determine section image URL
+    // Priority: sectionImageSrc > auto-fetch from projectSlug + sectionIndex
+    const [finalSectionImageSrc, setFinalSectionImageSrc] = React.useState<string | undefined>(
+      sectionImageSrc
+    );
+
+    React.useEffect(() => {
+      // Auto-fetch section image if projectSlug and sectionIndex are provided
+      // Only run when projectSlug or sectionIndex changes, not when finalSectionImageSrc changes
+      if (!sectionImageSrc && projectSlug && sectionIndex) {
+        const url = getSectionImageURLSync(projectSlug, sectionIndex);
+        // Set state even if URL is empty to prevent infinite loop
+        // Empty string means Supabase isn't configured, which is fine
+        setFinalSectionImageSrc(url || undefined);
+      }
+    }, [sectionImageSrc, projectSlug, sectionIndex]); // Use sectionImageSrc prop, not finalSectionImageSrc state
     const renderVariant = () => {
       switch (variant) {
 
@@ -108,6 +188,7 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
               imageSrc={imageSrc}
               imageAlt={imageAlt}
               projectDetails={projectDetails}
+              projectUrl={projectUrl}
             />
           );
 
@@ -120,6 +201,9 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
               imageSrc={imageSrc}
               imageAlt={imageAlt}
               imageOnRight={true}
+              imageObjectFit={imageObjectFit}
+              imageAspectRatio={imageAspectRatio}
+              imageLightbox={imageLightbox}
             />
           );
 
@@ -132,11 +216,17 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
               imageSrc={imageSrc}
               imageAlt={imageAlt}
               imageOnRight={false}
+              imageObjectFit={imageObjectFit}
+              imageAspectRatio={imageAspectRatio}
+              imageLightbox={imageLightbox}
             />
           );
 
         case "card-gallery":
           return <CardGallery images={galleryImages} />;
+
+        case "project-card-grid":
+          return <ProjectCardGrid projectCards={projectCards} />;
 
         case "text-with-image":
           return (
@@ -178,26 +268,80 @@ const ContentSection = React.forwardRef<HTMLElement, ContentSectionProps>(
         case "timeline":
           return <Timeline timelineItems={timelineItems} />;
 
+        case "default":
+          return (
+            <DefaultSection
+              headline={headline}
+              body={body}
+              eyebrow={eyebrow}
+              imageSrc={imageSrc}
+              imageAlt={imageAlt}
+              isAI={isAI}
+              contentBlocks={contentBlocks}
+            />
+          );
+
         default:
           return null;
       }
     };
 
-    // For full-width, card-gallery, annotated-visual, and text-with-image variants, don't wrap in Container/Section as they handle their own layout
-    if (variant === "full-width" || variant === "card-gallery" || variant === "annotated-visual" || variant === "text-with-image") {
+    // Render section image below content
+    // Don't render if image is already used in 2-column variant or text-with-image variant
+    const renderSectionImage = () => {
+      // Skip rendering if image is already used in the variant (2-column layouts or text-with-image)
+      if (variant === "2-column-image-right" || variant === "2-column-image-left" || variant === "2-column-split" || variant === "text-with-image") {
+        return null;
+      }
+      
+      if (!finalSectionImageSrc) {
+        return null;
+      }
+
+      const altText = sectionImageAlt || 
+        (projectSlug && sectionIndex 
+          ? `${projectSlug} section ${sectionIndex} UI image`
+          : "Section image");
+
       return (
-        <div ref={ref as any} className={className}>
+        <div className="w-full mt-12 md:mt-16 max-w-[52.5625rem] mx-auto">
+          <ImageContainer
+            imageSrc={finalSectionImageSrc}
+            alt={altText}
+            aspectRatio="auto"
+            objectFit="contain"
+            containerClassName="w-full"
+          />
+        </div>
+      );
+    };
+
+    // For full-width, card-gallery, project-card-grid, annotated-visual, text-with-image, and default variants, don't wrap in Container/Section as they handle their own layout
+    if (variant === "full-width" || variant === "card-gallery" || variant === "project-card-grid" || variant === "annotated-visual" || variant === "text-with-image" || variant === "default") {
+      return (
+        <div 
+          ref={ref as any} 
+          className={className}
+          data-section-id={sectionId}
+        >
           {renderVariant()}
           {children}
+          {renderSectionImage()}
         </div>
       );
     }
 
     return (
-      <Section ref={ref} variant={sectionVariant} className={className}>
+      <Section 
+        ref={ref} 
+        variant={sectionVariant} 
+        className={cn(className, '')}
+        data-section-id={sectionId}
+      >
         <Container size={containerSize}>
           {renderVariant()}
           {children}
+          {renderSectionImage()}
         </Container>
       </Section>
     );

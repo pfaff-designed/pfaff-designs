@@ -17,35 +17,44 @@ type ButtonVariant =
 
 export interface ButtonProps extends Omit<BaseButtonProps, "variant"> {
   variant?: ButtonVariant;
+  isActive?: boolean;
+  asChild?: boolean;
 }
 
 const baseClasses =
-  "inline-flex items-center justify-center gap-2 rounded-full border border-transparent px-4 py-2 text-base font-medium leading-5 tracking-tight transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-dark)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-default)] disabled:pointer-events-none disabled:opacity-60 [&_svg]:size-4 hover:opacity-80";
+  "inline-flex items-center min-w-[5.25rem] justify-center gap-2 rounded-full px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base font-medium leading-5 tracking-tight transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--text-default)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-default)] disabled:pointer-events-none disabled:opacity-60 [&_svg]:size-4";
 
 const variantClassMap: Record<ButtonVariant, string> = {
   primary:
-    "bg-[#e76f51] text-[#fdf9f4] hover:-translate-y-[1px] active:translate-y-0",
+    "border border-transparent bg-[color:var(--accent-primary)] text-[color:var(--bg-default)] hover:opacity-80 hover:-translate-y-[1px] active:translate-y-0",
   secondary:
-    "bg-[#9ec8d2] text-[#26291d] hover:-translate-y-[1px] active:translate-y-0",
+    "border border-transparent bg-[color:var(--accent-secondary)] text-[color:var(--text-default)] hover:opacity-80 hover:-translate-y-[1px] active:translate-y-0",
   destructive:
-    "bg-[#ef4444] text-[#fdf9f4] hover:-translate-y-[1px] active:translate-y-0",
+    "border border-transparent bg-[color:var(--state-error)] text-[color:var(--bg-default)] hover:opacity-80 hover:-translate-y-[1px] active:translate-y-0",
   continue:
-    "bg-[#6d7f5c] text-[#fdf9f4] hover:-translate-y-[1px] active:translate-y-0",
+    "border border-transparent bg-[color:var(--state-success)] text-[color:var(--bg-default)] hover:opacity-80 hover:-translate-y-[1px] active:translate-y-0",
   outline:
-    "bg-transparent text-[#26291d] border border-[#26291d] hover:-translate-y-[1px] active:translate-y-0",
+    "border border-[color:var(--text-default)] bg-background/40 backdrop-blur-md text-[color:var(--text-default)] hover:border-[color:var(--accent-primary)] hover:text-[color:var(--accent-primary)] hover:bg-background/80 hover:backdrop-blur-md hover:-translate-y-[1px] hover:focus-visible:ring-2 hover:focus-visible:ring-[var(--text-default)] hover:focus-visible:ring-offset-2 hover:focus-visible:ring-offset-[var(--bg-default)] active:border-[color:var(--accent-primary)] active:translate-y-0 focus-visible:border-[color:var(--accent-primary)] focus-visible:text-[color:var(--accent-primary)] focus-visible:outline-none data-[active=true]:border-[color:var(--accent-primary)] data-[active=true]:text-[color:var(--accent-primary)] hover:ring-2 hover:ring-primary",
   icon:
-    "size-10 gap-0 rounded-full bg-[#fff8a7] p-0 text-[#26291d] hover:-translate-y-[1px] active:translate-y-0",
+    "border border-transparent size-10 gap-0 rounded-full bg-[color:var(--accent-yellow)] p-0 text-[color:var(--text-default)] hover:opacity-80 hover:-translate-y-[1px] active:translate-y-0",
   inline:
-    "border-none bg-transparent px-0 py-0 text-[#e76f51] underline-offset-4 hover:underline focus-visible:underline",
+    "border-none bg-transparent px-0 py-0 text-[color:var(--accent-primary)] underline-offset-4 hover:underline focus-visible:underline",
 };
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", ...props }, ref) => {
+  ({ className, variant = "primary", isActive, asChild, ...props }, ref) => {
     return (
       <BaseButton
         ref={ref}
         variant="default"
-        className={cn(baseClasses, variantClassMap[variant], className)}
+        data-active={isActive}
+        asChild={asChild}
+        className={cn(
+          baseClasses,
+          variantClassMap[variant],
+          isActive && variant === "outline" && "ring-2 ring-primary",
+          className
+        )}
         {...props}
       />
     );

@@ -7,6 +7,9 @@ export type { TwoColumnImageProps } from "./TwoColumnImage";
 export { CardGallery } from "./CardGallery";
 export type { CardGalleryProps } from "./CardGallery";
 
+export { ProjectCardGrid } from "./ProjectCardGrid";
+export type { ProjectCardGridProps } from "./ProjectCardGrid";
+
 export { TextWithImage } from "./TextWithImage";
 export type { TextWithImageProps } from "./TextWithImage";
 
@@ -18,4 +21,7 @@ export type { HalfAndHalfColumnProps } from "./HalfAndHalfColumn";
 
 export { Timeline } from "./Timeline";
 export type { TimelineProps } from "./Timeline";
+
+export { DefaultSection } from "./DefaultSection";
+export type { DefaultSectionProps } from "./DefaultSection";
 

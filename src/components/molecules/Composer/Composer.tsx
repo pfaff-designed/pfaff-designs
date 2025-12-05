@@ -1,28 +1,55 @@
 import * as React from "react";
-import { Input } from "@/components/atoms/Input";
+import { ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// TODO: Component size violation - 330 lines exceeds molecule limit (250 lines)
+// Consider: Moving to ai-modal/ or utility/ directory, or splitting into smaller molecules
+// See: docs/repo-audit-2024-12-04.md section 4.1
 
 export interface ComposerProps {
   placeholder?: string;
   onSubmit?: (query: string) => void;
   recentQuery?: string;
   recentResponse?: string;
+  status?: "idle" | "loading" | "success" | "error";
+  lastPrompt?: string | null;
+  lastUpdatedAt?: string | null;
   className?: string;
   inputClassName?: string;
   buttonClassName?: string;
+  hideStatus?: boolean;
+  value?: string; // Optional controlled value
+  onValueChange?: (value: string) => void; // Optional controlled onChange
+  inputRef?: React.RefObject<HTMLTextAreaElement>; // Changed to HTMLTextAreaElement for multi-line
+  relative?: boolean; // If true, use relative positioning instead of fixed (for modal usage)
 }
 
-const EqualizerIcon = () => (
-  <span
-    aria-hidden="true"
-    className="flex h-5 w-5 items-end justify-center gap-[0.125rem]"
-  >
-    <span className="h-[0.75rem] w-[0.1875rem] rounded-full bg-[#fdf9f4]" />
-    <span className="h-4 w-[0.1875rem] rounded-full bg-[#fdf9f4]" />
-    <span className="h-2 w-[0.1875rem] rounded-full bg-[#fdf9f4]" />
-    <span className="h-4 w-[0.1875rem] rounded-full bg-[#fdf9f4]" />
-  </span>
-);
+
+/**
+ * Format a date to relative time (e.g., "2 seconds ago", "1 minute ago")
+ */
+const formatRelativeTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} second${diffInSeconds !== 1 ? "s" : ""} ago`;
+  }
+
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} minute${diffInMinutes !== 1 ? "s" : ""} ago`;
+  }
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${diffInHours} hour${diffInHours !== 1 ? "s" : ""} ago`;
+  }
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays} day${diffInDays !== 1 ? "s" : ""} ago`;
+};
 
 const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
   (
@@ -31,35 +58,90 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
       onSubmit,
       recentQuery,
       recentResponse,
+      status = "idle",
+      lastPrompt,
+      lastUpdatedAt,
       className,
       inputClassName,
       buttonClassName,
+      hideStatus = false,
+      value,
+      onValueChange,
+      inputRef: externalInputRef,
+      relative = false,
     },
     ref
   ) => {
-    const [inputValue, setInputValue] = React.useState("");
+    const [internalValue, setInternalValue] = React.useState("");
     const [localRecentQuery, setLocalRecentQuery] = React.useState<string | undefined>(recentQuery);
     const [isFocused, setIsFocused] = React.useState(false);
-    const inputRef = React.useRef<HTMLInputElement>(null);
+    const [footerHeight, setFooterHeight] = React.useState(0);
+    const [isComposing, setIsComposing] = React.useState(false); // IME composition tracking
+    const [userUnfocused, setUserUnfocused] = React.useState(false); // Track if user manually unfocused
+    const [isMultiline, setIsMultiline] = React.useState(false); // Track if textarea has multiple lines
+    // TODO (V2 streaming): Track partial message composition here for streaming responses
+    const internalInputRef = React.useRef<HTMLTextAreaElement>(null);
+    const inputRef = externalInputRef || internalInputRef;
     const containerRef = React.useRef<HTMLDivElement>(null);
+
+    // Use controlled value if provided, otherwise use internal state
+    const inputValue = value !== undefined ? value : internalValue;
+    const setInputValue = (newValue: string) => {
+      if (value !== undefined) {
+        // Controlled mode: notify parent
+        onValueChange?.(newValue);
+      } else {
+        // Uncontrolled mode: update internal state
+        setInternalValue(newValue);
+      }
+    };
 
     const handleSubmit = React.useCallback(() => {
       if (inputValue.trim()) {
         setLocalRecentQuery(inputValue.trim());
         onSubmit?.(inputValue.trim());
+        // Clear the input after successful submit
         setInputValue("");
+        // Reset user unfocus flag when they submit
+        setUserUnfocused(false);
       }
-    }, [inputValue, onSubmit]);
+    }, [inputValue, onSubmit, setInputValue]);
 
     const handleKeyDown = React.useCallback(
-      (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter" && !e.shiftKey) {
+      (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        // Enter without Shift = submit (unless composing via IME)
+        if (e.key === "Enter" && !e.shiftKey && !isComposing) {
           e.preventDefault();
           handleSubmit();
         }
+        // Shift+Enter = newline (default behavior, no action needed)
       },
-      [handleSubmit]
+      [handleSubmit, isComposing]
     );
+
+    // Auto-resize textarea as content grows
+    // TODO (V2 streaming): When we implement streaming, ensure auto-resize runs on every chunk append
+    const autoResize = React.useCallback(() => {
+      const textarea = inputRef.current;
+      if (!textarea) return;
+
+      // Reset height to auto to get accurate scrollHeight
+      textarea.style.height = "auto";
+      
+      // Calculate new height (capped at 144px from modular scale)
+      const newHeight = Math.min(textarea.scrollHeight, 144);
+      textarea.style.height = `${newHeight}px`;
+      
+      // Check if multiline (scrollHeight > single line height ~36px)
+      setIsMultiline(textarea.scrollHeight > 36);
+      
+      // TODO (V2 streaming): May need to debounce auto-resize if chunks arrive very quickly
+    }, [inputRef]);
+
+    // Trigger auto-resize when value changes
+    React.useEffect(() => {
+      autoResize();
+    }, [inputValue, autoResize]);
 
     // Update local state when prop changes
     React.useEffect(() => {
@@ -68,42 +150,159 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
       }
     }, [recentQuery]);
 
+    // Track footer position and adjust composer position when footer is in view
+    React.useEffect(() => {
+      const updateComposerPosition = () => {
+        const footer = document.querySelector("footer");
+        if (!footer) {
+          setFooterHeight(0);
+          return;
+        }
+
+        const footerRect = footer.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const composerHeight = containerRef.current?.offsetHeight || 0;
+        
+        // Check if footer is visible in viewport
+        // If footer top is above viewport bottom, we need to position composer above it
+        if (footerRect.top < viewportHeight) {
+          // Footer is in view, position composer above it
+          const spaceAboveFooter = viewportHeight - footerRect.top;
+          // Position composer above footer with some spacing
+          setFooterHeight(spaceAboveFooter); // 4.5rem spacing (72px)
+        } else {
+          // Footer is below viewport, composer can stay at bottom
+          setFooterHeight(0);
+        }
+      };
+
+      // Initial check
+      updateComposerPosition();
+
+      // Update on scroll and resize
+      window.addEventListener("scroll", updateComposerPosition, { passive: true });
+      window.addEventListener("resize", updateComposerPosition);
+      
+      // Use ResizeObserver to watch for footer size changes
+      const footer = document.querySelector("footer");
+      if (footer) {
+        const resizeObserver = new ResizeObserver(updateComposerPosition);
+        resizeObserver.observe(footer);
+        
+        return () => {
+          window.removeEventListener("scroll", updateComposerPosition);
+          window.removeEventListener("resize", updateComposerPosition);
+          resizeObserver.disconnect();
+        };
+      }
+
+      return () => {
+        window.removeEventListener("scroll", updateComposerPosition);
+        window.removeEventListener("resize", updateComposerPosition);
+      };
+    }, []);
+
     const displayQuery = localRecentQuery || recentQuery;
     const displayResponse = recentResponse;
+
+    // Auto-hide the query after 5 seconds
+    React.useEffect(() => {
+      if (displayQuery) {
+        const timer = setTimeout(() => {
+          setLocalRecentQuery(undefined);
+        }, 5000);
+
+        return () => {
+          clearTimeout(timer);
+        };
+      }
+    }, [displayQuery]);
 
     return (
       <div
         ref={ref}
         className={cn(
-          "fixed bottom-0 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-[3.3125rem] w-[24.875rem] pb-6",
+          relative
+            ? "relative w-full flex flex-col gap-[1rem]"
+            : "fixed left-1/2 -translate-x-1/2 z-50 flex flex-col gap-[1rem] w-[24.875rem]",
+          "transition-[filter] duration-200",
+          "drop-shadow-[0_-2px_8px_rgba(0,0,0,0.08),0_-1px_2px_rgba(255,255,255,0.5)]",
           className
         )}
+        style={{
+          bottom: relative ? undefined : (footerHeight > 0 ? `${footerHeight}px` : "3rem"),
+        }}
       >
+        {/* Status Display - Thinking or Last Updated */}
+        {!hideStatus && (
+          <>
+        {status === "loading" && lastPrompt ? (
+          <p className="text-base leading-5 text-[var(--text-default)] w-[24.875rem] text-left pl-[2rem] opacity-75">
+            Thinking about: "{lastPrompt}"
+          </p>
+        ) : status === "success" && lastPrompt && lastUpdatedAt ? (
+          <p className="text-base leading-5 text-[var(--text-default)] w-[24.875rem] text-left pl-[2rem] opacity-50">
+            Last updated {formatRelativeTime(lastUpdatedAt)} based on: "{lastPrompt}"
+          </p>
+        ) : displayQuery ? (
+          <p className="text-base leading-5 text-[var(--text-default)] w-[24.875rem] text-left pl-[2rem] opacity-50">
+            {displayQuery}
+          </p>
+        ) : null}
+          </>
+        )}
+
         {/* Input Field with Button */}
         <div className="relative w-full">
           <div
             ref={containerRef}
             className={cn(
-              "relative flex items-center w-full rounded-full border border-[#26291d] bg-[#fdf9f4] pr-2 pl-6 py-[0.5rem] transition-all",
-              isFocused && "outline-none ring-2 ring-[#9ec8d2] ring-offset-6"
+              "relative flex items-center w-full",
+              "rounded-full border border-[color:var(--border-subtle)]",
+              "bg-background shadow-sm",
+              "px-4 py-2",
+              "overflow-hidden",
+              isFocused && "border-[color:var(--accent-secondary)]"
             )}
-            style={isFocused ? { isolation: 'isolate' } : undefined}
+            style={{
+              borderRadius: isMultiline ? "8px" : "9999px",
+              transition: "border-radius 300ms ease-in-out, border 150ms ease-out",
+              minHeight: "2.5rem",
+            }}
           >
-            <div className="relative z-[1] flex-1" style={{ isolation: 'isolate' }}>
-              <Input
+            <div className="relative z-[1] flex-1 pr-12 min-w-0 flex items-center" style={{ isolation: 'isolate' }}>
+              <textarea
                 ref={inputRef}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
+                onFocus={() => {
+                  setIsFocused(true);
+                  // Don't reset userUnfocused here - only reset on submit or when modal reopens
+                }}
+                onBlur={() => {
+                  setIsFocused(false);
+                  // User manually unfocused the textarea
+                  setUserUnfocused(true);
+                }}
+                onCompositionStart={() => setIsComposing(true)}
+                onCompositionEnd={() => setIsComposing(false)}
                 placeholder={placeholder}
-                focusOff={true}
+                rows={1}
                 className={cn(
-                  "relative w-full border-0 bg-transparent px-0 py-0 text-base leading-5 text-[#26291d] placeholder:text-[#26291d] placeholder:opacity-50",
+                  "w-full border-0 bg-transparent outline-none text-sm flex-1 min-w-0",
+                  "placeholder:text-muted-foreground",
+                  "focus-visible:ring-0 focus-visible:ring-offset-0",
+                  "resize-none overflow-y-auto overflow-wrap-break-word",
+                  "min-h-[1.25rem] max-h-36", // min-h matches line-height, max-h is 144px
                   inputClassName
                 )}
-                style={{ caretColor: '#26291d' }}
+                style={{
+                  width: "100%",
+                  wordWrap: "break-word",
+                  whiteSpace: "pre-wrap",
+                  overflowWrap: "break-word",
+                }}
               />
             </div>
             <button
@@ -111,33 +310,20 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
               onClick={handleSubmit}
               aria-label="Submit query"
               className={cn(
-                "relative z-[1] flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e76f51] p-0 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e76f51] focus-visible:ring-offset-2",
+                "absolute right-2 top-1/2 -translate-y-1/2",
+                "z-[1] flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[color:var(--accent-primary)] p-0 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent-primary)] focus-visible:ring-offset-2 group",
                 buttonClassName
               )}
             >
-              <EqualizerIcon />
+              <ArrowDown 
+                className="h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-y-[2px]" 
+                strokeWidth={2}
+                style={{ color: 'var(--bg-default)' }}
+                aria-hidden="true"
+              />
             </button>
           </div>
         </div>
-
-        {/* Recent Query Display */}
-        {(displayQuery || displayResponse) && (
-          <div className="flex flex-col gap-[0.6875rem] w-[24.875rem]">
-            {displayQuery && (
-              <div className="flex items-center w-[24.875rem] rounded-full border border-[#26291d] bg-[#fdf9f4] pl-[1.4375rem] pr-[3.5rem] py-[0.5rem]">
-                <p className="flex-1 text-base leading-5 text-[#26291d]">
-                  {displayQuery}
-                </p>
-                <div className="h-9 w-9 shrink-0" aria-hidden="true" />
-              </div>
-            )}
-            {displayResponse && (
-              <p className="text-base leading-5 text-[#26291d] w-[24.875rem]">
-                {displayResponse}
-              </p>
-            )}
-          </div>
-        )}
       </div>
     );
   }

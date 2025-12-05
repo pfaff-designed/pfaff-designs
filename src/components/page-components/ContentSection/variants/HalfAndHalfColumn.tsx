@@ -23,6 +23,9 @@ export const HalfAndHalfColumn: React.FC<HalfAndHalfColumnProps> = ({
   rightLabel,
   rightContent,
 }) => {
+  const leftTopicLabel = leftLabel || "Left column";
+  const rightTopicLabel = rightLabel || "Right column";
+
   return (
     <div className="flex flex-col lg:flex-row items-center gap-6 w-full">
       {/* Left Column */}
@@ -48,7 +51,11 @@ export const HalfAndHalfColumn: React.FC<HalfAndHalfColumnProps> = ({
               </p>
             )}
             {leftContent && (
-              <div className="flex-1">
+              <div
+                className="flex-1"
+                data-ai-interactive="content-section"
+                data-ai-topic-label={leftTopicLabel}
+              >
                 <BodyText body={leftContent} />
               </div>
             )}
@@ -79,7 +86,11 @@ export const HalfAndHalfColumn: React.FC<HalfAndHalfColumnProps> = ({
               </p>
             )}
             {rightContent && (
-              <div className="flex-1">
+              <div
+                className="flex-1"
+                data-ai-interactive="content-section"
+                data-ai-topic-label={rightTopicLabel}
+              >
                 <BodyText body={rightContent} />
               </div>
             )}

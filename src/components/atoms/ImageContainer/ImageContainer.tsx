@@ -64,19 +64,6 @@ const ImageContainer = React.forwardRef<HTMLDivElement, ImageContainerProps>(
         </div>
       );
     }
-    
-    // Debug logging for image rendering
-    if (imageSrc) {
-      console.log(`ImageContainer rendering image:`, {
-        hasImageSrc: !!imageSrc,
-        imageSrcLength: imageSrc.length,
-        imageSrcPreview: imageSrc.substring(0, 100),
-        alt: alt,
-        isValidURL: validateSupabaseURL(imageSrc),
-      });
-    } else {
-      console.warn(`ImageContainer: No imageSrc provided, using default placeholder`);
-    }
 
     const objectFitClass = `object-${objectFit}`;
     const defaultImageSrc =
@@ -88,7 +75,9 @@ const ImageContainer = React.forwardRef<HTMLDivElement, ImageContainerProps>(
         ref={ref}
         className={cn(
           "relative w-full overflow-hidden",
+          "bg-[var(--bg-default)]",
           aspectRatio !== "auto" && aspectRatioClasses[aspectRatio],
+          aspectRatio === "auto" && fill && !containerClassName?.includes("h-full") && "min-h-[20rem]",
           containerClassName
         )}
       >

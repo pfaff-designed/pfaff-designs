@@ -1,6 +1,9 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
+// NOTE: Potentially unused component - verify usage before removing
+// See: docs/repo-audit-2024-12-04.md section 6.1
+
 export interface StackProps extends React.HTMLAttributes<HTMLDivElement> {
   // Modular spacing preferred: 3 (12px), 6 (24px), 9 (36px), 12 (48px), 18 (72px), 24 (96px)
   // Also supports smaller gaps: 1, 2, 4 for tight spacing

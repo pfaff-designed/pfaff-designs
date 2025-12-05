@@ -19,35 +19,52 @@ export const TextWithImage: React.FC<TextWithImageProps> = ({
   imageSrc,
   imageAlt = "",
 }) => {
+  const topicLabel = headline || "This section";
+
   return (
-    <div className="flex flex-col lg:flex-row items-start justify-between gap-8 w-full max-h-screen">
+    <div className="flex flex-col lg:flex items-center justify-center w-full min-h-screen">
       {/* Text Content */}
-      <div className="flex flex-col gap-6 pt-16 w-full lg:flex-[1] lg:min-w-0 pl-[0.5rem]">
-        {eyebrow && <Eyebrow text={eyebrow} />}
+      <div className="flex flex-col mb-80 max-w-6xl gap-40 pt-16 px-6 md:px-8 lg:px-12 w-full lg:flex-shrink-0 lg:justify-center z-10">
         {headline && (
           <Heading
             text={headline}
             variant="display"
+            
           />
         )}
         {body && (
-          <div className="w-full">
-            <BodyText body={body} />
+          <div
+            className="flex flex-col gap-6 md:flex-row md:gap-6 w-full"
+            data-ai-interactive="content-section"
+            data-ai-topic-label={topicLabel}
+          >
+            {eyebrow && (
+              <div className="flex w-full shrink-0 items-start font-bold text-base leading-5 md:w-[116px] text-[color:var(--text-default)]">
+                {eyebrow}
+              </div>
+            )}
+            <BodyText body={body} className="flex-1" />
           </div>
         )}
       </div>
 
-      {/* Image */}
+      {/* Image - Full width on desktop, extends to viewport edge */}
       {imageSrc && (
-        <div className="w-full lg:flex-[2] lg:min-w-0 h-screen relative">
-          <ImageContainer
-            imageSrc={imageSrc}
-            alt={imageAlt}
-            fill={true}
-            containerClassName="absolute inset-0 w-full h-full"
-            imageClassName="object-cover"
-            sizes="100vw"
-          />
+        <div className="w-full lg:w-screen mx-auto lg:flex lg:items-center lg:justify-center">
+          <div className="w-full">
+            <ImageContainer
+              imageSrc={imageSrc}
+              alt={imageAlt}
+              fill={false}
+              width={1920}
+              height={1080}
+              aspectRatio="auto"
+              objectFit="contain"
+              containerClassName="w-full"
+              imageClassName="w-full h-auto"
+              sizes="100vw"
+            />
+          </div>
         </div>
       )}
     </div>

@@ -7,10 +7,10 @@ const EqualizerGlyph = () => (
     aria-hidden="true"
     className="flex h-5 w-5 items-end justify-center gap-[2px]"
   >
-    <span className="h-3 w-[3px] rounded-full bg-[var(--color-dark)]" />
-    <span className="h-4 w-[3px] rounded-full bg-[var(--color-dark)]" />
-    <span className="h-2 w-[3px] rounded-full bg-[var(--color-dark)]" />
-    <span className="h-4 w-[3px] rounded-full bg-[var(--color-dark)]" />
+    <span className="h-3 w-[3px] rounded-full bg-[var(--text-default)]" />
+    <span className="h-4 w-[3px] rounded-full bg-[var(--text-default)]" />
+    <span className="h-2 w-[3px] rounded-full bg-[var(--text-default)]" />
+    <span className="h-4 w-[3px] rounded-full bg-[var(--text-default)]" />
   </span>
 );
 

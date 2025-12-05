@@ -67,30 +67,53 @@
 
 @layer base {
   :root {
-    /* Color Palette - Raw Colors */
-    --color-dark: #26291D;
-    --color-light: #FDF9F4;
-    --color-primary-light: #E76F51;
-    --color-primary-dark: #FFF8A7;
-    --color-secondary: #9EC8D2;
-    --color-success: #6D7F5C;
-    --color-error: #E75151;
-    --color-hover: #C2C0B4;
-    --color-border: #DAC1BD;
-    --color-yellow: #FFF8A7;
+    /* === Raw-ish functional tokens (traditional names) === */
 
-    /* Light Theme Semantic Tokens */
-    --bg-default: #FDF9F4;
-    --bg-surface: #FFFFFF;
-    --text-default: #26291D;
-    --text-muted: #C2C0B4;
-    --accent-primary: #E76F51;
-    --accent-secondary: #9EC8D2;
-    --accent-yellow: #FFF8A7;
-    --border-subtle: #DAC1BD;
-    --state-success: #6D7F5C;
-    --state-error: #E75151;
-    --state-hover: #C2C0B4;
+    /* Neutrals */
+    --neutral-50:  #FDF9F4;  /* light neutral surface */
+    --neutral-100: #FDF9F4;  /* main background */
+    --neutral-200: #FDF9F4;  /* subtle neutral */
+    --neutral-300: #FDF9F4;  /* muted neutral */
+    --neutral-800: #1C1F17;  /* deep neutral */
+    --neutral-900: #1C1F17;  /* main dark text */
+
+    /* Brand / Accent */
+    --primary-500:   #C26044; /* warm primary accent */
+    --secondary-500: #4F7E85; /* cool secondary accent */
+    --tertiary-500:  #FFF8A7; /* bright accent highlight */
+
+    /* States */
+    --success-500: #4C482E;   /* success */
+    --error-500:   #DA4C47;   /* error */
+
+    /* === Semantic tokens (light theme) === */
+
+    --bg-default:        var(--neutral-100);
+    --bg-surface:        var(--neutral-50);
+    --bg-subtle-warm:    var(--neutral-50);
+
+    --text-default:      var(--neutral-900);
+    --text-muted:        var(--neutral-300);
+
+    --accent-primary:    var(--primary-500);
+    --accent-secondary:  var(--secondary-500);
+    --accent-tertiary:   var(--tertiary-500);
+
+    --border-subtle:     var(--neutral-200);
+    --border-strong:     var(--neutral-800);
+
+    --state-success:     var(--success-500);
+    --state-error:       var(--error-500);
+    --state-hover:       var(--neutral-300);
+
+    /* Overlays & subtle text tints */
+    --overlay-90: rgba(28, 31, 23, 0.90); /* neutral-900 at 90% (#1C1F17) */
+    --overlay-70: rgba(28, 31, 23, 0.70);
+    --overlay-50: rgba(28, 31, 23, 0.50);
+
+    --muted-foreground-60: rgba(28, 31, 23, 0.60); /* extra-subtle text */
+
+    --border-soft: rgba(28, 31, 23, 0.25); /* soft border from dark neutral */
 
     /* Shadcn-compatible variables */
     --background: var(--bg-default);
@@ -162,12 +185,11 @@
 
   /* Dark Theme (future support) */
   [data-theme="dark"] {
-    --bg-default: #26291D;
-    --bg-surface: #26291D;
-    --text-default: #FDF9F4;
-    --text-muted: #C2C0B4;
-    --accent-primary: #FFF8A7;
-    --accent-secondary: #9EC8D2;
+    --bg-default: var(--neutral-900);
+    --bg-surface: var(--neutral-800);
+    --text-default: var(--neutral-50);
+    --text-muted: var(--neutral-300);
+    /* TODO: Define dark theme accent colors if needed */
   }
 }
 
@@ -187,6 +209,8 @@
     line-height: var(--line-height-normal);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
   }
 
   /* Typography Base Styles */
@@ -231,5 +255,55 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+  }
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+
+/* Typing indicator bounce animation - subtle vertical wave */
+@keyframes typing-bounce {
+  0%, 60%, 100% {
+    opacity: 0.3;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+/* Message entrance animation - fade + slide in (180ms ease-out) */
+@keyframes message-enter-animation {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Message exit animation - fade out for trimming (180ms ease-in) */
+@keyframes message-exit-animation {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@layer utilities {
+  .animate-typing-bounce {
+    animation: typing-bounce 1.4s ease-in-out infinite;
+  }
+  
+  .message-enter {
+    animation: message-enter-animation 180ms ease-out;
+  }
+  
+  .message-exit {
+    animation: message-exit-animation 180ms ease-in forwards;
   }
 }

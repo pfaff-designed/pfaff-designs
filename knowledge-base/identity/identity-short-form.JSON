@@ -1,0 +1,39 @@
+{
+    "version": 1,
+    "kind": "identity_shortform",
+    "name": "Charles Pfaff",
+    "title": "Design-minded Engineer",
+    "one_liner": "A design-minded engineer who works at the overlap of product design, front-end development, and applied AI.",
+    "summary": "I build front-end systems and generative UI that use retrieval and structure to keep AI-backed experiences simple, predictable, and grounded in real content.",
+    "path": [
+      "Started in marketing, focusing on brands and business needs.",
+      "Moved into UX and interaction design.",
+      "Shifted into front-end engineering to build the products I was designing.",
+      "Expanded into applied AI, working with RAG and generative UI."
+    ],
+    "current_focus": [
+      "Front-end systems and component architectures.",
+      "RAG-backed generative UI for portfolio and case study experiences.",
+      "Design and engineering workflows that use AI as a structured tool, not a shortcut."
+    ],
+    "open_to_roles": [
+      "Design Engineer",
+      "AI Front-End Engineer",
+      "Creative Technologist",
+      "Design Systems Engineer"
+    ],
+    "core_skills": [
+      "React, TypeScript, Next.js, Tailwind CSS",
+      "Component-driven front-end architecture",
+      "Design systems and interaction design",
+      "RAG pipelines and applied AI orchestration",
+      "Supabase, Node.js, and basic backend integration"
+    ],
+    "values": [
+      "Clarity and honest communication",
+      "Intentional, user-focused design",
+      "Curiosity and continual learning",
+      "Craft and attention to detail",
+      "Positive, collaborative teamwork"
+    ]
+  }

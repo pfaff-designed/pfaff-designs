@@ -1,5 +1,9 @@
+"use client";
+
 import * as React from "react";
+import { cn } from "@/lib/utils";
 import { getComponent, hasComponent, isValidChild, componentRegistry } from "@/lib/registry/componentRegistry";
+import { ResponseContext, type ResponseContextValue } from "./ResponseContext";
 
 export interface Block {
   id: string;
@@ -116,6 +120,9 @@ export interface PageJSON {
 export interface RendererProps {
   data: PageJSON | null;
   className?: string;
+  status?: "idle" | "loading" | "success" | "error";
+  responseId?: string | number;
+  isLatest?: boolean;
 }
 
 /**
@@ -224,6 +231,9 @@ const normalizeProps = (name: string, props: Record<string, any> = {}): Record<s
         p.rightImageSrc = p.rightImageUrl;
       }
       
+      // Section image props (projectSlug and sectionIndex) are set during block preprocessing
+      // No need to add them here as they're already in props
+      
       // Clean up old prop names
       delete p.title;
       delete p.description;
@@ -238,16 +248,53 @@ const normalizeProps = (name: string, props: Record<string, any> = {}): Record<s
     case "ImageContainer":
       if (p.src && !p.imageSrc) p.imageSrc = p.src;
       break;
+
+    case "AnswerBlock":
+      // Normalize prop names for AnswerBlock
+      // heading is already correct, but ensure it exists
+      if (p.title && !p.heading) {
+        p.heading = p.title;
+      }
+      // body is already correct
+      // eyebrow is already correct
+      // imageId should be resolved to imageSrc by orchestrator, but handle fallback
+      if (p.imageId && !p.imageSrc) {
+        // imageId should have been resolved by orchestrator, but if not, we can't resolve it here
+        // Just ensure imageSrc takes precedence
+      }
+      // Clean up old prop names
+      delete p.title;
+      break;
   }
 
   return p;
 };
 
+
+/**
+ * Extract project slug from page ID
+ * Handles patterns like "project-slug" or "pmi-project-slug"
+ * The page ID is typically the project slug directly from the orchestrator
+ */
+const extractProjectSlug = (pageId: string | undefined, pageKind: string | undefined): string | undefined => {
+  if (!pageId || pageKind !== "case_study") {
+    return undefined;
+  }
+  
+  // Try to extract slug from page ID
+  // Common patterns: "project-slug", "pmi-project-slug", "page-project-slug", etc.
+  // Remove common prefixes if present
+  let slug = pageId
+    .replace(/^pmi-/, "")
+    .replace(/^case-study-/, "")
+    .replace(/^page-/, "")
+    .trim();
+  
+  return slug || undefined;
+};
+
 const renderBlock = (block: Block, parentComponent?: string): React.ReactNode => {
   const { id, component: componentName, props = {}, children = [], text } = block;
-  
-  // Debug: Log block rendering
-  console.log(`Rendering block: ${componentName} (id: ${id})`, { props, childrenCount: children.length, parentComponent });
 
   // Check if component exists in registry
   if (!hasComponent(componentName)) {
@@ -327,44 +374,6 @@ const renderBlock = (block: Block, parentComponent?: string): React.ReactNode =>
   // Normalize props based on component expectations
   const normalizedProps = normalizeProps(componentName, propsWithText);
 
-  // Debug: Log ContentSection props specifically
-  if (componentName === "ContentSection") {
-    console.log(`ContentSection ${id} props:`, {
-      variant: normalizedProps.variant,
-      headline: normalizedProps.headline,
-      body: normalizedProps.body,
-      eyebrow: normalizedProps.eyebrow,
-      imageSrc: normalizedProps.imageSrc,
-      imageAlt: normalizedProps.imageAlt,
-      hasImageSrc: !!normalizedProps.imageSrc,
-      imageSrcType: normalizedProps.imageSrc ? typeof normalizedProps.imageSrc : "none",
-      imageSrcLength: normalizedProps.imageSrc ? normalizedProps.imageSrc.length : 0,
-      // Original props for comparison
-      originalProps: {
-        headline: props.headline,
-        body: props.body,
-        eyebrow: props.eyebrow,
-        imageSrc: props.imageSrc,
-        imageUrl: props.imageUrl,
-        title: props.title,
-        description: props.description,
-      },
-      allNormalizedProps: Object.keys(normalizedProps),
-    });
-  }
-
-  // Debug: Log BodyText and Heading props to see why text isn't rendering
-  if (componentName === "BodyText" || componentName === "Heading") {
-    console.log(`${componentName} ${id} props:`, {
-      originalProps: props,
-      normalizedProps: normalizedProps,
-      blockText: text,
-      hasBody: !!normalizedProps.body,
-      hasText: !!normalizedProps.text,
-      propsChildren: props.children,
-    });
-  }
-
   // Get component from registry
   const Component = getComponent(componentName);
   if (!Component) {
@@ -421,23 +430,27 @@ const renderBlock = (block: Block, parentComponent?: string): React.ReactNode =>
  * Renderer Component
  * Converts JSON page structure into React components
  */
-export const Renderer: React.FC<RendererProps> = ({ data, className }) => {
-  // Debug: Log what we receive
-  console.log("Renderer received data:", data);
-  if (data) {
-    try {
-      console.log("Renderer debug content:", JSON.stringify(data, null, 2));
-    } catch (error) {
-      console.warn("Renderer: Failed to stringify debug content", error);
-    }
-  }
+export const Renderer: React.FC<RendererProps> = ({ 
+  data, 
+  className,
+  status = "idle",
+  responseId,
+  isLatest = true,
+}) => {
+  const contextValue: ResponseContextValue = {
+    status,
+    responseId: responseId || data?.page?.id,
+    isLatest,
+  };
   
   if (!data) {
-    console.log("Renderer: No data provided");
     return (
-      <div className={className}>
-        <div className="p-6 text-center text-text-muted">
-          <p>No content to display. Ask a question to get started.</p>
+      <div 
+        className={cn("flex items-center justify-center", className)}
+        style={{ height: "calc(100dvh - 12rem)" }}
+      >
+        <div className="p-6 text-left text-text-muted max-w-[25rem]">
+          <p>Hey 👋, my name is Charles, I'm a design-minded engineer who builds RAG based front-ends and generative ui experiences. Thanks for visiting!</p>
         </div>
       </div>
     );
@@ -469,14 +482,63 @@ export const Renderer: React.FC<RendererProps> = ({ data, className }) => {
     );
   }
 
-  console.log("Renderer: Rendering blocks", data.page.blocks.length, "blocks");
-
-  // Render all blocks
-  const renderedBlocks = data.page.blocks.map((block) => renderBlock(block));
+  // Extract project slug for case study pages
+  const projectSlug = extractProjectSlug(data.page.id, data.page.kind);
+  console.log("[Renderer] Project slug extraction:", {
+    pageId: data.page.id,
+    pageKind: data.page.kind,
+    extractedSlug: projectSlug,
+    isCaseStudy: data.page.kind === "case_study",
+  });
   
-  console.log("Renderer: Rendered blocks count", renderedBlocks.length);
+  // Track section index for ContentSection components in case studies
+  let sectionIndex = 0;
+  
+  // Helper to traverse blocks and assign section indices
+  const assignSectionIndices = (blocks: Block[], context?: { projectSlug?: string }): Block[] => {
+    return blocks.map((block) => {
+      const newBlock = { ...block };
+      
+      // If this is a ContentSection in a case study, assign section index
+      if (block.component === "ContentSection" && context?.projectSlug) {
+        sectionIndex++;
+        newBlock.props = {
+          ...block.props,
+          projectSlug: context.projectSlug,
+          sectionIndex,
+        };
+        console.log("[Renderer] Assigned section props to ContentSection:", {
+          blockId: block.id,
+          projectSlug: context.projectSlug,
+          sectionIndex,
+          existingProps: Object.keys(block.props || {}),
+        });
+      }
+      
+      // Recursively process children
+      if (block.children && block.children.length > 0) {
+        newBlock.children = assignSectionIndices(block.children, context);
+      }
+      
+      return newBlock;
+    });
+  };
+  
+  // Assign section indices to ContentSection blocks
+  const blocksWithIndices = data.page.kind === "case_study" && projectSlug
+    ? assignSectionIndices(data.page.blocks, { projectSlug })
+    : data.page.blocks;
 
-  return <div className={className}>{renderedBlocks}</div>;
+  // Render all blocks with timing
+  console.time("renderer-render");
+  const renderedBlocks = blocksWithIndices.map((block) => renderBlock(block));
+  console.timeEnd("renderer-render");
+
+  return (
+    <ResponseContext.Provider value={contextValue}>
+      <div className={className}>{renderedBlocks}</div>
+    </ResponseContext.Provider>
+  );
 };
 
 Renderer.displayName = "Renderer";

@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 export interface ContentBlockItem {
   eyebrow?: string;
   body: string;
+  richText?: boolean;
+  isAI?: boolean;
 }
 
 export interface ContentBlockProps {
@@ -53,7 +55,8 @@ const ContentBlock = React.forwardRef<HTMLDivElement, ContentBlockProps>(
               {item.eyebrow && (
                 <div
                   className={cn(
-                    "flex w-full shrink-0 items-start font-bold text-base leading-5 text-text-default md:w-[116px]",
+                    "flex w-full shrink-0 items-start font-bold text-base leading-5 md:w-[116px]",
+                    item.isAI ? "text-accent-primary" : "text-text-default",
                     eyebrowClassName
                   )}
                 >
@@ -64,6 +67,8 @@ const ContentBlock = React.forwardRef<HTMLDivElement, ContentBlockProps>(
               {/* Body Text */}
               <BodyText
                 body={item.body}
+                richText={item.richText !== false}
+                markdown={item.richText === false ? true : false}
                 className={cn("flex-1 max-w-[388px]", bodyClassName)}
               />
             </div>

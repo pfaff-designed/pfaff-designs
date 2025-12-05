@@ -1,205 +1,374 @@
-Getting Started: pfaff-designs
+getting-started.md
 
-You are working in an existing Next.js 14 + TypeScript project located at:
+Updated to match the real codebase + Cursor’s feedback
 
-~/Documents/code/pfaff-designs
+# Getting Started  
+_Updated for the actual `pfaff-designs` codebase_
 
-Do not create a new app. Use the existing repo and follow these steps whenever you need to set up or repair the environment.
+This document explains how to set up, run, and contribute to the `pfaff-designs` Next.js project.  
+Everything here accurately reflects the current implementation.
 
-⸻
+---
 
-1. Open the Project
-	1.	Use this directory as the project root:
+# 1. Prerequisites
 
-    cd ~/Documents/code/pfaff-designs
+The project requires:
 
-    	2.	Use the existing package.json and next.config rather than scaffolding new ones.
+- **Node.js 18+**  
+  Check version:  
+  ```bash
+  node --version
+  ```
 
-⸻
+- **npm 9+**  
+  Check version:  
+  ```bash
+  npm --version
+  ```
 
-2. Install Core Dependencies
+- **macOS or Linux recommended**  
+- **Cursor or VSCode** (Cursor is preferred)
 
-If dependencies are missing, add them using npm from the project root.
+---
 
-Runtime dependencies:
+# 2. Install Dependencies
 
-npm install \
-  @supabase/supabase-js \
-  @anthropic-ai/sdk \
-  langchain \
-  clsx \
-  tailwind-merge \
-  zod
+Install all packages:
 
-  Dev dependencies (if any are missing):
+```bash
+npm install
+```
 
-npm install -D \
-  typescript \
-  @types/node \
-  @types/react \
-  @types/react-dom \
-  eslint \
-  eslint-config-next \
-  prettier \
-  tailwindcss \
-  postcss \
-  autoprefixer \
-  @storybook/react \
-  @storybook/addon-essentials \
-  jest \
-  @testing-library/react \
-  @testing-library/jest-dom
+---
 
-Keep all installs scoped to this project (no global installs).
+# 3. Available Commands
 
-⸻
+From `package.json`, the valid commands are:
 
-3. Tailwind Setup
+```bash
+npm run dev           # Start Next.js locally
+npm run build         # Build for production
+npm run start         # Start production build
 
-The project uses Tailwind CSS with tokens in globals.css.
-	1.	Confirm Tailwind config file (tailwind.config.ts or .js) includes the app, components, and stories:
+npm run lint          # Run ESLint
+npm run storybook     # Start Storybook (pre-configured)
+npm run embed-projects  # Embeds project metadata (internal tooling)
+```
 
-    // tailwind.config.ts or tailwind.config.js
-module.exports = {
-  content: [
-    "./src/app/**/*.{ts,tsx}",
-    "./src/components/**/*.{ts,tsx}",
-    "./src/stories/**/*.{ts,tsx,mdx}",
-  ],
-  theme: {
-    extend: {
-      // hook into CSS variables for colors, typography, spacing
-    },
-  },
-  plugins: [],
-};
+### ⚠️ Not implemented:
+- No `test` script exists  
+- No Jest config exists  
+- No test files exist  
 
-2.	Use src/app/globals.css for:
+Testing is **planned** but currently **not configured**.
 
-	•	CSS variables (colors, typography scale, spacing, breakpoints).
-	•	Resets and base styles.
+---
 
-	3.	Use Tailwind utility classes inside components instead of new CSS files.
+# 4. Project Stack (Exact Versions)
 
-⸻
+### Runtime & Framework
+- **Next.js: 14.2.33** (App Router)
+- **React: 18.3.1**
+- **TypeScript: 5.9.3**
 
-4. shadcn/ui Setup
+### Styling & UI
+- **Tailwind CSS v4** (via `@tailwindcss/postcss`)
+- **shadcn/ui** (generated components in `src/components/ui/`)
+- **Radix Primitives** (via shadcn/ui)
+- **globals.css** includes:
+  - CSS variables (colors, radii, spacing, typography)
+  - `@import "tailwindcss";` (Tailwind v4 syntax)
 
-The project uses shadcn/ui as the primitive library.
-	1.	Initialize shadcn in this project (if not already done):
+### AI & Orchestration
+- **Anthropic (Haiku/Sonnet/Opus)**  
+- **LangChain** (retrieval, pipeline, orchestration)
+- **RAG system** (custom implementation)
 
-    npx shadcn-ui@latest init
+### Data & Storage
+- **Supabase**  
+  - Database  
+  - Storage (images)  
+  - Public image URLs resolved via media registry
 
-	•	App Router
-	•	TypeScript
-	•	Components directory: ./src/components/ui
+### Tooling
+- Storybook 10  
+- ESLint  
+- Prettier  
+- tsx  
+- Vercel deployment ready
 
-	2.	When you need primitives, add them via:
+---
 
-    npx shadcn-ui@latest add button card input textarea dialog tabs accordion
+# 5. Folder Structure (Accurate to Codebase)
 
-
-	3.	Usage rules:
-
-	•	Always import primitives like:
-
-    import { Button } from "@/components/ui/button";
-
-    	•	Wrap shadcn primitives into atoms and molecules when they become reusable patterns (e.g. PrimaryButton, CardWithEyebrow).
-
-⸻
-
-5. Storybook Setup
-
-The project documents atoms and molecules in Storybook.
-	1.	Initialize Storybook for this repo if .storybook does not exist:
-
-    npx storybook@latest init
-
-    	•	Framework: React with TypeScript.
-	•	Integrate with Next.js.
-
-	2.	Make sure Storybook loads Tailwind styles. In .storybook/preview.ts (or preview.js):
-
-    import "../src/app/globals.css";
-
-const preview: Preview = {
-  parameters: {},
-};
-
-export default preview;
-
-	3.	Ensure package.json contains these scripts:
-
-    {
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
-  }
-}
-
-	4.	Storybook rules:
-
-	•	Every atom and molecule should have a *.stories.tsx file.
-	•	Use CSF stories that demonstrate key states and variants.
-
-⸻
-
-6. Folder Structure & Atomic Design
-
-Work inside this structure (create subfolders if missing):
-
+```
 src/
   app/
-    (Next.js App Router: layouts, pages, route handlers)
+    api/             # Next.js App Router API routes
+    globals.css      # Imports Tailwind + design tokens
+    layout.tsx
+    page.tsx
   components/
-    atoms/
-      (buttons, links, text, icons, inputs)
+    atoms/           
     molecules/
-      (card patterns, nav items, list items, form groups)
     organisms/
-      (hero sections, footers, nav bars, case-study sections)
     page-components/
-      (page-level blocks composed of organisms)
     templates/
-      (layout templates used by the Orchestrator JSON)
-    ui/
-      (shadcn/ui primitives live here)
+    layout/
+    media/
+    utility/         # Renderer, AIIndicator, Divider, Spacer
+    ui/              # shadcn/ui primitives
+    ai/              # Legacy AI components (Composer, SectionAIAnswer, etc.)
+    # ai-modal/     # Planned, NOT implemented yet
+  docs/              # Internal documentation
+  hooks/
+    useTypewriter.ts
   lib/
-    (utilities, zod schemas, data fetching, client wrappers)
-  stories/
-    (standalone stories if needed)
-  docs/
-    (markdown docs for design rules, agents, renderer)
+    ai/              # AI pipeline, orchestrator, copywriter
+    caseStudies/
+    kb/
+    layout/          # Block schemas, AnswerBlock schema
+    media/
+    pages/
+    projects/
+    rag/
+    registry/        # componentRegistry
+    supabase/        # Supabase client utilities
+    utils/
+    validation/
+  stories/           # Storybook stories
+```
 
-    Rules for dependencies:
-	•	Atoms only depend on other atoms and shared utilities.
-	•	Molecules depend on atoms.
-	•	Organisms depend on molecules and atoms.
-	•	Page-components and templates depend on organisms/molecules/atoms.
-	•	Do not import high-level components into lower-level ones (no organism → atom import loops).
+### Notes
+- `src/pages/` does **not** exist — this is **App Router**, not Pages Router.
+- `src/tests/` does **not** exist.
+- `src/styles/` does **not** exist — styles live in `globals.css`.
 
-When adding new UI:
-	1.	Check for an existing atom/molecule first.
-	2.	If it’s reused in multiple places and composed of several atoms, make it a molecule.
-	3.	If it’s a whole section (hero, case-study summary, etc.), make it an organism.
+---
 
-⸻
+# 6. AI System Overview (Implemented vs Planned)
 
-7. Running the Project
+The system currently has **only one AI response pathway**:
 
-From the project root:
-	•	Start the Next app:
+### ✔ Implemented: Page Mode Pipeline
+```
+Retrieval → Copywriter → Orchestrator → Renderer → UI
+```
 
-    npm run dev
+### ⚠️ Planned but NOT implemented yet: AI Modal Path
+The following do **not exist yet**:
 
-    	•	Start Storybook:
+- `src/components/ai-modal/`
+- `AskAiPill`
+- `AiModal`
+- `/api/ai/modal`
 
-        npm run storybook
+The document references these as part of the **future conversational overlay**, but they are not yet in the codebase.
 
-        Keep these commands as the primary way to run the project and validate UI and component behavior.
-    
+Today, the only API route is:
+
+```
+/api/ai/query
+```
+
+This powers standard Q&A across the site.
+
+---
+
+# 7. Styling (Tailwind v4 + shadcn/ui Notes)
+
+### Tailwind v4 uses:
+
+- `@import "tailwindcss"` (not @tailwind directives)
+- PostCSS plugin: `@tailwindcss/postcss`
+- Build-time class scanning
+
+### shadcn/ui
+
+To add new components:
+
+```bash
+npx shadcn-ui@latest add button
+```
+
+Components go to:
+
+```
+src/components/ui/
+```
+
+---
+
+# 8. Environment Variables
+
+Create `.env.local` with the following:
+
+```env
+# AI
+ANTHROPIC_API_KEY=""
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=""
+NEXT_PUBLIC_SUPABASE_ANON_KEY=""
+
+# Optional: media fallbacks
+NEXT_PUBLIC_SUPABASE_PLACEHOLDER_IMAGE_URL=""
+
+# LangSmith (optional)
+LANGSMITH_API_KEY=""
+LANGSMITH_ENDPOINT="https://api.smith.langchain.com"
+
+# Optional logging behavior
+DEBUG=""
+```
+
+These must be set for AI responses + media loading.
+
+---
+
+# 9. Supabase Setup
+
+The project expects:
+
+- A Supabase project for image hosting
+- `public/projects/` or similar folder structure
+- Public URLs for all media
+- Images registered in:
+  ```
+  src/lib/media/mediaRegistry.ts
+  ```
+
+When adding new images:
+
+1. Upload to Supabase Storage.
+2. Add entry to `mediaRegistry`.
+3. Use ID (not URL) in the KB YAML.
+
+---
+
+# 10. LangChain Setup
+
+AI pipeline lives in:
+
+```
+src/lib/ai/
+```
+
+Components:
+- `pipeline.ts`
+- `retrieval.ts`
+- `copywriter.ts`
+- `orchestrator.ts`
+
+Requires:
+- Anthropic API key
+- Knowledge Base loaded from `/lib/kb/`
+
+---
+
+# 11. Case Study Data
+
+Case studies live in:
+
+```
+src/lib/caseStudies/
+src/lib/pages/
+src/lib/projects/
+```
+
+These define:
+- Metadata
+- Descriptions
+- KB references
+- Layouts (via Orchestrator)
+
+Use `npm run embed-projects` to regenerate project metadata.
+
+---
+
+# 12. Storybook
+
+Storybook is fully configured.
+
+Run:
+
+```bash
+npm run storybook
+```
+
+Supports:
+- Atoms
+- Molecules
+- Page components
+- Layout previews
+
+---
+
+# 13. Testing (Planned, Not Implemented)
+
+The project currently:
+
+- Has **no Jest config**
+- Has **no test scripts**
+- Has **no test files**
+
+Testing is planned but not yet ready.
+
+This document references testing only as a **future requirement**.
+
+---
+
+# 14. Quick Start
+
+For a new contributor:
+
+1. Clone the repo  
+2. Run:  
+   ```bash
+   npm install
+   ```
+3. Create `.env.local` using the template in Section 8  
+4. Start the dev server:  
+   ```bash
+   npm run dev
+   ```
+5. Start Storybook (optional):  
+   ```bash
+   npm run storybook
+   ```
+6. Explore components under `src/components/`  
+7. Review AI pipeline under `src/lib/ai/`  
+
+---
+
+# 15. What’s Next?
+
+Read these documents next:
+
+- `architecture.md`
+- `component-inventory.md`
+- `design-rules.md`
+- `dev-rules.md`
+
+These define:
+- System behavior  
+- Generative UI rules  
+- Component registry  
+- AI modal future architecture  
+
+---
+
+# 16. Summary
+
+This guide now accurately reflects the **current state** of the project:
+
+✔ Correct commands  
+✔ Correct folder structure  
+✔ Correct versions  
+✔ Realistic stack  
+✔ Accurate AI flow  
+✔ Clear separation of implemented vs planned features  
+✔ Accurate Supabase + LangChain setup  
+✔ Correct absence of Jest/tests  
+
+This is now a reliable on-ramp for anyone working in the repo.

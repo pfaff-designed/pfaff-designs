@@ -1,0 +1,129 @@
+version: 1
+id: about-global
+kind: about_page
+
+meta:
+  title: "About Charles Pfaff"
+  slug: "/about"
+
+sections:
+  - id: hero
+    type: hero
+    title: "About"
+    tags: ["hero", "summary", "intro"]
+    body: |
+      I am a design-minded engineer who works with RAG and generative UI. I care about how things look on the surface and how the systems underneath stay organized. My goal is to build interfaces that feel straightforward to use and grounded in real content, not AI guesswork.
+
+  - id: background
+    type: background
+    title: "Background & Path"
+    tags: ["background", "story", "experience_path"]
+    body: |
+      I did not start in engineering. I began in marketing, moved into UX and design, and eventually shifted into front-end development so I could build the things I was sketching. Before that, I spent years playing in a DIY band and teaching myself guitar, which taught me how to figure things out with limited tools.
+
+      I also earned an MBA in Experience Design at VCU’s Brandcenter. That work sat at the overlap of user needs, business goals, and creative problem solving. It still shapes how I think about digital products today.
+
+  - id: approach
+    type: approach
+    title: "How I Approach My Work"
+    tags: ["approach", "philosophy", "how_i_work"]
+    body: |
+      I try to keep the work simple and honest. I start by putting the problem in plain language, then I map the structure: content, data, components, and flows. Only after that do I bring in AI.
+
+      I like systems that are easy to reason about and easy to change. I prefer clear patterns, predictable behavior, and interfaces that help people do what they came to do without getting in the way.
+
+  - id: ai_approach
+    type: ai_approach
+    title: "How I Work With AI"
+    tags: ["ai", "ai_approach", "ai_process", "ai_policy"]
+    content:
+      principles:
+        - "AI should support the work people are trying to do, not replace their judgment."
+        - "Predictable and reliable behavior matters more than clever output."
+        - "The system should never invent roles, projects, or impact that do not exist in the knowledge base."
+        - "Users should feel in control of the experience. AI should act more like a guide than an invisible driver."
+      process:
+        - "Start from a clear user need or question instead of starting from the model."
+        - "Shape the knowledge base and schemas first so there is something solid for the model to work with."
+        - "Use RAG to keep answers tied to real project data rather than generic internet knowledge."
+        - "Add an explicit intent and routing layer so the AI knows whether to navigate, scroll, answer quickly, or open a deeper experience."
+        - "Use smaller, cheaper models for routing and orchestration, and reserve larger models for work that truly benefits from them."
+        - "Trace and evaluate the system over time, then adjust prompts, data, or structure based on real behavior instead of guessing."
+      policy:
+        - "No hallucinated work experience, clients, or impact metrics. If the knowledge base does not contain it, the AI should not claim it."
+        - "If the system cannot answer confidently, it should say so or ask a short clarifying question instead of bluffing."
+        - "When intent is ambiguous, AI should offer options like scroll here, navigate there, quick answer, or deep dive instead of choosing silently."
+        - "The tone should be warm, clear, and concise. It should be easy to skim and honest about uncertainty."
+      fit:
+        good_for:
+          - "Summarizing case studies into recruiter-friendly narratives and layouts."
+          - "Turning unstructured notes into structured YAML or JSON that the site can render deterministically."
+          - "Prototyping new interaction patterns for generative UI, such as contextual modals or command palettes."
+        not_for:
+          - "Fabricating impact numbers or achievements that are not grounded in real work."
+          - "Replacing direct human conversations for hiring, feedback, or collaboration."
+          - "Making high-stakes decisions without a person reading and approving what it produced."
+
+  - id: toolset
+    type: tools_global
+    title: "Tools & Tech Stack"
+    tags: ["tools_global", "stack", "libraries", "tech", "skills"]
+    body: |
+      I work across front-end, orchestration, and design tooling. The exact stack shifts by project, but this is the core set of tools I reach for most often.
+    tools:
+      frontend:
+        - "React"
+        - "Next.js"
+        - "TypeScript"
+        - "Tailwind CSS"
+        - "shadcn/ui"
+      ai:
+        - "Anthropic models"
+        - "LangChain"
+        - "LangSmith"
+      backend:
+        - "Node.js"
+        - "Supabase"
+      design:
+        - "Figma"
+        - "Storybook"
+
+  - id: collaboration
+    type: collaboration
+    title: "How I Work With Teams"
+    tags: ["collaboration", "teams", "process"]
+    body: |
+      I like working in the space where design, product, and engineering overlap. I try to make ideas concrete quickly with prototypes, small slices, and clear examples instead of long abstract descriptions. I am comfortable owning work end to end when needed, but I do my best work when there is a steady feedback loop with the people closest to the problem.
+
+  - id: values
+    type: values
+    title: "Values & Principles"
+    tags: ["values", "principles", "philosophy"]
+    values:
+      - name: "Clarity"
+        description: "Clear thinking, clear communication, and interfaces that respect the person using them."
+      - name: "Intentionality"
+        description: "Being deliberate about what we build, why we build it, and how it will actually be used."
+      - name: "Curiosity"
+        description: "Treating new tools and constraints as chances to explore, not just boxes to tick."
+      - name: "Care"
+        description: "Caring about the details, the people, and the long-term impact of the systems we ship."
+
+  - id: highlights
+    type: highlights
+    title: "Selected Highlights"
+    tags: ["highlights", "proof_points", "summary"]
+    items:
+      - label: "Coca-Cola — AI vending prototype"
+        detail: "Helped turn an AI-powered vending concept into a working prototype the team could react to and evaluate."
+      - label: "Tanger — Generative UI retail experience"
+        detail: "Built generative UI patterns that let the site adapt content while staying inside a defined design system."
+      - label: "Capital One Travel — Marketing site"
+        detail: "Worked on scalable components and templates for the travel marketing site as new lounges and content were added."
+
+  - id: contact_teaser
+    type: contact_teaser
+    title: "Let’s Talk"
+    tags: ["contact", "cta"]
+    body: |
+      I am open to roles and collaborations where thoughtful design, solid engineering, and applied AI intersect. If you would like to talk about working together, the best place to start is the contact form on this site.

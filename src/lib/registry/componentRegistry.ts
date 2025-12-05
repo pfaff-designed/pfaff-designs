@@ -4,6 +4,8 @@ import { Heading } from "@/components/atoms/Heading";
 import { BodyText } from "@/components/atoms/BodyText";
 import { Eyebrow } from "@/components/atoms/Eyebrow";
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/molecules/Card";
+import { ProjectCard } from "@/components/molecules/ProjectCard";
+import { ProjectCardGrid } from "@/components/molecules/ProjectCardGrid";
 import { Section } from "@/components/layout/Section";
 import { Container } from "@/components/layout/Container";
 import { ImageContainer } from "@/components/atoms/ImageContainer";
@@ -11,6 +13,8 @@ import { Video } from "@/components/atoms/Video";
 import { MediaFigure } from "@/components/molecules/MediaFigure";
 import { SideBySideMedia } from "@/components/molecules/SideBySideMedia";
 import { MediaGallery } from "@/components/molecules/MediaGallery";
+import { AnswerBlock } from "@/components/page-components/AnswerBlock";
+import { CaseStudyHero } from "@/components/page-components/CaseStudyHero";
 
 export type ComponentType = React.ComponentType<any>;
 
@@ -33,6 +37,22 @@ export const componentRegistry: Record<string, RegistryEntry> = {
     component: ContentSection,
     category: "page-component",
     allowedChildren: ["Heading", "BodyText", "Eyebrow", "ImageContainer"],
+    allowedParents: "*",
+  },
+
+  AnswerBlock: {
+    name: "AnswerBlock",
+    component: AnswerBlock,
+    category: "page-component",
+    allowedChildren: [],
+    allowedParents: "*",
+  },
+
+  CaseStudyHero: {
+    name: "CaseStudyHero",
+    component: CaseStudyHero,
+    category: "page-component",
+    allowedChildren: [],
     allowedParents: "*",
   },
 
@@ -124,6 +144,22 @@ export const componentRegistry: Record<string, RegistryEntry> = {
     category: "molecule",
     allowedChildren: [],
     allowedParents: ["CardHeader"],
+  },
+
+  ProjectCard: {
+    name: "ProjectCard",
+    component: ProjectCard,
+    category: "molecule",
+    allowedChildren: [],
+    allowedParents: ["ProjectCardGrid", "*"],
+  },
+
+  ProjectCardGrid: {
+    name: "ProjectCardGrid",
+    component: ProjectCardGrid,
+    category: "molecule",
+    allowedChildren: ["ProjectCard"],
+    allowedParents: "*",
   },
 
   MediaFigure: {
