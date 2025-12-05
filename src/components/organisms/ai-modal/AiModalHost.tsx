@@ -11,6 +11,8 @@ import { useAiModal } from "./AiModalContext";
 import { Composer } from "@/components/molecules/Composer";
 import { TypingIndicator } from "@/components/ui/TypingIndicator";
 import type { ModalRequestBody, ModalResponseBody, RelatedProject } from "@/app/api/ai/modal/route";
+import { trackAIAnswerShown, trackAIContactClickFromAI, trackAIQuestionAsked } from "@/lib/analytics/ai";
+import { Button } from "@/components/atoms/Button";
 
 /**
  * AiModalHost
@@ -56,6 +58,17 @@ export function AiModalHost() {
 
   const pathname = usePathname();
   const router = useRouter();
+
+  const deriveProjectSlug = React.useCallback((path: string): string | null => {
+    const match = path.match(/^\/work\/([^/]+)/);
+    return match ? match[1] : null;
+  }, []);
+
+  const getPageMeta = React.useCallback(() => {
+    const pagePath = state.pagePath ?? pathname;
+    const projectSlug = state.projectSlug ?? deriveProjectSlug(pagePath);
+    return { pagePath, projectSlug };
+  }, [deriveProjectSlug, pathname, state.pagePath, state.projectSlug]);
 
   // Detect mobile for relative Composer positioning
   const [isMobile, setIsMobile] = React.useState(false);
@@ -151,6 +164,14 @@ export function AiModalHost() {
       // 3. Store the question for retry functionality
       setLastQuestion(trimmed);
 
+      // Analytics: question asked
+      const { pagePath: metaPagePath, projectSlug: metaProjectSlug } = getPageMeta();
+      trackAIQuestionAsked({
+        pagePath: metaPagePath,
+        projectSlug: metaProjectSlug,
+        question: trimmed,
+      });
+
       // 4. Tell the state machine a question was submitted
       submitQuestion({ question: trimmed });
 
@@ -176,6 +197,7 @@ export function AiModalHost() {
       try {
         // Use state.pagePath if available (from openAiModal), otherwise fallback to pathname
         const effectivePagePath = state.pagePath ?? pathname;
+        const { pagePath: metaPagePath, projectSlug: metaProjectSlug } = getPageMeta();
         
         const requestBody: ModalRequestBody = {
           question: trimmed,
@@ -232,6 +254,13 @@ export function AiModalHost() {
           },
         ]);
 
+        // Analytics: answer shown
+        trackAIAnswerShown({
+          pagePath: metaPagePath,
+          projectSlug: metaProjectSlug,
+          mode: data.mode,
+        });
+
         // 7. Update actions if any
         if (data.actions && data.actions.length > 0) {
           setActions(data.actions);
@@ -285,6 +314,7 @@ export function AiModalHost() {
       pathname,
       close,
       router,
+      getPageMeta,
     ]
   );
 
