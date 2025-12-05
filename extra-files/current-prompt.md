@@ -1,139 +1,178 @@
-# Prompt: Internal Linking & AI-Driven Navigation
+
+
+# Prompt: Modal Graph Tone & Answer Quality Patch
 
 You are working in the **pfaff-designs** repo.
 
 ## Goal
 
-Improve how the AI helps users move around the site:
+Improve the **AI modal / modal graph answers** so they:
 
-1. When the AI mentions projects, it should **link to the correct internal case study pages**.
-2. When users type things like **“take me to…”** or **“navigate to…”**, the system should treat that as a navigation intent and **actually move them** to the right page.
+1. Use a consistent, high-quality voice: calm, clear, and a bit like a short **99% Invisible / NPR / NYT Magazine** segment.
+2. Lead with a **direct answer to the user’s question**, grounded in the portfolio’s knowledge base (no vague biography filler).
+3. Stay **short and scannable** (1–3 short paragraphs, plus optional bullets) with light **markdown formatting** for readability.
+4. Avoid generic, résumé-like or “marketing” answers, especially on case study pages.
+5. Keep correctness and grounding intact: **no new facts** beyond what’s in the context.
 
-This should work both:
-- In **AI answers** (links in text / buttons).
-- In the **command palette / inline chat** where navigation makes sense.
-
----
-
-## Context (high-level)
-
-- Project routes follow a pattern like:  
-  `/work/[slug]` → e.g. `capital-one-travel`, `coca-cola`, `pmi`, `pfaff-designs-portfolio`.
-- There is already a **project registry / KB** that maps slugs to:
-  - `name` (display name, e.g. “Capital One Travel”)
-  - `client` (e.g. “Capital One”)
-  - `shortName` or similar fields.
-- The **command palette** already has a `navigate` helper in the command context.
-- The AI modal / renderer already knows how to render AnswerBlocks and link-like UI pieces.
-
-You should infer exact file paths and helpers from the codebase (e.g. KB loader, project registry, command context, renderer).
+Do **not** change function signatures or overall control flow of the modal graph. We want a **safe, localized patch** that improves tone and answer shape without breaking existing behavior.
 
 ---
 
-## Part 1 — Internal project linking in AI answers
+## Context
 
-**Goal:** When the AI answers questions and references a project, it should surface **clickable navigation** to that project.
+- The AI conversation flow is implemented as a **modal graph** (something like `modalGraph`, `ModalGraphState`, `conversationPolicy` / `conversationPolicyNode`, `generateAnswerNode`, etc.).
+- There is a **context blob** being built with lines like:
+  - `PAGE PATH: /...`
+  - `PROJECT: ...`
+  - `SECTION: ...`
+  - `[PORTFOLIO_FACTS]`, `[PROJECT_FACTS]`, etc.
+- The final answer text is stored as something like `answerText` on the modal state.
+- Routing modes include values like:
+  - `answer_direct`
+  - `clarify_then_answer`
+  - `low_context_fallback`
+- Previously we experimented with a Copywriter agent; for **chat in the modal**, that is now disabled.
 
-### Requirements
+Your job in this prompt is to:
 
-1. **Project mention → internal link**
-   - When the AI mentions any of these projects:
-     - “Capital One Travel”
-     - “Coca-Cola”
-     - “Project Management Institute” / “PMI” / “PMI.org redesign”
-     - “This portfolio” / “pfaff.design”
-   - It should be able to map them to **canonical slugs**:
-     - Capital One → `/work/capital-one-travel`
-     - Coca-Cola → `/work/coca-cola`
-     - PMI / PMI-ACP / PMI Agile → `/work/pmi`
-     - Portfolio / pfaff.design → `/work/pfaff-designs-portfolio` or `/`
-   - Use the existing normalization rules already in the KB / modal graph (don’t invent a new mapping; reuse the canonical PMI logic).
+1. **Locate** where the LLM prompt for the modal’s final answer is constructed.
+2. **Update the prompt text and answer shaping**, without touching the surrounding wiring.
+3. **Improve low-context behavior** so it stays helpful and conversational, not just “I don’t have enough information.”
 
-2. **Add optional link metadata to answers**
-   - When generating an answer for a project question, add **structured metadata** like:
-     - `relatedProjects: Array<{ slug: string; label: string; reason?: string }>`
-   - The renderer should:
-     - If `relatedProjects` exists, show **small inline or footer pills/buttons** that link to those pages:
-       - e.g. “View Capital One Case Study”, “View Coca-Cola Case Study”.
+If you’re unsure where to start, search for these clues:
 
-3. **Answer-level link formatting**
-   - The prose itself can say:
-     - “You can dive deeper in the Capital One case study.”
-   - But the **actual navigable element** should come from structured data so it’s predictable to render.
-   - The renderer should use Next.js `<Link>` (or the project’s NavLink abstraction) to push to `/work/[slug]`.
-
-4. **Keep it minimal**
-   - Don’t overwhelm the user with 6+ links. For most answers, **1–3 related project links** is enough.
-   - Prioritize:
-     - The project currently in context (if on `/work/[slug]`).
-     - One or two related projects by tools/role.
+- `build_context_blob` or similar functions.
+- debug notes like `"[generate_answer] handled answer_direct via LLM"`.
+- references to `mode = "answer_direct"` or `"low_context_fallback"`.
+- the code that ultimately calls the LLM and sets `answerText`.
 
 ---
 
-## Part 2 — “Take me to…” / navigation intents
+## Requirements
 
-**Goal:** When the user clearly asks to go somewhere, we navigate them, not just describe it.
+### 1. Set the tone: small, reusable system prompt
 
-### Requirements
+Find the **system message** (or equivalent) used when calling the LLM for the modal graph answer. Replace or refactor it so the tone is defined as a **small, reusable block** that looks like this (you can adapt exact wording, but keep the intent):
 
-1. **Detect navigation-style queries**
-   - Examples:
-     - “take me to the Capital One page”
-     - “navigate me to coke”
-     - “go to the PMI case study”
-     - “show me the work page”
-   - Create a small helper to detect these:
-     - Check for verbs like `["go", "take", "navigate", "open", "show"]`
-     - Plus targets like `["capital one", "coke", "coca-cola", "pmi", "project management institute", "portfolio", "home", "work"]`
-   - Use **lowercased, trimmed** input for detection.
+> **SYSTEM (tone & style):**
+> - You are a clear, grounded explainer for Charles Pfaff’s portfolio.
+> - Your voice is similar to a short segment from 99% Invisible or an NPR/NYTimes feature: calm, curious, precise.
+> - Use **short sentences** and **short paragraphs**. Aim for **1–3 paragraphs max**, plus optional bullets.
+> - Lead with the **direct answer** to the user’s question, not a preamble.
+> - Use light **markdown** for readability: you may bold 1–3 key phrases or section labels, and use short bullet lists when listing tools, roles, or steps.
+> - Never use marketing clichés (e.g. "innovative", "passionate", "at its core", "in today’s world").
+> - Never invent facts. If the context does not provide something, say what you *can* infer and optionally suggest a clarifying question.
+> - Avoid roleplay language (e.g. "I’m just an AI" or "I lean in").
 
-2. **Map navigation intent → route**
-   - Reuse the same slug mapping as above.
-   - Examples:
-     - “capital one”, “capital one travel” → `/work/capital-one-travel`
-     - “coke”, “coca-cola” → `/work/coca-cola`
-     - “pmi”, “project management institute” → `/work/pmi`
-     - “portfolio”, “home”, “landing page” → `/`
-     - “work” → `/work`
-     - “contact”, “reach out”, “get in touch” → `/contact`
+Attach this tone block **before** any task-specific instructions so the model consistently follows it.
 
-3. **Command palette / inline chat**
-   - In the **command palette**:
-     - Add or update a command that:
-       - Detects navigation intents in the input.
-       - Calls the existing `navigate(path)` helper in the command context.
-     - If a navigation intent is detected, **prioritize executing navigation** instead of sending this as an AI question.
-   - In **inline chat / modal**:
-     - If the user types something like “take me to capital one”:
-       - Either:
-         - Immediately redirect, or
-         - Answer with “Sure, taking you to the Capital One case study” and trigger navigation.
-     - Prefer the approach that matches the existing UX patterns.
+### 2. Shape the user-facing answer
 
-4. **Guardrails**
-   - If the system can’t confidently map the phrase to a known page:
-     - Don’t guess.
-     - Respond with something like:
-       - “I’m not sure which page you mean. I can take you to the Work page, or you can ask about Capital One, Coca-Cola, PMI, or this portfolio.”
-   - This should be friendly and match the current tone (calm, clear, 99%-Invisible-ish).
+In the **user message** (or combined prompt) that you send to the model, ensure the following structure:
+
+1. **Provide context** (page, project, section, facts, retrieved snippets, history) *briefly*, similar to the existing `contextBlob`, but you do not have to change its structure.
+2. Then give clear **task instructions**, for example:
+
+> - Answer the user’s question as if you are explaining the work to a thoughtful recruiter or hiring manager.
+> - Use the project and portfolio facts above as your source of truth.
+> - **Always start by directly answering the user’s question in 1–2 short paragraphs.**
+> - If the question is about a **specific project** (you have `projectSlug` and project facts), focus your answer on:
+>   - **Client**
+>   - **Role**
+>   - **What Charles actually did**
+>   - **Tools/stack**
+>   - **How he worked with other disciplines**
+>   - **Impact / why it mattered**
+> - Keep the total length under ~220–250 words.
+> - Use at least **one bolded phrase** to help scanning.
+> - Optionally end with **one short follow-up question** that invites the user to go deeper (for example: "If you’d like, I can walk through how the component system was structured."), but only if it feels natural.
+
+Update the existing prompt template so these rules are clearly expressed. The key is: **lead with the answer**, keep it short, and frame it like a thoughtful explanation of real work.
+
+### 3. Fix project-specific answers vs. generic biography
+
+Right now, answers sometimes fall back to generic biography even when the user is on a **case study page**.
+
+Update the prompt logic so that:
+
+- If `projectSlug` is present **and** project facts are available:
+  - Treat the question as **project-scoped by default**.
+  - Encourage the model to anchor heavily in that project’s facts.
+  - For questions like:
+    - "What did you do on this project?"
+    - "How did you work with other disciplines here?"
+    - "What tools did you use on this?"
+  - The answer should:
+    - Name the **client** (e.g. Capital One, Coca-Cola, PMI).
+    - State the **role**.
+    - Describe **what Charles did** in practical, concrete terms.
+    - Mention **tools and collaboration**.
+    - Highlight **impact** in 1–2 clear sentences.
+
+You can implement this as **additional instructions in the prompt**, keyed off the presence of `projectSlug` and case-study-style phrasing in the question. You do **not** need to rewrite the routing or introduce a new mode; just ensure the prompt text makes the expectation explicit.
+
+### 4. Improve low-context fallback copy (without changing routing)
+
+For now, keep the existing routing modes (`answer_direct`, `clarify_then_answer`, `low_context_fallback`) and when they are chosen — do **not** restructure the graph in this prompt.
+
+Instead, improve the **content** of low-context answers by updating the fallback instructions:
+
+- When the mode is `low_context_fallback`, the model should:
+  - Be honest about limited context, but still **offer something useful**.
+  - For example:
+
+> - Briefly say what is and isn’t known from the portfolio.
+> - Offer one concrete next step: a follow-up question or a suggestion for what the user could ask next.
+> - Keep the same tone rules (short, clear, no clichés).
+
+- Avoid answers like:
+  - "I do not have enough contextual information to generate a meaningful response."
+
+You can do this by:
+
+- Adding a small conditional block in the prompt instructions when `mode === "low_context_fallback"`.
+- Or by slightly altering the existing low-context template to include the behavior above.
+
+### 5. Preserve correctness and avoid regressions
+
+While making these changes:
+
+- **Do not** change function signatures.
+- **Do not** change the shape of the state (`ModalGraphState`) or API responses.
+- **Do not** re-enable the Copywriter agent for chat.
+- **Do not** alter the way `answerText` is stored or returned.
+- **Do not** modify the command palette or inline chat behavior.
+
+Limit your changes to:
+
+- The **prompt text** and instructions sent to the LLM.
+- The **branch-specific prompt fragments** used for `answer_direct` and `low_context_fallback` (and optionally `clarify_then_answer`).
+
+Add or update inline comments where you adjust the prompt (e.g. `// Tone & answer-shaping patch: Dec 2025`).
 
 ---
 
-## Part 3 — Testing & Verification
+## Post-Change Smoke Tests
 
-Add a short, inline checklist to the PR description or comments verifying:
+After implementing the prompt updates, manually run a few checks in the dev environment:
 
-- [ ] From the home page, ask: “What projects have you worked on?”  
-      → Answer mentions projects and shows links/pills to their pages.
-- [ ] On the Capital One page, ask: “What other projects are similar?”  
-      → Answer includes links to at least one other case study (e.g. PMI or Tanger).
-- [ ] Type “take me to the Capital One page” into:
-      - [ ] Command palette  
-      - [ ] AI modal / inline chat  
-      → Both navigate to `/work/capital-one-travel`.
-- [ ] Type “take me to the work page”  
-      → Navigates to `/work`.
-- [ ] Type “take me to something I haven’t built”  
-      → No navigation; answer falls back to a clarifying message.
+1. **Home page (`/`)**
+   - Ask: "How does this portfolio use AI?"
+   - Expect: 1–2 short paragraphs, clearly describing the RAG + generative UI system, with bolded key phrases and an optional follow-up question.
 
-Do not change unrelated logic. Keep all existing working behavior intact.
+2. **Capital One Travel page**
+   - Ask: "What did you do on this project?" and "How did you work with other disciplines here?"
+   - Expect: concrete, project-specific explanations (client, role, tools, collaboration, impact), not generic biography.
+
+3. **Coca-Cola page**
+   - Ask: "Tell me about your work on this project" and "How did AI show up here?"
+   - Expect: concise, project-focused answers with the new tone and structure.
+
+4. **Low-context scenario** (e.g. page or project with little content)
+   - Ask a broad question.
+   - Expect: the model says what it can infer, notes what’s missing in a friendly way, and suggests a next question, instead of a hard "I don’t have enough context" wall.
+
+If any of these start returning generic or résumé-like answers, refine the **prompt text only** (not the routing) until they match the desired tone and structure.
+
+- Save all changes.
+- Do not commit or run any additional formatting beyond what the repo already uses.

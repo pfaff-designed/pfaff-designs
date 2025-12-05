@@ -3,6 +3,8 @@ import { modalGraphApp, type ModalGraphState } from "@/lib/ai/modalGraph";
 import { getCaseStudyBySlug } from "@/lib/caseStudies/data";
 import type { AiModalAction } from "@/components/organisms/ai-modal/AiActionsRow";
 import type { CaseStudyPage } from "@/lib/caseStudies/types";
+import { detectProjectMentions, getProjectRoute, getProjectLabelFromSlug } from "@/lib/navigation/project-mapping";
+import { detectNavigationIntent } from "@/lib/navigation/navigation-intent";
 
 // ============================================================
 // TYPES
@@ -25,16 +27,72 @@ export interface ModalRequestBody {
   }>;
 }
 
+export interface RelatedProject {
+  slug: string;
+  label: string;
+  path: string;
+  reason?: string;
+}
+
 export interface ModalResponseBody {
   answer: string;
   mode?: "answer_direct" | "clarify_then_answer" | "low_context_fallback";
   debugNotes?: string[];
   actions: AiModalAction[];
+  relatedProjects?: RelatedProject[];
+  navigationIntent?: {
+    path: string;
+    label: string;
+  };
 }
 
 // ============================================================
 // HELPERS
 // ============================================================
+
+/**
+ * Detect if the question is explicitly asking about projects, clients, or work portfolio
+ */
+function isAskingAboutProjects(question: string): boolean {
+  const q = question.toLowerCase();
+  
+  const projectKeywords = [
+    "projects",
+    "project",
+    "case studies",
+    "case study",
+    "clients",
+    "client",
+    "work",
+    "portfolio",
+    "companies",
+    "company",
+  ];
+  
+  const askingPhrases = [
+    "tell me about",
+    "show me",
+    "what are",
+    "what other",
+    "what kind of",
+    "who are",
+    "who have you worked",
+    "have you worked on",
+    "worked on",
+    "worked with",
+    "list",
+    "examples of",
+  ];
+  
+  // Must have both: a project keyword AND an asking phrase (or just "projects?" / "clients?")
+  const hasProjectKeyword = projectKeywords.some((keyword) => q.includes(keyword));
+  const hasAskingPhrase = askingPhrases.some((phrase) => q.includes(phrase));
+  
+  // Short direct questions like "projects?" or "clients?" should also trigger
+  const isShortDirectQuestion = q.trim().endsWith("?") && q.length < 30 && hasProjectKeyword;
+  
+  return hasProjectKeyword && (hasAskingPhrase || isShortDirectQuestion);
+}
 
 function deriveProjectSlugFromPath(pagePath?: string): string | undefined {
   if (!pagePath) return undefined;
@@ -251,11 +309,9 @@ function generateModalActions(params: {
       label: "Go to Capital One case study",
     },
     {
-    },
-    {
-      patterns: [/portfolio/, /rag portfolio/, /generative ui/],
-      path: "/work/rag-portfolio",
-      label: "Go to Generative-UI portfolio case study",
+      patterns: [/pfaff.design/, /pfaff-designs/, /pfaff design portfolio/],
+      path: "/work/pfaff-designs",
+      label: "Go to Pfaff.design case study",
     },
   ];
 
@@ -325,6 +381,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Check for navigation intent first
+    const navigationIntent = detectNavigationIntent(question);
+    if (navigationIntent.type !== "none" && navigationIntent.path && navigationIntent.confidence !== "low") {
+      // Return navigation response instead of generating an answer
+      return NextResponse.json({
+        answer: `Sure, taking you to ${navigationIntent.label || navigationIntent.path}.`,
+        mode: "answer_direct" as const,
+        actions: [],
+        navigationIntent: {
+          path: navigationIntent.path,
+          label: navigationIntent.label || navigationIntent.path,
+        },
+      } as ModalResponseBody);
+    }
+
     // 1. Derive project context from pagePath (use provided projectSlug if available)
     const effectiveProjectSlug = body.projectSlug ?? deriveProjectSlugFromPath(pagePath);
 
@@ -374,7 +445,25 @@ export async function POST(req: NextRequest) {
 
     const debugNotes: string[] = finalState.debugNotes ?? [];
 
-    // 7. Generate smart actions
+    // 7. Detect project mentions in the answer (only if explicitly asked)
+    let relatedProjects: RelatedProject[] | undefined;
+    if (isAskingAboutProjects(question)) {
+      const projectMentions = detectProjectMentions(answer, effectiveProjectSlug ?? undefined);
+      relatedProjects = projectMentions
+        .slice(0, 3) // Limit to 3 related projects
+        .map((mention) => ({
+          slug: mention.slug,
+          label: mention.label,
+          path: getProjectRoute(mention.slug),
+          reason: mention.reason,
+        }));
+      
+      if (relatedProjects.length === 0) {
+        relatedProjects = undefined;
+      }
+    }
+
+    // 8. Generate smart actions
     const actions = generateModalActions({
       question,
       projectSlug: effectiveProjectSlug,
@@ -383,12 +472,13 @@ export async function POST(req: NextRequest) {
       caseStudy,
     });
 
-    // 8. Build response
+    // 9. Build response
     const responseBody: ModalResponseBody = {
       answer,
       mode,
       debugNotes: process.env.NODE_ENV !== "production" ? debugNotes : undefined,
       actions,
+      relatedProjects,
     };
 
     return NextResponse.json(responseBody);

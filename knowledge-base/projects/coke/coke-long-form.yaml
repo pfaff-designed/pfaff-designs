@@ -2,52 +2,97 @@ version: "1"
 kind: "project_longform"
 
 project:
-  id: "coca-cola-hydration-vending"
-  title: "Coca-Cola Hydration-Aware Vending Exploration"
+  id: "coca-cola-creative-technology"
+  title: "Coca-Cola Applied AI & Creative Technology Initiatives"
   client: "Coca-Cola"
-  industry: "Brand, Creative Technology, Innovation"
+  industry: "Brand, Creative Technology, Applied AI"
   role: "Creative Technologist / Applied AI Researcher"
-  one_liner: "Charles explored and prototyped a hydration-aware vending concept using research, simulated data modeling, and system-interpretation logic. He built a working prototype that demonstrated how hydration readings could responsibly translate into product recommendations."
+  one_liner: "Charles worked with Coca-Cola on applied AI and creative technology initiatives, turning abstract AI capabilities into tangible prototypes that were understandable and usable by non-technical teams."
 
 project_facts: |
+  [PROJECT_FACTS]
+  
   Client: Coca-Cola
-  Project: Hydration-Aware Vending Exploration
+  
+  Project: Applied AI & Creative Technology Initiatives
+  
   Role: Creative Technologist / Applied AI Researcher
-  Summary: Charles explored and prototyped a hydration-aware vending concept using research, simulated data modeling, and system-interpretation logic. He built a working prototype that demonstrated how hydration readings could responsibly translate into product recommendations.
-  Team: Innovation strategists, product designers, technical directors
+  
+  Summary: Charles worked with Coca-Cola on a series of applied AI and creative technology initiatives, exploring how generative models and intelligent tools could support brand storytelling, internal workflows, and new digital experiences. His work focused on turning abstract AI capabilities into tangible prototypes that were understandable and usable by non-technical teams.
+  
+  Team: Brand/creative teams, strategy, engineering partners, and innovation stakeholders.
+
+role: |
+  [ROLE]
+  
+  Charles's role at Coca-Cola sat at the intersection of creative direction and technical implementation. He acted as a bridge between AI research and brand/creative teams, helping translate emerging AI capabilities into concrete concepts, prototypes, and tools. Rather than shipping a single consumer-facing product, his work centered on exploring what was possible, rapidly prototyping ideas, and helping the organization understand how generative AI could show up in their ecosystem.
 
 context: |
-  Coca-Cola wanted to understand whether a vending machine could identify a simple hydration signal and offer an appropriate product recommendation before a person felt noticeably dehydrated. The challenge involved grounding the concept in real scientific behavior while acknowledging hardware limitations.
+  Coca-Cola wanted to understand how emerging AI capabilities could support their creative, brand, and strategic operations. Rather than a single product launch, the organization needed a way to evaluate different AI applications, understand their constraints, and build internal knowledge about what was feasible and valuable.
 
 problem: |
-  Hydration is difficult to measure outside clinical environments. The team needed clarity on which signals were realistic, how reliable they might be, and whether a consumer-friendly experience could be responsibly designed around them. Without real sensors, evaluating the concept required a believable data model and interpretation logic.
-
-solution: |
-  Charles developed a simplified but science-informed hydration classification model, built simulated datasets that reflected natural variation, and designed interpretation rules mapping hydration levels to Coca-Cola's product categories. He then built an interactive prototype that let stakeholders experience the idea as a functioning flow rather than an abstract concept.
+  Moving from abstract conversations about "AI" to concrete, evaluable experiments was challenging. The team needed prototypes that demonstrated real value, clear explanations of technical constraints, and a framework for understanding how AI could support—not replace—creative workflows.
 
 process: |
-  - Researched how dehydration is measured and classified across clinical and consumer contexts.
-  - Identified feasible sensing methods, excluding solutions unrealistic for consumer hardware.
-  - Created simulated hydration data representing mild, moderate, and more significant dehydration levels, including natural noise.
-  - Designed interpretation logic that emphasized responsible recommendations and conservative thresholds.
-  - Built an interactive prototype demonstrating end-to-end system behavior, pacing, tone, and edge cases.
-  - Explored a far-future "Freestyle-like" machine vision for real-time nutrient/electrolyte mixing.
+  [PROCESS]
+  
+  - Collaborated with creative and strategy partners to identify high-leverage use cases for applied AI (e.g., content exploration, internal tooling, and concept development).
+  
+  - Evaluated capabilities and tradeoffs of different AI models and tooling approaches, focusing on what would be reliable and explainable in practice.
+  
+  - Built prototypes and internal demos that showed how AI could support creative workflows, rather than replace them.
+  
+  - Framed complex technical concepts in accessible language so cross-functional partners could confidently contribute feedback and direction.
+
+tools: |
+  [TOOLS]
+  
+  - Prototyping stack: React, TypeScript, Node.js
+  
+  - AI and experimentation: modern LLMs and generative tools (text and image), API-driven prototypes
+  
+  - Collaboration and design: Figma, shared documentation, and demo environments for stakeholder review
 
 impact: |
-  The exploration clarified the feasibility of a hydration-aware vending experience.
-  The prototype gave leadership a concrete way to evaluate the idea, revealing which UX patterns felt intuitive and which scientific assumptions needed refinement.
-  It also provided a flexible technical model the team could evolve as sensor opportunities matured.
+  [IMPACT]
+  
+  Charles helped Coca-Cola move from abstract conversations about "AI" to concrete, evaluable experiments. By building prototypes and framing their capabilities clearly, he enabled stakeholders to:
+  
+  - See how AI might support real creative and strategic workflows.
+  
+  - Understand constraints and risks, instead of treating AI as a vague magic box.
+  
+  - Make more grounded decisions about which directions were worth pursuing and which should be deprioritized.
+  
+  
+  
+  Rather than a single launch, the impact of this work was a clearer internal language and mental model for applied AI at Coca-Cola, plus a set of prototypes and patterns that future teams could learn from or build on.
+
+collaboration: |
+  [COLLABORATION]
+  
+  Across the Coca-Cola work, Charles collaborated closely with:
+  
+  - Creative and brand teams, to ensure prototypes reflected real storytelling and campaign needs.
+  
+  - Strategy and innovation partners, to align AI explorations with broader business questions.
+  
+  - Technical partners, where needed, to sanity-check feasibility and think through how prototypes might scale if they moved beyond experimentation.
+  
+  
+  
+  In all cases, his focus was on making AI feel concrete, explainable, and genuinely useful to the people who would eventually rely on it.
 
 reflections: |
-  Charles strengthened his ability to combine research, feasibility modeling, AI reasoning, and prototyping into an experience that supports decision-making in ambiguous problem spaces. The work balanced scientific grounding with creative possibility, helping envision both near-term and long-term future states.
+  This work demonstrated the value of acting as a bridge between technical capabilities and creative applications. Rather than focusing on a single deliverable, the project succeeded by building organizational understanding and providing concrete examples that teams could learn from and build upon.
 
 other_sections: |
   - Context
   - Problem
-  - Solution
   - Process
-  - Outcomes
-  - Reflections
-  - Technical Notes (hydration classification, feasibility, simulated data modeling, interpretation logic, future vision)
+  - Role
+  - Tools
+  - Impact
+  - Collaboration
 
 links: []

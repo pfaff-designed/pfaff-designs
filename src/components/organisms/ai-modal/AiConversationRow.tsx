@@ -79,14 +79,6 @@ export const AiConversationRow: React.FC<AiConversationRowProps> = ({
             {mode === "low_context_fallback" && "Low-context overview"}
           </span>
         )}
-        {/* User-facing mode hint - shown only for first assistant message of each turn */}
-        {role === "ai" && mode && isFirstAssistantMessageOfTurn && (
-          <div className="mb-1 text-xs text-[color:var(--text-muted)] opacity-80">
-            {mode === "answer_direct" && "Direct answer"}
-            {mode === "clarify_then_answer" && "Answer + follow-up"}
-            {mode === "low_context_fallback" && "Overview from limited context"}
-          </div>
-        )}
         {/* TODO (V2 streaming): When isStreaming is true, render partial content
             with a cursor/indicator. Display partialContent instead of body. */}
         {typeof body === "string" ? (
