@@ -192,6 +192,8 @@ export const CommandPaletteContainer = React.forwardRef<
             ref={setRefs}
             className={cn(
               "flex flex-col gap-2 items-center pointer-events-auto",
+              "w-full px-4 sm:px-0",
+              "max-w-[40rem]",
               className,
             )}
             onClick={(e) => e.stopPropagation()}

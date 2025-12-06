@@ -200,10 +200,10 @@ export const CommandPaletteContent = React.forwardRef<
     );
 
     return (
-      <div 
-        ref={ref} 
-        onKeyDown={onKeyDown} 
-        className="flex flex-col"
+      <div
+        ref={ref}
+        onKeyDown={onKeyDown}
+        className="flex flex-col w-full max-w-[40rem] sm:max-w-none"
         style={{
           maxHeight: "calc(100vh - 96px)",
           overflowY: "auto",
@@ -219,14 +219,15 @@ export const CommandPaletteContent = React.forwardRef<
                 "bg-[color:var(--bg-default)] shadow-sm",
                 "overflow-hidden",
                 "px-4 py-2 flex items-center justify-center gap-2 h-[2.5rem]",
+                "w-full",
               )}
               initial={{
-                width: initialWidth,
+                width: "100%",
                 scale: 0.8,
                 opacity: 0,
               }}
-              animate={{ width: 400, scale: 1, opacity: 1 }}
-              exit={{ width: initialWidth, scale: 0.8, opacity: 0 }}
+              animate={{ width: "100%", scale: 1, opacity: 1 }}
+              exit={{ width: "100%", scale: 0.8, opacity: 0 }}
               transition={{
                 type: "spring",
                 stiffness: 260,
@@ -235,6 +236,7 @@ export const CommandPaletteContent = React.forwardRef<
               style={{
                 originX: 0.5,
                 flexShrink: 0,
+                maxWidth: "400px",
               }}
               onAnimationComplete={handleAnimationComplete}
             >
