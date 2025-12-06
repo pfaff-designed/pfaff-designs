@@ -159,7 +159,7 @@ export const CommandPaletteContainer = React.forwardRef<
               e.stopPropagation();
               onOpenPalette();
             }}
-            className="rounded-full border border-[color:var(--accent-primary)] bg-neutral-50/50 backdrop-blur-md shadow-sm px-4 py-2 flex items-center justify-between gap-2 hover:bg-neutral-50/60 transition-colors flex-shrink-0 h-[2.5rem] pointer-events-auto"
+            className="rounded-full border border-[color:var(--accent-primary)] bg-[color:var(--bg-default)]/90 backdrop-blur-md shadow-sm px-4 py-2 flex items-center justify-between gap-2 hover:bg-[color:var(--bg-default)] transition-colors flex-shrink-0 h-[2.5rem] pointer-events-auto"
             aria-label="Open command palette"
             initial={false}
             animate={{

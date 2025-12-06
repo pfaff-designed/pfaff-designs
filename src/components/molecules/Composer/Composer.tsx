@@ -257,70 +257,54 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
           <div
             ref={containerRef}
             className={cn(
-              "relative flex items-center w-full",
-              "rounded-full border border-[color:var(--border-subtle)]",
-              "bg-background shadow-sm",
-              "px-4 py-2",
-              "overflow-hidden",
-              isFocused && "border-[color:var(--accent-secondary)]"
+              "flex items-center w-full",
+              "rounded-full border border-[color:var(--accent-primary)]",
+              "bg-[color:var(--bg-default)] shadow-sm",
+              "overflow-hidden px-4 py-2 h-[2.5rem]",
+              isFocused && "border-[color:var(--accent-secondary)]",
             )}
-            style={{
-              borderRadius: isMultiline ? "8px" : "9999px",
-              transition: "border-radius 300ms ease-in-out, border 150ms ease-out",
-              minHeight: "2.5rem",
-            }}
+            style={{ transition: "border 150ms ease-out" }}
           >
-            <div className="relative z-[1] flex-1 pr-12 min-w-0 flex items-center" style={{ isolation: 'isolate' }}>
-              <textarea
-                ref={inputRef}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onFocus={() => {
-                  setIsFocused(true);
-                  // Don't reset userUnfocused here - only reset on submit or when modal reopens
-                }}
-                onBlur={() => {
-                  setIsFocused(false);
-                  // User manually unfocused the textarea
-                  setUserUnfocused(true);
-                }}
-                onCompositionStart={() => setIsComposing(true)}
-                onCompositionEnd={() => setIsComposing(false)}
-                placeholder={placeholder}
-                rows={1}
-                className={cn(
-                  "w-full border-0 bg-transparent outline-none text-sm flex-1 min-w-0",
-                  "placeholder:text-muted-foreground",
-                  "focus-visible:ring-0 focus-visible:ring-offset-0",
-                  "resize-none overflow-y-auto overflow-wrap-break-word",
-                  "min-h-[1.25rem] max-h-36", // min-h matches line-height, max-h is 144px
-                  inputClassName
-                )}
-                style={{
-                  width: "100%",
-                  wordWrap: "break-word",
-                  whiteSpace: "pre-wrap",
-                  overflowWrap: "break-word",
-                }}
-              />
-            </div>
+            <textarea
+              ref={inputRef}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => {
+                setIsFocused(true);
+              }}
+              onBlur={() => {
+                setIsFocused(false);
+                setUserUnfocused(true);
+              }}
+              onCompositionStart={() => setIsComposing(true)}
+              onCompositionEnd={() => setIsComposing(false)}
+              placeholder={placeholder}
+              rows={1}
+              className={cn(
+                "bg-transparent outline-none text-sm flex-1 min-w-0 placeholder:text-muted-foreground",
+                "focus-visible:ring-0 focus-visible:ring-offset-0",
+                "resize-none overflow-y-hidden",
+                "h-full",
+                inputClassName,
+              )}
+              style={{
+                width: "100%",
+                wordWrap: "break-word",
+                whiteSpace: "pre-wrap",
+                overflowWrap: "break-word",
+              }}
+            />
             <button
               type="button"
               onClick={handleSubmit}
               aria-label="Submit query"
               className={cn(
-                "absolute right-2 top-1/2 -translate-y-1/2",
-                "z-[1] flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[color:var(--accent-primary)] p-0 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent-primary)] focus-visible:ring-offset-2 group",
-                buttonClassName
+                "flex items-center justify-center size-6 rounded-full bg-[color:var(--accent-primary)] text-[color:var(--primary-foreground)] hover:opacity-90 transition-opacity flex-shrink-0 -mr-2",
+                buttonClassName,
               )}
             >
-              <ArrowDown 
-                className="h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-y-[2px]" 
-                strokeWidth={2}
-                style={{ color: 'var(--bg-default)' }}
-                aria-hidden="true"
-              />
+              <ArrowDown className="size-3" aria-hidden="true" />
             </button>
           </div>
         </div>
