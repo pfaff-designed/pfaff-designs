@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { modalGraphApp, type ModalGraphState } from "@/lib/ai/modalGraph";
+import { buildRunMetadata, modalGraphApp, type ModalGraphState } from "@/lib/ai/modalGraph";
 import { getCaseStudyBySlug } from "@/lib/caseStudies/data";
 import type { AiModalAction } from "@/components/organisms/ai-modal/AiActionsRow";
 import type { CaseStudyPage } from "@/lib/caseStudies/types";
@@ -189,11 +189,23 @@ function buildModalGraphStateFromRequest(
   sectionHeadline: string | null,
   sectionText: string | null
 ): Partial<ModalGraphState> {
-  // Map history from ModalRequestBody format to ModalGraphState format
-  const history = (body.history ?? []).map((h) => ({
-    role: h.role === "ai" ? ("assistant" as const) : ("user" as const),
-    content: h.text,
-  }));
+  // Legacy history path (back-compat): if provided, trust it as authoritative
+  const mappedHistory =
+    body.history && body.history.length > 0
+      ? body.history.map((h) => ({
+          role: h.role === "ai" ? ("assistant" as const) : ("user" as const),
+          content: h.text,
+        }))
+      : [];
+
+  // Preferred path: append only the current question to whatever history we have
+  const baseHistory = mappedHistory;
+  const appendedHistory =
+    baseHistory.length > 0
+      ? baseHistory
+      : body.question && body.question.trim().length > 0
+        ? [{ role: "user" as const, content: body.question.trim() }]
+        : [];
 
   return {
     question: body.question,
@@ -201,7 +213,7 @@ function buildModalGraphStateFromRequest(
     projectSlug: projectSlug ?? undefined,
     sectionHeadline: sectionHeadline ?? "",
     sectionText: sectionText ?? "",
-    history,
+    history: appendedHistory,
     debugNotes: [],
   };
 }
@@ -425,7 +437,8 @@ export async function POST(req: NextRequest) {
     // 5. Invoke the modal graph
     let finalState: ModalGraphState;
     try {
-      finalState = await modalGraphApp.invoke(initialState);
+      const runMetadata = buildRunMetadata(initialState as ModalGraphState);
+      finalState = await modalGraphApp.withConfig({ metadata: runMetadata }).invoke(initialState);
     } catch (graphError) {
       // Re-throw to be caught by outer catch block
       throw graphError;

@@ -177,22 +177,10 @@ export function AiModalHost() {
       submitQuestion({ question: trimmed });
 
       // 5. Add a user message locally
-      let historyMessages: AiConversationRowProps[] = [];
-      setMessages((currentMessages) => {
-        const updatedMessages = [...currentMessages, { role: "user" as const, body: trimmed }];
-        historyMessages = updatedMessages; // Store for history building
-        return updatedMessages;
-      });
-
-      // 4. Build conversation history from the updated messages (last 2 turns = 4 messages)
-      // Filter out "system" role and ensure only "user" | "ai" roles
-      const history = historyMessages
-        .slice(-4)
-        .filter((m) => m.role === "user" || m.role === "ai")
-        .map((m) => ({
-          role: m.role === "ai" ? ("ai" as const) : ("user" as const),
-          text: typeof m.body === "string" ? m.body : "",
-        }));
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        { role: "user" as const, body: trimmed },
+      ]);
 
       // 5. Call the real API
       try {
@@ -210,7 +198,6 @@ export function AiModalHost() {
           projectSlug: state.projectSlug ?? undefined,
           sectionHeadline: state.sectionHeadline ?? undefined,
           sectionText: state.sectionText ?? undefined,
-          history,
         };
 
         // Add timeout to prevent hanging

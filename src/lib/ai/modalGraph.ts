@@ -76,6 +76,76 @@ export type ModalGraphState = {
 };
 
 // State annotation for LangGraph
+const MAX_HISTORY_MESSAGES = 30;
+
+function trimHistory(
+  history: Array<{ role: "user" | "assistant"; content: string }>
+): Array<{ role: "user" | "assistant"; content: string }> {
+  if (!history) return [];
+  if (history.length <= MAX_HISTORY_MESSAGES) return history;
+  return history.slice(-MAX_HISTORY_MESSAGES);
+}
+
+export function buildRunMetadata(state: ModalGraphState) {
+  const {
+    pagePath,
+    projectSlug,
+    mode,
+    sectionHeadline,
+    sectionText,
+    retrievedChunks,
+    answerText,
+    question,
+  } = state;
+
+  const answer = answerText ?? "";
+  const answerWordCount = answer.split(/\s+/).filter(Boolean).length;
+  const hasSectionContext = Boolean(sectionHeadline || sectionText);
+  const retrievedChunkCount = Array.isArray(retrievedChunks) ? retrievedChunks.length : 0;
+  const hadFollowupSuggestion = /would you like|would you be interested|i can also/i.test(
+    answer.toLowerCase()
+  );
+
+  return {
+    pagePath: pagePath ?? null,
+    projectSlug: projectSlug ?? null,
+    mode: mode ?? "unknown",
+    question: question ?? null,
+    hasSectionContext,
+    retrievedChunkCount,
+    answerWordCount,
+    hadFollowupSuggestion,
+    timestampIso: new Date().toISOString(),
+  };
+}
+
+const PROJECT_LABELS: Record<string, string> = {
+  "capital-one-travel": "Capital One Travel — Capital One",
+  "coca-cola": "Coca-Cola Creative Technology — Coca-Cola",
+  pmi: "PMI.org — Project Management Institute",
+  "pfaff-designs": "Pfaff.design — Self-initiated",
+};
+
+function getProjectLabel(
+  projectSlug?: string | null,
+  projectFacts?: {
+    name?: string;
+    client?: string;
+  },
+): string | null {
+  if (!projectSlug) return null;
+  if (PROJECT_LABELS[projectSlug]) return PROJECT_LABELS[projectSlug];
+
+  const name = projectFacts?.name || projectSlug;
+  const client = projectFacts?.client;
+
+  if (client && name && name.toLowerCase() !== client.toLowerCase()) {
+    return `${name} — ${client}`;
+  }
+
+  return name ?? null;
+}
+
 const ModalGraphStateAnnotation = Annotation.Root({
   question: Annotation<string>(),
   pagePath: Annotation<string | undefined>(),
@@ -84,9 +154,13 @@ const ModalGraphStateAnnotation = Annotation.Root({
   sectionText: Annotation<string | undefined>(),
   history: Annotation<Array<{ role: "user" | "assistant"; content: string }> | undefined>({
     reducer: (left, right) => {
-      if (!right) return left ?? [];
-      if (!left) return Array.isArray(right) ? right : [right];
-      return left.concat(Array.isArray(right) ? right : [right]);
+      if (right && Array.isArray(right)) {
+        return trimHistory(right);
+      }
+      if (Array.isArray(left)) {
+        return trimHistory(left);
+      }
+      return [];
     },
     default: () => [],
   }),
@@ -830,7 +904,7 @@ function convertAnswerBlocksToModalState(
       return {
         ...state,
         answerText: baseAnswerText,
-        history: [...history, { role: "assistant" as const, content: baseAnswerText }],
+        history: trimHistory([...history, { role: "assistant" as const, content: baseAnswerText }]),
         debugNotes: [...(state.debugNotes ?? []), "[generate_answer] copywriter returned error, used base answer"],
       };
     }
@@ -845,7 +919,7 @@ function convertAnswerBlocksToModalState(
   return {
     ...state,
     answerText,
-    history: updatedHistory,
+    history: trimHistory(updatedHistory),
     debugNotes: [...(state.debugNotes ?? []), debugNote],
   };
 }
@@ -1095,13 +1169,10 @@ function computeContextScores(state: ModalGraphState) {
 // ============================================================
 
 async function deriveContextNode(state: ModalGraphState): Promise<Partial<ModalGraphState>> {
-  // Ensure history is never undefined
-  const history = state.history ?? [];
-  
   const debugNotes = [
     ...(state.debugNotes ?? []),
     "derive_context: inspected pagePath/projectSlug/section",
-    `entry: received history length=${history.length}`,
+    `entry: received history length=${(state.history ?? []).length}`,
   ];
 
   // Normalize projectSlug from pagePath (if not already set)
@@ -1159,7 +1230,6 @@ async function deriveContextNode(state: ModalGraphState): Promise<Partial<ModalG
 
   return {
     ...state,
-    history,
     projectSlug,
     projectFacts,
     allProjects,
@@ -1315,7 +1385,6 @@ Charles worked as a Design Engineer and Applied AI Technologist on this self-ini
   return {
     ...state,
     retrievedChunks,
-    history: state.history ?? [],
     projectFacts: state.projectFacts,
     allProjects: state.allProjects,
     debugNotes,
@@ -1433,7 +1502,6 @@ async function buildContextBlobNode(state: ModalGraphState): Promise<Partial<Mod
   return {
     ...state,
     contextBlob: blob,
-    history: state.history ?? [],
     allProjects: state.allProjects,
     debugNotes,
   };
@@ -1705,7 +1773,7 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
       return {
         ...state,
         answerText: answer,
-        history: [...history, { role: "assistant" as const, content: answer }],
+        history: trimHistory([...history, { role: "assistant" as const, content: answer }]),
         debugNotes: [...debugNotes, "generate_answer: cross-project-tools"],
       };
     }
@@ -1714,8 +1782,10 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
   if (toolsQ && !projectsQ && state.projectSlug && allProjects.length > 0) {
     const current = allProjects.find((p) => p.slug === state.projectSlug);
     const tools = current?.tools ?? [];
+    const projectLabel = getProjectLabel(state.projectSlug, state.projectFacts);
     if (tools.length > 0) {
       const answer = [
+        projectLabel ? `${projectLabel}:` : "For this project:",
         "For this project, Charles used:",
         ...tools.map((t) => `- ${t}`),
         "These tools supported a modular, maintainable front-end that could evolve over time.",
@@ -1723,7 +1793,7 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
       return {
         ...state,
         answerText: answer,
-        history: [...history, { role: "assistant" as const, content: answer }],
+        history: trimHistory([...history, { role: "assistant" as const, content: answer }]),
         debugNotes: [...debugNotes, "generate_answer: deterministic tools answer"],
       };
     }
@@ -1746,7 +1816,7 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
       return {
         ...state,
         answerText: answer,
-        history: [...history, { role: "assistant" as const, content: answer }],
+        history: trimHistory([...history, { role: "assistant" as const, content: answer }]),
         debugNotes: [...debugNotes, "generate_answer: project-list"],
       };
     }
@@ -1812,6 +1882,12 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
     baseDebugNote = "[generate_answer] base LLM call failed, returned fallback message";
   }
 
+  const nodeMetadata = buildRunMetadata({
+    ...state,
+    answerText: baseAnswerText,
+  } as ModalGraphState);
+  debugNotes.push(`[metadata] ${JSON.stringify(nodeMetadata)}`);
+
   // Step 3: Copywriter is disabled for conversational answers
   // Copywriter should ONLY generate structured YAML for Orchestrator (UI blocks), NOT conversational text
   const useCopywriter = shouldUseCopywriter(state, baseAnswerText);
@@ -1830,7 +1906,7 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
     return {
       ...state,
       answerText: baseAnswerText,
-      history: updatedHistory,
+      history: trimHistory(updatedHistory),
       debugNotes: [
         ...debugNotes,
         baseDebugNote,
@@ -1848,7 +1924,7 @@ async function generateAnswerNode(state: ModalGraphState): Promise<Partial<Modal
   return {
     ...state,
     answerText: baseAnswerText,
-    history: updatedHistory,
+    history: trimHistory(updatedHistory),
     debugNotes: [
       ...debugNotes,
       baseDebugNote,
