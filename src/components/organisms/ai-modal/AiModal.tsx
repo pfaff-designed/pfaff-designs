@@ -316,9 +316,9 @@ export const AiModal: React.FC<AiModalProps> = ({
             transition: isSwipingDown ? 'none' : 'transform 180ms ease-out',
           }}
         >
-          {/* Backdrop with neutral dim (90% opacity) */}
+          {/* Backdrop with blur and dim (match desktop) */}
           <div
-            className="absolute inset-0 bg-[color:var(--bg-default)]/90 opacity-100 transition-opacity duration-[180ms] ease-[cubic-bezier(0.33,1,0.68,1)]"
+            className="absolute inset-0 bg-[color:var(--bg-default)]/90 backdrop-blur-xl opacity-100 transition-opacity duration-[180ms] ease-[cubic-bezier(0.33,1,0.68,1)]"
             aria-hidden="true"
           />
 

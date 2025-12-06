@@ -216,7 +216,7 @@ export const CommandPaletteContent = React.forwardRef<
               key="palette-input"
               className={cn(
                 "rounded-full border border-[color:var(--accent-primary)]",
-                "bg-neutral-50 shadow-sm",
+                "bg-[color:var(--bg-default)] shadow-sm",
                 "overflow-hidden",
                 "px-4 py-2 flex items-center justify-center gap-2 h-[2.5rem]",
               )}
