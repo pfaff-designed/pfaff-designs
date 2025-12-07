@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/molecules/Card";
 import { Eyebrow } from "@/components/atoms/Eyebrow";
@@ -43,10 +44,13 @@ const MediaCard = React.forwardRef<HTMLDivElement, MediaCardProps>(
       <Card ref={ref} variant={variant} className={cn("overflow-hidden", className)} {...props}>
         {image && (
           <div className="relative w-full aspect-[4/3] md:aspect-video overflow-hidden rounded-sm">
-            <img
+            <Image
               src={image.src}
               alt={image.alt}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              priority={false}
             />
           </div>
         )}

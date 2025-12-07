@@ -5,13 +5,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { filterCommands, createCommandContext, type Command } from "@/lib/cmdk";
 import type { UseCommandPaletteReturn } from "@/lib/cmdk/useCommandPalette";
 import type { UseInlineChatReturn } from "@/lib/inline-chat/useInlineChat";
-import { detectNavigationIntent } from "@/lib/navigation/navigation-intent";
 
 // Feature flag: Set to false to disable inline chat and use AI modal instead
 const ENABLE_INLINE_CHAT = false;
-import { useAiModal } from "@/components/organisms/ai-modal/AiModalContext";
+import { useAiModal } from "@/components/ai-modal/AiModalContext";
 import { motion } from "framer-motion";
-import { ArrowDown } from "lucide-react";
 import { CommandPaletteContainer } from "./CommandPaletteContainer";
 import { CommandPaletteContent } from "./CommandPaletteContent";
 
@@ -224,64 +222,6 @@ export function CommandPalette({
   }, [isOpen]);
 
 
-  // Submit handler (same logic as Enter key)
-  const handleSubmit = React.useCallback(() => {
-    if (input.trim().length > 0 && allCommands.length === 0) {
-      // Check for navigation intent before falling back to AI modal
-      const navigationIntent = detectNavigationIntent(input.trim());
-      if (navigationIntent.type !== "none" && navigationIntent.path && navigationIntent.confidence !== "low") {
-        // Navigate directly
-        closePalette();
-        router.push(navigationIntent.path);
-        return;
-      }
-
-      // No matching commands and not navigation: fall back to AI modal (inline chat disabled)
-      closePalette();
-      if (ENABLE_INLINE_CHAT) {
-        const position = typeof window !== "undefined"
-          ? {
-              x: window.innerWidth / 2,
-              y: window.innerHeight - 100,
-            }
-          : undefined;
-
-        inlineChat.openInlineChat({
-          question: input.trim(),
-          pagePath: pathname ?? undefined,
-          projectSlug: projectSlug ?? null,
-          position,
-        });
-      } else {
-        openAiModal({
-          question: input.trim(),
-          pagePath: pathname ?? undefined,
-          projectSlug: projectSlug ?? undefined,
-        });
-      }
-    } else if (commands[activeIndex]) {
-      const command = commands[activeIndex];
-      command.run(ctx);
-
-      // closePalette() is called inside openAiModal/openInlineChat for AI commands
-      if (command.kind !== "ai_deep" && command.kind !== "ai_quick") {
-        closePalette();
-      }
-    }
-  }, [
-    commands,
-    allCommands,
-    activeIndex,
-    ctx,
-    input,
-    closePalette,
-    pathname,
-    projectSlug,
-    inlineChat,
-    openAiModal,
-    router,
-  ]);
-
   // Keyboard navigation
   const handleKeyDown = React.useCallback(
     (event: React.KeyboardEvent) => {
@@ -293,7 +233,40 @@ export function CommandPalette({
         setActiveIndex((prev) => Math.max(prev - 1, 0));
       } else if (event.key === "Enter") {
         event.preventDefault();
-        handleSubmit();
+
+        if (input.trim().length > 0 && allCommands.length === 0) {
+          // No matching commands: fall back to AI modal (inline chat disabled)
+          closePalette();
+          if (ENABLE_INLINE_CHAT) {
+            const position = typeof window !== "undefined"
+              ? {
+                  x: window.innerWidth / 2,
+                  y: window.innerHeight - 100,
+                }
+              : undefined;
+
+            inlineChat.openInlineChat({
+              question: input.trim(),
+              pagePath: pathname ?? undefined,
+              projectSlug: projectSlug ?? null,
+              position,
+            });
+          } else {
+            openAiModal({
+              question: input.trim(),
+              pagePath: pathname ?? undefined,
+              projectSlug: projectSlug ?? undefined,
+            });
+          }
+        } else if (commands[activeIndex]) {
+          const command = commands[activeIndex];
+          command.run(ctx);
+
+          // closePalette() is called inside openAiModal/openInlineChat for AI commands
+          if (command.kind !== "ai_deep" && command.kind !== "ai_quick") {
+            closePalette();
+          }
+        }
       } else if (event.key === "Escape") {
         event.preventDefault();
         closePalette();
@@ -301,8 +274,15 @@ export function CommandPalette({
     },
     [
       commands,
+      allCommands,
+      activeIndex,
+      ctx,
       closePalette,
-      handleSubmit,
+      input,
+      pathname,
+      projectSlug,
+      inlineChat,
+      openAiModal,
     ],
   );
 
@@ -330,30 +310,62 @@ export function CommandPalette({
   // Hide command palette when AI modal is open
   const shouldShowPalette = isOpen && !isAiModalOpen;
 
-  // Handle pill open - capture hover state to start animation from correct width
-  const handlePillOpen = React.useCallback(() => {
-    setStartFromHover(pillHover);
-    openPalette();
-  }, [pillHover, openPalette]);
+  // Persistent pill - appears on all pages when palette is closed
+  if (!isOpen) {
+    // Hide persistent pill when AI modal is open
+    if (isAiModalOpen) {
+      return null;
+    }
+    return (
+      <div className="sticky bottom-6 z-50 pointer-events-auto w-full flex justify-center">
+        <motion.button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Capture hover state at click time to start animation from correct width
+            setStartFromHover(pillHover);
+
+            // Open palette (always opens at bottom center)
+            openPalette();
+          }}
+          className="rounded-full border border-[color:var(--border-subtle)] bg-background/80 backdrop-blur-sm shadow-sm px-4 py-2 flex items-center gap-2 hover:bg-background/90 transition-colors flex-shrink-0 h-[2.5rem]"
+          aria-label="Open command palette"
+          initial={false}
+          animate={{
+            width: pillHover ? 240 : 200,
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 30,
+          }}
+          style={{ originX: 0.5 }}
+          onHoverStart={() => setPillHover(true)}
+          onHoverEnd={() => setPillHover(false)}
+        >
+          <span className="text-[10px] uppercase tracking-wide text-muted-foreground whitespace-nowrap">
+            Cmd+K
+          </span>
+          <span className="text-sm text-[color:var(--text-default)] whitespace-nowrap">
+            Ask or search…
+          </span>
+        </motion.button>
+      </div>
+    );
+  }
 
   return (
     <CommandPaletteContainer
       ref={containerRef}
       isOpen={shouldShowPalette}
       onClose={closePalette}
-      onOpenPalette={handlePillOpen}
-      pillHover={pillHover}
-      onPillHoverStart={() => setPillHover(true)}
-      onPillHoverEnd={() => setPillHover(false)}
-      initialPillWidth={200}
-      isAiModalOpen={isAiModalOpen}
     >
       <CommandPaletteContent
         isOpen={shouldShowPalette}
         input={input}
         onInputChange={setInput}
         onClose={closePalette}
-        onSubmit={handleSubmit}
         commands={commands}
         activeIndex={activeIndex}
         onActiveIndexChange={setActiveIndex}
