@@ -301,7 +301,6 @@ export function CommandPalette({
     },
     [
       commands,
-      activeIndex,
       closePalette,
       handleSubmit,
     ],

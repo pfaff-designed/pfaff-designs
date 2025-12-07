@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import * as React from "react";
 
 export interface UseTypewriterOptions {
   fullText: string;
@@ -22,14 +22,14 @@ export const useTypewriter = ({
   speedMs,
   responseId,
 }: UseTypewriterOptions): string => {
-  const [visibleText, setVisibleText] = useState<string>("");
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const currentIndexRef = useRef<number>(0);
-  const previousResponseIdRef = useRef<string | number | undefined>(undefined);
+  const [visibleText, setVisibleText] = React.useState<string>("");
+  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const currentIndexRef = React.useRef<number>(0);
+  const previousResponseIdRef = React.useRef<string | number | undefined>(undefined);
 
   // Calculate speed: for long text, ensure animation completes in 2-3 seconds
   // For short text, use a reasonable per-character speed
-  const calculateSpeed = (textLength: number): number => {
+  const calculateSpeed = React.useCallback((textLength: number): number => {
     if (speedMs !== undefined) {
       return speedMs;
     }
@@ -45,10 +45,10 @@ export const useTypewriter = ({
     
     const calculatedSpeed = maxDuration / textLength;
     return Math.max(minSpeed, Math.min(calculatedSpeed, defaultSpeed));
-  };
+  }, [speedMs]);
 
   // Reset when responseId changes (new response)
-  useEffect(() => {
+  React.useEffect(() => {
     if (responseId !== undefined && responseId !== previousResponseIdRef.current) {
       setVisibleText("");
       currentIndexRef.current = 0;
@@ -60,7 +60,7 @@ export const useTypewriter = ({
     }
   }, [responseId]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     // If disabled or no text, show full text immediately
     if (!enabled || !fullText) {
       setVisibleText(fullText || "");
@@ -103,7 +103,7 @@ export const useTypewriter = ({
         timeoutRef.current = null;
       }
     };
-  }, [fullText, enabled]);
+  }, [calculateSpeed, enabled, fullText]);
 
   return visibleText;
 };

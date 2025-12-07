@@ -282,6 +282,7 @@ export function CommandPalette({
       pathname,
       projectSlug,
       inlineChat,
+      openAiModal,
     ],
   );
 

@@ -33,7 +33,7 @@ export const CommandPaletteContainer = React.forwardRef<
     ref,
   ) => {
 
-    const containerRef = React.useRef<HTMLDivElement>(null);
+    const containerRef: React.MutableRefObject<HTMLDivElement | null> = React.useRef<HTMLDivElement | null>(null);
     
     // Merge refs: both forward ref and internal ref
     const setRefs = React.useCallback(
@@ -41,8 +41,10 @@ export const CommandPaletteContainer = React.forwardRef<
         containerRef.current = node;
         if (typeof ref === "function") {
           ref(node);
-        } else if (ref) {
-          ref.current = node;
+          return;
+        }
+        if (ref && "current" in ref) {
+          (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
         }
       },
       [ref],
