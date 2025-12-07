@@ -1,324 +1,160 @@
-# Phase 14 – Plausible Analytics: AI Modal & AI Q&A Instrumentation
+You are working in the `pfaff-designs` repo on the Command Palette UI.
 
-You are working in the `pfaff-designs` Next.js repo. Plausible is already wired via `src/components/analytics/PlausibleAnalytics.tsx` and pageview tracking is working. Your job now is to implement **custom Plausible events** for the AI modal and AI-driven contact flows so we can test everything locally (no deployment required).
+## Goal
 
-## Goals
+Fix a mobile overflow bug in the Command Palette so that:
 
-1. Track AI modal usage:
-   - When the AI modal opens
-   - When the AI modal closes
-   - How long it stayed open (duration)
-2. Track AI Q&A behavior:
-   - When a question is submitted
-   - When an answer is shown (with mode, page, and project context)
-3. Track AI-assisted contact flows:
-   - When a user clicks a contact CTA that is clearly AI-related (from inside the modal or an AI-driven suggestion)
+- On small screens (mobile), the palette **never expands beyond the viewport width**.
+- There is **no horizontal scrolling** when the palette is open.
+- The palette remains **centered** horizontally, with a comfortable margin from the viewport edges.
+- Existing **desktop behavior and animations** must stay intact.
+- Existing **height clamping** (`max-height: calc(100vh - 96px)`) must remain in place.
 
-Everything must:
-- Be **client-safe** (no crashes if `window` or `plausible` is missing).
-- Respect the existing architecture (AI modal context, modal graph, etc.).
-- Not change any user-facing behavior other than sending analytics events.
+Right now, on mobile:
 
----
+- When the Command Palette opens, the UI is centered correctly.
+- But the **palette content (input + quick actions) can be wider than the viewport**, causing horizontal overflow.
+- This is especially noticeable when the quick action buttons wrap in odd ways.
+- This behavior does **not** occur on desktop.
 
-## 1. Create a small analytics helper for AI events
+## Relevant components
 
-**File to create (if it does not exist yet):**
-- `src/lib/analytics/ai.ts`
+Start by inspecting these files:
 
-Implement a tiny helper module that wraps Plausible’s `window.plausible` API.
+- `src/components/organisms/CommandPalette/CommandPaletteContent.tsx`
+- `src/components/organisms/CommandPalette/CommandPaletteHost.tsx` (or similar host/portal file that mounts the palette overlay)
+- Any shared layout wrapper used specifically for the Command Palette (e.g. a container inside the host).
 
-### 1.1. Core helper: `trackPlausible`
+Current `CommandPaletteContent` root element looks like this (for reference):
 
-Add a function:
-
-```ts
-// src/lib/analytics/ai.ts
-
-export type AiEventProps = Record<string, string | number | boolean | null | undefined>;
-
-function trackPlausible(eventName: string, props?: AiEventProps) {
-  if (typeof window === "undefined") return;
-  const plausible = (window as any).plausible as
-    | ((event: string, options?: { props?: AiEventProps }) => void)
-    | undefined;
-
-  if (!plausible) return;
-
-  if (props && Object.keys(props).length > 0) {
-    plausible(eventName, { props });
-  } else {
-    plausible(eventName);
-  }
-}
+```tsx
+return (
+  <div
+    ref={ref}
+    onKeyDown={onKeyDown}
+    className="flex flex-col w-full max-w-[40rem] sm:max-w-none"
+    style={{
+      maxHeight: "calc(100vh - 96px)",
+      overflowY: "auto",
+    }}
+  >
+    {/* ... */}
+  </div>
+);
 ```
 
-### 1.2. Derive `pagePath` and `projectSlug`
+The animated input container currently has:
 
-Still in `src/lib/analytics/ai.ts`, add small utilities:
-
-```ts
-export function getPagePath(): string {
-  if (typeof window === "undefined") return "(server)";
-  return window.location.pathname || "/";
-}
-
-export function getProjectSlugFromPath(path: string): string | null {
-  const match = path.match(/^\/work\/([^/]+)/);
-  if (!match) return null;
-  let slug = match[1];
-  // Keep the same PMI normalization logic used elsewhere in the repo
-  if (
-    slug === "pmi" ||
-    slug === "pmi-agile" ||
-    slug === "pmi-acp" ||
-    slug.startsWith("pmi-")
-  ) {
-    slug = "pmi";
-  }
-  return slug;
-}
+```tsx
+<motion.div
+  key="palette-input"
+  className={cn(
+    "rounded-full border border-[color:var(--accent-primary)]",
+    "bg-[color:var(--bg-default)] shadow-sm",
+    "overflow-hidden",
+    "px-4 py-2 flex items-center justify-center gap-2 h-[2.5rem]",
+    "w-full",
+  )}
+  initial={{
+    width: "100%",
+    scale: 0.8,
+    opacity: 0,
+  }}
+  animate={{ width: "100%", scale: 1, opacity: 1 }}
+  exit={{ width: "100%", scale: 0.8, opacity: 0 }}
+  transition={{
+    type: "spring",
+    stiffness: 260,
+    damping: 24,
+  }}
+  style={{
+    originX: 0.5,
+    flexShrink: 0,
+    maxWidth: "400px",
+  }}
+  onAnimationComplete={handleAnimationComplete}
+>
+  {/* input + submit button */}
+</motion.div>
 ```
 
-### 1.3. Export event-specific helpers
-
-Still in `src/lib/analytics/ai.ts`, export these higher-level helpers that other components will call:
-
-```ts
-export function trackAiModalOpen(params?: { entryPoint?: "keyboard" | "cta" | "unknown" }) {
-  const pagePath = getPagePath();
-  const projectSlug = getProjectSlugFromPath(pagePath);
-
-  trackPlausible("ai_modal_open", {
-    pagePath,
-    projectSlug: projectSlug ?? "none",
-    entryPoint: params?.entryPoint ?? "unknown",
-  });
-}
-
-export function trackAiModalClose(params: {
-  entryPoint?: "keyboard" | "cta" | "unknown";
-  durationMs?: number;
-}) {
-  const pagePath = getPagePath();
-  const projectSlug = getProjectSlugFromPath(pagePath);
-
-  trackPlausible("ai_modal_close", {
-    pagePath,
-    projectSlug: projectSlug ?? "none",
-    entryPoint: params.entryPoint ?? "unknown",
-    durationMs: params.durationMs ?? 0,
-  });
-}
-
-export function trackAiQuestionSubmitted(params: {
-  mode: string; // answer_direct | clarify_then_answer | low_context_fallback | unknown
-  questionLength: number;
-}) {
-  const pagePath = getPagePath();
-  const projectSlug = getProjectSlugFromPath(pagePath);
-
-  trackPlausible("ai_question_submitted", {
-    pagePath,
-    projectSlug: projectSlug ?? "none",
-    mode: params.mode,
-    questionLength: params.questionLength,
-  });
-}
-
-export function trackAiAnswerShown(params: {
-  mode: string; // answer_direct | clarify_then_answer | low_context_fallback | tools | unknown
-  questionLength: number;
-  answerLength: number;
-}) {
-  const pagePath = getPagePath();
-  const projectSlug = getProjectSlugFromPath(pagePath);
-
-  trackPlausible("ai_answer_shown", {
-    pagePath,
-    projectSlug: projectSlug ?? "none",
-    mode: params.mode,
-    questionLength: params.questionLength,
-    answerLength: params.answerLength,
-  });
-}
+## Requirements
 
-export function trackAiContactClick(params?: { source?: "ai_modal" | "ai_suggestion" | "unknown" }) {
-  const pagePath = getPagePath();
-  const projectSlug = getProjectSlugFromPath(pagePath);
+### 1. Mobile width clamping
 
-  trackPlausible("ai_contact_click", {
-    pagePath,
-    projectSlug: projectSlug ?? "none",
-    source: params?.source ?? "unknown",
-  });
-}
-```
+On mobile/small screens:
 
-> **Important:** Do not import `next/navigation` in this helper. Use `window.location.pathname` as shown so it can be reused from any client component.
+- The **entire palette container** (including quick actions grid) must be constrained to the viewport width **minus a small horizontal margin**.
+- Use a **responsive max width** that:
+  - Clamps to `100vw - 2rem` (or similar) on mobile.
+  - Preserves the existing 40rem-ish max width for larger screens.
 
----
+Concretely, update the root wrapper and/or host so that on small screens:
 
-## 2. Wire events into the AI modal lifecycle
+- It uses something like:
 
-Now hook these helpers into the existing AI modal system. The goal is to track **open/close/duration** and **Q&A behavior** without changing how the UI behaves.
+  - `w-full`
+  - `max-w-[min(100vw-2rem,40rem)]` (or equivalent Tailwind utility)
+  - `mx-auto`
+  - `px-4` on mobile, no extra padding on larger screens.
 
-### 2.1. Find the AI modal entry point
+- The goal is: **no horizontal scroll**, palette remains centered, and it feels like a “pill” floating comfortably inside the viewport.
 
-Look for the core modal components:
-- `src/components/ai-modal/AiModal.tsx`
-- `src/components/ai-modal/AiModalContext.tsx`
+Do **not** re-introduce the bug where the palette jumps sideways or “snaps” to the left when opening.
 
-Use the component that actually **mounts/unmounts the modal UI** (likely `AiModal` itself, or a wrapper that renders it based on context `isOpen`).
+### 2. Quick actions + grid behavior
 
-#### Implementation
+The quick actions section currently uses a `grid grid-cols-3 gap-3 w-full` layout.
 
-1. In the component that renders the modal when it is open:
-   - Import `trackAiModalOpen` and `trackAiModalClose` from `src/lib/analytics/ai`.
+You should:
 
-2. Add a `useRef<number | null>` to capture the timestamp when the modal opens:
+- Keep the overall layout and behavior (3 columns, wrapping, show-more/collapse row, etc.).
+- Ensure that **grid children never force the container to be wider than the clamped width**.
+- If needed, allow labels to wrap or shrink slightly on very small screens, instead of stretching the container.
 
-```ts
-const openedAtRef = React.useRef<number | null>(null);
-```
+It is acceptable to:
 
-3. In an effect that watches `isOpen` (or the equivalent open/closed flag):
+- Add mobile-specific constraints to button text (`text-xs` on very small screens, for example).
+- Allow multi-line labels when necessary instead of forcing `whitespace-nowrap` everywhere.
+- Add `overflow-x-hidden` to the palette container as a last-resort guardrail, but the primary fix should be **correct width constraints**, not just hiding overflow.
 
-```ts
-React.useEffect(() => {
-  if (isOpen) {
-    openedAtRef.current = performance.now();
-    trackAiModalOpen({ entryPoint: source ?? "unknown" });
-  } else if (openedAtRef.current !== null) {
-    const durationMs = performance.now() - openedAtRef.current;
-    trackAiModalClose({ entryPoint: source ?? "unknown", durationMs });
-    openedAtRef.current = null;
-  }
-}, [isOpen, source]);
-```
+### 3. Preserve existing behavior
 
-- **`source` hint:** if your modal context already has a concept of `source` (e.g., opened via keyboard, CTA click, command palette), pass that through. If not, just hardcode `"keyboard"` for now or use `"unknown"`.
+Do **not**:
 
-4. Make sure this effect only runs on the client (it will naturally, since the modal is a client component), and that it does not change any existing behavior.
+- Change routing or keyboard shortcuts.
+- Change the open/close logic for the Command Palette.
+- Change the height clamping behavior (`max-height: calc(100vh - 96px)`).
+- Break any desktop layouts.
 
----
+Do:
 
-## 3. Track AI question submissions and answers
+- Keep the animation feel (spring, scale, fade) the same.
+- Keep the pill-like shape and visual styling.
+- Keep the current order of special commands (show more / collapse) and regular commands.
 
-Now instrument the AI Q&A path.
+### 4. Implementation steps
 
-### 3.1. Locate the question submission code
+1. Inspect the Command Palette host to see how it is positioned (likely fixed/absolute in the viewport).
+2. Introduce a **responsive width clamp** at the **highest appropriate container** for the palette (likely inside the host, wrapping `CommandPaletteContent`).
+3. Adjust `CommandPaletteContent`’s root div so it:
+   - Uses `w-full` consistently.
+   - Uses a **responsive max width** that clamps on mobile (see above).
+   - Applies horizontal padding on mobile (`px-4`) to keep the pill from touching the edges.
+4. If necessary, tweak the quick actions grid/button text styles so they do not create overflow on very narrow viewports.
+5. Verify:
+   - Mobile: iPhone-ish viewport in devtools with the palette open, no horizontal scroll, no width overflow, still centered.
+   - Desktop: behavior unchanged, still looks and feels like before, no regressions to centering or animation.
 
-Find the code that:
-- Takes the user’s question from the modal input/composer
-- Calls the API route for the modal graph (likely `/api/ai/modal-graph` or similar)
-- Stores the result in state to render the answer UI
+### 5. Testing
 
-This will probably live in one of:
-- `src/components/ai-modal/Composer.tsx` or similar
-- `src/components/ai-modal/AiModal.tsx`
-- Or a hook under `src/lib/inline-chat` / `src/lib/ai`
+- Use the browser devtools responsive mode to test multiple viewport widths (e.g., 320px, 375px, 414px).
+- Confirm:
+  - No horizontal scrollbar appears when the palette is open.
+  - The palette width is visually clamped with some breathing room from the edges.
+  - Quick actions grid wraps gracefully and doesn’t push the layout wider.
 
-### 3.2. Hook `trackAiQuestionSubmitted`
+When you’re done:
 
-Where the question is sent to the server (just before or right after the fetch call), import and call:
-
-```ts
-import { trackAiQuestionSubmitted } from "@/lib/analytics/ai";
-
-// ... inside the submit handler
-const trimmed = question.trim();
-if (trimmed.length === 0) return;
-
-trackAiQuestionSubmitted({
-  mode: responseMode ?? "unknown", // see below for mode
-  questionLength: trimmed.length,
-});
-```
-
-- If you don’t yet have `responseMode` at submit time, you can pass `"unknown"` here and rely more on `ai_answer_shown` below, which *will* have the real mode.
-
-### 3.3. Hook `trackAiAnswerShown`
-
-When the modal receives a successful answer from the server and updates the UI state, call:
-
-```ts
-import { trackAiAnswerShown } from "@/lib/analytics/ai";
-
-// Suppose the modal graph response shape includes { mode, answerText, ... }
-
-const mode = response.mode ?? "unknown";
-const answerText = response.answerText ?? "";
-
-trackAiAnswerShown({
-  mode,
-  questionLength: trimmedQuestion.length,
-  answerLength: answerText.length,
-});
-```
-
-Where to find `mode`:
-- The modal graph response already includes a `mode` string (as seen in your debug logs: `answer_direct`, `clarify_then_answer`, `low_context_fallback`, etc.). Use that.
-- If the field name is different (e.g., `conversationMode`), adjust accordingly.
-
-> **Important:** This event should fire **once per answer** actually rendered to the user—not on retries or errors.
-
----
-
-## 4. Track AI-driven contact clicks
-
-We want to know when people decide to contact Charles **after interacting with the AI**.
-
-### 4.1. Locate AI-related contact CTAs
-
-Search for:
-- Any button/link in the AI modal that navigates to `/contact` or opens a contact flow.
-- Any AI-suggested CTA that says things like "Contact Charles" or "Reach out".
-
-This could be:
-- Part of the AI modal UI
-- Part of an inline chat suggestion
-- A dedicated CTA component rendered conditionally after certain answers
-
-### 4.2. Wrap with `trackAiContactClick`
-
-Wherever you have an AI-related contact CTA, update the click handler to:
-
-```ts
-import { trackAiContactClick } from "@/lib/analytics/ai";
-
-const handleClick = () => {
-  trackAiContactClick({ source: "ai_modal" });
-  // existing behavior (router.push("/contact"), open modal, etc.)
-  router.push("/contact");
-};
-```
-
-If there are multiple AI-related entry points, you can use different sources:
-- `"ai_modal"` – contact CTA inside the AI modal
-- `"ai_suggestion"` – a CTA the AI explicitly suggests in copy
-- `"unknown"` – fallback
-
-> **Do not** change the visible labels or navigation behavior—only wrap the click with a tracking call.
-
----
-
-## 5. Safety & testing
-
-1. **No crashes if Plausible is absent**
-   - All tracking must silently no-op if `window.plausible` is missing.
-   - This is already handled by `trackPlausible` if you follow the pattern above.
-
-2. **Local testing**
-   - Run the dev server and interact with the AI modal.
-   - Open the browser devtools console and verify there are **no runtime errors** from `trackAi*` functions.
-   - In the Network tab, you should see Plausible `event` calls when you:
-     - Open/close the AI modal
-     - Submit a question and see an answer
-     - Click a contact CTA from the AI flow
-
-3. **Code style**
-   - Use TypeScript, match existing import paths and alias style (e.g., `@/lib/...`).
-   - Keep the new helper small, focused, and well-typed.
-
-When you’re done, leave a brief comment at the bottom of `src/lib/analytics/ai.ts` summarizing which events are implemented (one-line comment is fine).
+- Summarize the exact changes you made (files + className/style updates).
+- Call out any tradeoffs you had to make specifically for very small viewports.

@@ -193,13 +193,16 @@ export const CommandPaletteContainer = React.forwardRef<
             className={cn(
               "flex flex-col gap-2 items-center pointer-events-auto",
               "w-full px-4 sm:px-0",
-              "max-w-[40rem]",
+              "max-w-[40rem] mx-auto",
               className,
             )}
             onClick={(e) => e.stopPropagation()}
             style={{
+              width: "100%",
+              maxWidth: "min(100vw - 2rem, 40rem)",
               maxHeight: "calc(100vh - 96px)",
               overflowY: "auto",
+              overflowX: "hidden",
             }}
           >
             {children}

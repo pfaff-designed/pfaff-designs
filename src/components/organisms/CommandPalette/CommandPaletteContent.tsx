@@ -141,11 +141,12 @@ export const CommandPaletteContent = React.forwardRef<
                             "justify-center text-center w-full",
                             columnSpan === 2 && "col-span-2",
                             columnSpan === 3 && "col-span-3",
+                            "min-w-0",
                             "opacity-70 italic",
                           )}
                           onMouseEnter={() => onActiveIndexChange(originalIndex)}
                         >
-                          <span className="font-medium text-sm whitespace-nowrap">
+                          <span className="font-medium text-xs sm:text-sm whitespace-normal break-words leading-tight">
                             {label}
                           </span>
                         </Button>
@@ -180,10 +181,11 @@ export const CommandPaletteContent = React.forwardRef<
                             "justify-center text-center w-full",
                             columnSpan === 2 && "col-span-2",
                             columnSpan === 3 && "col-span-3",
+                            "min-w-0",
                           )}
                           onMouseEnter={() => onActiveIndexChange(originalIndex)}
                         >
-                          <span className="font-medium text-sm whitespace-nowrap flex items-center gap-1.5">
+                          <span className="font-medium text-xs sm:text-sm whitespace-normal break-words leading-tight flex items-center gap-1.5">
                             {isResume && <Download className="size-3" />}
                             {label}
                           </span>
@@ -203,10 +205,10 @@ export const CommandPaletteContent = React.forwardRef<
       <div
         ref={ref}
         onKeyDown={onKeyDown}
-        className="flex flex-col w-full max-w-[40rem] sm:max-w-none"
+        className="flex flex-col w-full mx-auto px-4 sm:px-0 max-h-[calc(100vh-96px)] overflow-y-auto overflow-x-hidden"
         style={{
-          maxHeight: "calc(100vh - 96px)",
-          overflowY: "auto",
+          width: "100%",
+          maxWidth: "min(100vw - 2rem, 40rem)",
         }}
       >
         {/* Command Palette - the input that expands */}
@@ -220,6 +222,7 @@ export const CommandPaletteContent = React.forwardRef<
                 "overflow-hidden",
                 "px-4 py-2 flex items-center justify-center gap-2 h-[2.5rem]",
                 "w-full",
+                "mx-auto" // Added mx-auto here to keep pill/input horizontally centered inside container
               )}
               initial={{
                 width: "100%",
@@ -237,6 +240,8 @@ export const CommandPaletteContent = React.forwardRef<
                 originX: 0.5,
                 flexShrink: 0,
                 maxWidth: "400px",
+                marginLeft: "auto",  // Ensure horizontal centering with margin auto
+                marginRight: "auto",
               }}
               onAnimationComplete={handleAnimationComplete}
             >
@@ -265,3 +270,10 @@ export const CommandPaletteContent = React.forwardRef<
 
 CommandPaletteContent.displayName = "CommandPaletteContent";
 
+/**
+ * Mobile clamp + centering fix – see Phase 14 hotfix
+ * 
+ * - Applied max-height clamp and overflow-y-auto with mx-auto on root container to clamp palette height and enable internal scroll.
+ * - Added mx-auto and margin auto on the pill/input motion.div to keep it horizontally centered and prevent the horizontal jump on mobile.
+ * - Removed inline styles for maxHeight and overflow on root div to rely on Tailwind classes for cleaner layout.
+ */
