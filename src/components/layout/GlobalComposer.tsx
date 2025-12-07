@@ -236,7 +236,7 @@ export const GlobalComposer: React.FC = () => {
     }
     // Note: Inline answers are generated automatically when there's a current section
     // No need for a separate "inline" suggestion handler
-  }, [router, state.lastPrompt, currentSection, handleSubmit]);
+  }, [router]);
 
   // Determine placeholder based on current route
   const placeholder = React.useMemo(() => {

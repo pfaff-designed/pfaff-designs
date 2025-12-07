@@ -86,15 +86,15 @@ const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
 
     // Use controlled value if provided, otherwise use internal state
     const inputValue = value !== undefined ? value : internalValue;
-    const setInputValue = (newValue: string) => {
+    const setInputValue = React.useCallback((newValue: string) => {
       if (value !== undefined) {
         // Controlled mode: notify parent
         onValueChange?.(newValue);
-      } else {
-        // Uncontrolled mode: update internal state
-        setInternalValue(newValue);
+        return;
       }
-    };
+      // Uncontrolled mode: update internal state
+      setInternalValue(newValue);
+    }, [onValueChange, value]);
 
     const handleSubmit = React.useCallback(() => {
       if (inputValue.trim()) {
