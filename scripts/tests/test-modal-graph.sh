@@ -1,6 +1,6 @@
 #!/bin/bash
 # Test script for modal graph with structured context
-# Usage: ./scripts/test-modal-graph.sh
+# Usage: ./scripts/tests/test-modal-graph.sh
 
 echo "🧪 Testing Modal Graph with Capital One Travel context..."
 echo ""

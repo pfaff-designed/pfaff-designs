@@ -1,6 +1,6 @@
 #!/bin/bash
 # Test script for modal graph scenarios
-# Usage: ./scripts/test-modal-graph-scenarios.sh
+# Usage: ./scripts/tests/test-modal-graph-scenarios.sh
 
 BASE_URL="http://localhost:3000/api/dev/modal-graph"
 

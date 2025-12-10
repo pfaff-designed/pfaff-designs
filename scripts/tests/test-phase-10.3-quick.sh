@@ -100,5 +100,5 @@ echo "1. Start dev server: npm run dev"
 echo "2. Press Cmd+K (or Ctrl+K) to open CommandPalette"
 echo "3. Type 'summarize page' and press Enter"
 echo "4. Verify inline chat window opens with answer"
-echo "5. See scripts/test-phase-10.3.md for full testing guide"
+echo "5. See scripts/tests/test-phase-10.3.md for full testing guide"
 

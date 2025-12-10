@@ -1,0 +1,310 @@
+# knowledge-base/faq.yaml
+
+doc_type: faq
+version: 1
+updated: "2025-12-08"
+
+faqs:
+  - id: what_do_you_do
+    category: identity
+    question: "What do you do?"
+    alias_questions:
+      - "What is your role?"
+      - "What is your job?"
+      - "How would you describe what you do?"
+    short_answer: >
+      I design and build intelligent systems, using AI and front end engineering to create context aware interfaces for brands and product teams.
+    long_answer: >
+      I design and build intelligent systems. In practice that means I use AI, RAG pipelines, and modern front end engineering to create context aware interfaces that
+      help people use digital products more effectively. I sit in the space between design and engineering, translating intent and goals into concrete systems,
+      components, and flows.
+
+  - id: professional_label
+    category: identity
+    question: "How do you describe your professional identity?"
+    alias_questions:
+      - "What are you professionally?"
+      - "How do you label your role?"
+    short_answer: >
+      I am an applied AI engineer and design minded technologist who blends UX thinking with front end code.
+    long_answer: >
+      I usually describe myself as an applied AI engineer or a design minded technologist. I blend UX thinking, system design, and front end engineering to build
+      intelligent interfaces. I care about both how things work and how they feel, and I try to turn fuzzy intent into clear, reliable systems.
+
+  - id: where_are_you_based
+    category: logistics
+    question: "Where are you based?"
+    alias_questions:
+      - "Where do you live?"
+      - "What city are you in?"
+    short_answer: "I am based in Richmond, Virginia."
+    long_answer: >
+      I am based in Richmond, Virginia. I am open to remote roles, hybrid roles, and relocating for the right opportunity.
+
+  - id: work_preferences
+    category: logistics
+    question: "Are you open to remote or relocation?"
+    alias_questions:
+      - "What are your work location preferences?"
+      - "Are you willing to move?"
+    short_answer: >
+      I am open to remote or hybrid work and I am willing to relocate for the right role.
+    long_answer: >
+      I am comfortable working remotely or in a hybrid setup, and I am open to relocating for the right team and opportunity,
+      especially if the work aligns with intelligent systems, AI powered products, and design driven engineering.
+
+  - id: seniority_level
+    category: role_search
+    question: "What level are you?"
+    alias_questions:
+      - "Are you junior, mid, or senior?"
+      - "What is your seniority?"
+    short_answer: >
+      I am a mid level engineer with experience operating with senior level responsibility on small teams.
+    long_answer: >
+      Formally I have held mid level titles, but I have often been resourced and treated as a senior technologist on small teams.
+      I am comfortable owning significant slices of a system, collaborating directly with design and PM, and taking responsibility
+      for how technical decisions affect the product.
+
+  - id: roles_you_are_seeking
+    category: role_search
+    question: "What kinds of roles are you looking for?"
+    alias_questions:
+      - "What roles are you open to?"
+      - "What jobs are you interested in?"
+    short_answer: >
+      I am looking for roles where I can design and build AI powered systems, RAG pipelines, and intelligent interfaces.
+    long_answer: >
+      I am interested in roles that let me design and build AI powered systems and intelligent interfaces. That can look like
+      applied AI engineer, design engineer, senior front end engineer with AI responsibilities, or similar hybrid roles.
+      The label matters less to me than the work: I want to help teams turn intent into working systems that use AI in useful,
+      grounded ways.
+
+  - id: years_experience_akqa
+    category: experience
+    question: "How long did you work at AKQA?"
+    alias_questions:
+      - "What was your tenure at AKQA?"
+    short_answer: "I worked at AKQA for roughly three years."
+    long_answer: >
+      I joined AKQA in 2022 as an Associate Technologist and continued there through 2025, with my title later updated to Technologist.
+      Over that period I worked on Capital One Travel, PMI.org, Tanger, Coca Cola applied AI work, and other internal and client projects.
+
+  - id: years_experience_brandcenter
+    category: education
+    question: "How long were you at Brandcenter and what did you study?"
+    alias_questions:
+      - "What did you study at Brandcenter?"
+      - "How long was your Brandcenter program?"
+    short_answer: >
+      I spent two years at VCU Brandcenter studying Experience Design as part of an MBA program.
+    long_answer: >
+      I attended VCU Brandcenter from 2020 to 2022 in the Experience Design track. The degree is an MBA conferred by the VCU School of Business.
+      There I focused on experience design, UX, and emerging technologies like AI, AR, and VR.
+
+  - id: total_experience
+    category: experience
+    question: "How many years of experience do you have?"
+    alias_questions:
+      - "How long have you been doing this?"
+    short_answer: >
+      I have several years of professional experience across marketing, front end engineering, and applied AI work.
+    long_answer: >
+      I started in scrappy marketing and digital work around 2016, moved into experience design and prototyping during my time at Brandcenter,
+      and have been working in front end engineering and applied AI since 2022. That mix gives me a blend of marketing, design, engineering,
+      and intelligent systems experience.
+
+  - id: industries_experience
+    category: experience
+    question: "What industries have you worked in?"
+    alias_questions:
+      - "What sectors have you done work for?"
+    short_answer: >
+      I have worked on projects in financial services, professional certification, retail, entertainment, and real estate.
+    long_answer: >
+      I have worked on or contributed to projects in several industries, including financial services and travel (Capital One Travel),
+      professional certification and education (PMI.org), retail and consumer brands (Coca Cola, Tanger), and real estate.
+      Earlier in my career I also worked in marketing for a coffee roaster and a real estate company.
+
+  - id: how_to_contact
+    category: logistics
+    question: "How do I contact you?"
+    alias_questions:
+      - "How can I get in touch?"
+      - "What is the best way to reach you?"
+    short_answer: >
+      The best way to contact me is through the contact flow on this site.
+    long_answer: >
+      The simplest way to contact me is through the contact form on this site. You can also usually find my contact information
+      in the site header or through the command palette. If you are a recruiter, hiring manager, or potential collaborator,
+      you can reach out with details about the role or project and I will follow up.
+
+  - id: resume_access
+    category: logistics
+    question: "Can I see or download your resume?"
+    alias_questions:
+      - "Where is your resume?"
+      - "Do you have a resume I can download?"
+    short_answer: >
+      Yes, you can download my resume directly from this site.
+    long_answer: >
+      Yes. You can download my resume from this site, typically via a Download Resume option in the header, command palette,
+      or CTA buttons. If a direct link is needed in conversation, the assistant can point you to the resume download location.
+
+  - id: tools_you_use
+    category: tools
+    question: "What tools do you use?"
+    alias_questions:
+      - "What is your tech stack?"
+      - "What design and engineering tools do you work with?"
+    short_answer: >
+      I primarily use React, TypeScript, Next.js, Tailwind, Supabase, Storybook, LangSmith, and tools like Figma and Cursor.
+    long_answer: >
+      On the engineering side I work with React, TypeScript, Next.js, Tailwind, Supabase, Storybook, Jest, and related tooling.
+      For AI and RAG work I use vector databases, LangSmith, and orchestration tools to design and monitor pipelines.
+      For design and UX I use Figma, Framer when needed, and I often work in Cursor and ChatGPT to accelerate exploration
+      and implementation.
+
+  - id: preferred_stack
+    category: tools
+    question: "What is your preferred stack for building intelligent interfaces?"
+    alias_questions:
+      - "What stack do you like for AI powered web apps?"
+    short_answer: >
+      I like a React and TypeScript front end with Next.js, Tailwind, Supabase, and a RAG pipeline orchestrated through a tracing tool like LangSmith.
+    long_answer: >
+      For intelligent interfaces I prefer a React and TypeScript front end with Next.js and Tailwind, backed by Supabase or a similar platform.
+      I design RAG pipelines using vector storage, good chunking and metadata, and an orchestration layer that I can trace and debug in LangSmith.
+      On top of that I add deterministic UI components so AI outputs map cleanly to layouts.
+
+  - id: rag_definition
+    category: ai
+    question: "What is a RAG pipeline?"
+    alias_questions:
+      - "What does RAG mean?"
+      - "How do you define RAG?"
+    short_answer: >
+      RAG stands for retrieval augmented generation, which means combining search over your own data with a language model so answers are grounded in real sources.
+    long_answer: >
+      RAG stands for retrieval augmented generation. In a RAG pipeline, a user question is first turned into a retrieval query against a knowledge base,
+      using embeddings and sometimes lexical search to find relevant chunks of content. Those retrieved snippets are then passed to a language model
+      with clear instructions to answer using only that context. This gives you more accurate, controllable answers that are grounded in your own data,
+      instead of relying on the model to guess.
+
+  - id: how_you_think_about_rag
+    category: ai
+    question: "How do you think about RAG in your work?"
+    alias_questions:
+      - "What is your approach to RAG?"
+      - "How do you design RAG systems?"
+    short_answer: >
+      I treat RAG as a system design problem, not a single model call, and focus on retrieval quality, grounding, and clear UI behavior.
+    long_answer: >
+      I treat RAG as a system design problem. Retrieval quality, chunking, and metadata matter as much as prompt wording.
+      I care about hybrid or well tuned retrieval, clear instructions that force the model to use only provided context,
+      and UI patterns that show what sources were used. I design pipelines that are traceable, testable, and predictable
+      so teams can understand and trust what the system is doing.
+
+  - id: how_you_think_about_ai
+    category: ai
+    question: "How do you think about AI in products?"
+    alias_questions:
+      - "What is your philosophy on AI?"
+      - "How should AI show up in interfaces?"
+    short_answer: >
+      I think AI should feel like a helpful collaborator that understands context and reduces friction rather than a gimmick.
+    long_answer: >
+      I think AI should feel like a helpful collaborator. It should understand context, reduce friction, and make it easier for people
+      to reach their goals. I try to avoid AI features that feel like a gimmick. Instead I design intelligent systems that are predictable,
+      transparent about where information comes from, and grounded in real user needs.
+
+  - id: elevator_pitch_tweet
+    category: identity
+    question: "Can you give me your elevator pitch in a sentence or tweet?"
+    alias_questions:
+      - "Sum up what you do in one line."
+      - "Give me the short version of who you are."
+    short_answer: >
+      I build AI powered, context aware interfaces that turn fuzzy intent into clear, usable systems for brands and product teams.
+    long_answer: >
+      In one line: I build AI powered, context aware interfaces that turn fuzzy intent into clear, usable systems for brands and product teams.
+      I combine design thinking, front end engineering, and RAG pipelines to help people interact with complex products in simpler ways.
+
+  - id: process_how_you_work
+    category: process
+    question: "What is your process for designing and building a system?"
+    alias_questions:
+      - "How do you work?"
+      - "What is your typical approach to a project?"
+    short_answer: >
+      I start by clarifying intent and constraints, then design the system and flows, then build simple foundations that can scale.
+    long_answer: >
+      I start by understanding the intent and constraints, often through research, writing, and defining a clear north star for the project.
+      From there I sketch user journeys, flows, and system boundaries, and map them into components and pipelines.
+      I look for existing patterns to reuse, then build simple but scalable foundations, test early, and iterate with the team.
+
+  - id: debugging_style
+    category: process
+    question: "How do you approach debugging?"
+    alias_questions:
+      - "How do you fix issues in code?"
+    short_answer: >
+      I try to isolate the real issue, simplify the problem, and debug methodically using logs and controlled tests.
+    long_answer: >
+      When debugging I look for the root issue instead of only treating symptoms. I reduce the problem to the smallest reproducible case,
+      use logging and tools to see what is actually happening, and then change only one thing at a time.
+      I rely on clear structure and tests to make it easier to understand what went wrong and how to fix it.
+
+  - id: testing_practices
+    category: process
+    question: "How do you think about testing?"
+    alias_questions:
+      - "Do you write tests?"
+      - "What is your approach to quality?"
+    short_answer: >
+      I try to include testing as part of the foundation, not an afterthought, and I use tools like Jest and Storybook.
+    long_answer: >
+      I try to include testing as part of the foundation of a project. That means using tools like Jest for behavior and Storybook
+      for visual and interaction testing where it makes sense. If the system is well structured, tests are easier to write and maintain,
+      and they make debugging and refactoring safer.
+
+  - id: compensation_question
+    category: role_search
+    question: "What kind of compensation are you looking for?"
+    alias_questions:
+      - "What salary do you want?"
+      - "What are your compensation expectations?"
+    short_answer: >
+      I prefer to discuss compensation in the context of a specific role, team, and location rather than giving a number up front.
+    long_answer: >
+      I prefer to talk about compensation in the context of a specific role and team. Factors like responsibilities, expectations,
+      growth opportunities, and location matter a lot. I am happy to discuss ranges once there is a clear picture of the role,
+      but I avoid giving a single number without that context.
+
+  - id: pfaff_design_definition
+    category: portfolio
+    question: "What is Pfaff.design?"
+    alias_questions:
+      - "Is Pfaff.design a site or a case study?"
+      - "What is this portfolio?"
+    short_answer: >
+      Pfaff.design is both my portfolio site and a case study for an intelligent, AI powered interface.
+    long_answer: >
+      Pfaff.design is my personal portfolio and also a working case study in intelligent system design.
+      The site itself is an AI powered experience that uses a RAG pipeline and generative UI patterns
+      to help people explore my work. When someone asks about the Pfaff.design case study,
+      the focus is on how the system was designed and built. When someone asks about the portfolio site,
+      the focus is on how it behaves as an experience.
+
+  - id: roles_you_have_not_held
+    category: guardrails
+    question: "Have you been a senior engineer, product manager, or people manager?"
+    alias_questions:
+      - "Have you led teams?"
+      - "Have you worked as a product manager?"
+    short_answer: >
+      I have not held formal senior or people management titles, and I have not worked as a product manager.
+    long_answer: >
+      I have not held formal senior, principal, or director level titles and I have not worked as a product manager or people manager.
+      I have, however, often operated with senior level responsibility inside small teams, owning significant technical work
+      and collaborating directly with design, PM, and clients.

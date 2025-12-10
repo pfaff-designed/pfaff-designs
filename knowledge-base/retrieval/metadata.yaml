@@ -1,0 +1,192 @@
+# knowledge-base/retrieval-config.yaml
+#
+# Central config for how the KB is indexed and retrieved.
+# Code (retrieveProjectChunks, modalGraph) should read this
+# and apply the rules when building queries.
+
+# 	1.	Load config
+Create a small helper, for example src/lib/ai/kbConfig.ts, that reads this YAML and returns a typed object.
+	2.	In retrieveProjectChunks.ts
+	•	Look up collections.projects for chunking and top_k defaults.
+	•	When a projectSlug is present, use routing.project_scoped_query.
+	•	Filter Supabase rows by:
+	•	doc_type in collections.projects.doc_types
+	•	project_slug = projectSlug
+	•	visibility != 'hidden' unless you explicitly allow overrides.
+	3.	In the modal graph retrieve node
+	•	If on a project page: use project_scoped_query.
+	•	If on home or clearly portfolio-wide: use portfolio_scoped_query.
+	•	If ambiguous: use mixed_query.
+	•	Always add a small slice of master_profile and faq for portfolio questions.
+	4.	Prompt building
+	•	Use formatting_hints to order how you assemble chunks in the context blob so the LLM sees project goals, responsibilities, and impact in a consistent order.
+
+# ------------------------------------------------------------
+# Retrieval Configuration
+# ------------------------------------------------------------
+doc_type: retrieval_config
+version: 1
+updated: "2025-12-08"
+
+collections:
+  master_profile:
+    description: "Global profile and identity for Charles. Used for portfolio-wide questions."
+    doc_types:
+      - "master_profile"
+    scope: "global"
+    priority: 90          # Higher priority for general portfolio questions
+    default_top_k: 3
+    max_tokens: 1200
+    chunking:
+      target_tokens: 220
+      overlap_tokens: 40
+    default_tags:
+      - "profile"
+      - "identity"
+      - "career"
+      - "skills"
+      - "background"
+
+  projects:
+    description: "Per-project structured case studies used for project questions."
+    doc_types:
+      - "project"
+    scope: "per_project"
+    priority: 100         # Highest priority when projectSlug is known
+    default_top_k: 6
+    max_tokens: 1600
+    chunking:
+      target_tokens: 260
+      overlap_tokens: 60
+    default_tags:
+      - "case_study"
+      - "project"
+      - "responsibilities"
+      - "impact"
+      - "tools"
+      - "constraints"
+
+  philosophy:
+    description: "Design, engineering, and intelligent system philosophy."
+    doc_types:
+      - "philosophy"
+    scope: "global"
+    priority: 70
+    default_top_k: 3
+    max_tokens: 800
+    chunking:
+      target_tokens: 220
+      overlap_tokens: 40
+    default_tags:
+      - "philosophy"
+      - "approach"
+      - "principles"
+      - "intelligent_system_design"
+
+  faq:
+    description: "Canonical answers and short factual responses to common questions."
+    doc_types:
+      - "faq"
+    scope: "global"
+    priority: 95
+    default_top_k: 4
+    max_tokens: 800
+    chunking:
+      target_tokens: 180
+      overlap_tokens: 30
+    default_tags:
+      - "faq"
+      - "canonical_answer"
+
+routing:
+  # Used when the user is on a project page or clearly asking about a project.
+  project_scoped_query:
+    description: "Questions about a specific project (role, tools, impact, process)."
+    include_collections:
+      - collection: "projects"
+        weight: 1.0
+        require_project_slug: true
+      - collection: "master_profile"
+        weight: 0.4
+        require_project_slug: false
+    hidden_projects_behavior:
+      allow_hidden: false   # do not retrieve hidden projects unless code explicitly overrides
+
+  # Used on the home page or when the question is clearly portfolio-wide.
+  portfolio_scoped_query:
+    description: "Questions about Charles overall, work history, skills, or philosophy."
+    include_collections:
+      - collection: "master_profile"
+        weight: 1.0
+      - collection: "projects"
+        weight: 0.5
+      - collection: "philosophy"
+        weight: 0.6
+      - collection: "faq"
+        weight: 0.9
+    hidden_projects_behavior:
+      allow_hidden: false
+
+  # Used for ambiguous questions where intent is not clearly project or portfolio.
+  mixed_query:
+    description: "Fallback when intent is unclear; mix global and project context."
+    include_collections:
+      - collection: "master_profile"
+        weight: 0.9
+      - collection: "projects"
+        weight: 0.7
+      - collection: "philosophy"
+        weight: 0.4
+      - collection: "faq"
+        weight: 0.8
+    hidden_projects_behavior:
+      allow_hidden: false
+
+defaults:
+  # Global retrieval defaults if a collection does not override them.
+  default_top_k: 6
+  max_context_tokens: 2200
+  min_score_threshold: 0.0    # optional score filter if your RPC returns similarity scores
+
+  hybrid_search:
+    enabled: false            # start with vector only; can flip to true later
+    notes: "When enabled, combine vector search with a lexical filter in the Supabase RPC."
+
+  reranking:
+    enabled: false            # you can flip this to true when you add a reranker
+    strategy: "none"          # options later: "score_then_length", "llm_rerank"
+    max_rerank_k: 12
+
+  formatting_hints:
+    # These are hints for the prompt builder, not user-facing text.
+    project_section_order:
+      - "project_goal"
+      - "responsibilities"
+      - "impact"
+      - "contextual_constraints"
+      - "notable_strengths_demonstrated"
+      - "learnings"
+    profile_section_order:
+      - "identity"
+      - "career_timeline"
+      - "education"
+      - "core_strengths"
+    faq_answer_style:
+      lead_with_takeaway: true
+      prefer_short_answer_first: true
+
+guardrails:
+  # High level guardrails to be enforced in prompts and generation nodes.
+  hallucination_control:
+    require_context_for_facts: true
+    allow_speculation: false
+    missing_context_behavior: "admit_gap"   # admit when the KB does not contain the answer
+  hidden_projects:
+    # Projects with visibility: hidden should not be mentioned unless:
+    #  - the user already knows them by name, or
+    #  - a feature explicitly opts into including them.
+    default_behavior: "do_not_surface"
+  titles_and_roles:
+    # Encourage the assistant to rely on KB roles, not LLM guesses.
+    must_use_kb_for_roles: true
+

@@ -1,0 +1,124 @@
+# knowledge-base/projects/project-pfaff-design.yaml
+
+doc_type: project
+project_slug: "pfaff-design"
+project_label: "Pfaff.design — Intelligent Portfolio System"
+version: 1
+updated: "2025-12-08"
+
+visibility: visible
+project_url: "https://www.pfaff.design"
+
+timeline:
+  start: "2025-11-10"
+  end: "2025-12-06"   # V1 launch
+  ongoing:
+    v2_started: "2025-12-08"
+    status: "active development across V2 features"
+
+role:
+  title: "Intelligent Systems Designer"
+  description: "End-to-end architect, designer, and engineer for an AI-powered adaptive portfolio."
+
+team_structure:
+  - "Solo project (no collaborators)"
+  - "Used AI tools (Cursor, ChatGPT) as accelerators—NOT team members"
+  - "Handled architecture, planning, design system, narrative, and implementation alone"
+
+project_goal:
+  - "Build a portfolio that demonstrates intelligent system design, not just static work samples."
+  - "Use AI to adapt the experience to a user's intent in real time."
+  - "Create a site that communicates Charles’s capabilities more effectively than linear case studies."
+  - "Design a production-ready RAG pipeline, generative UI engine, and conversational agent."
+  - "Stay within <$100/month cost while maintaining ~3s response times."
+
+responsibilities:
+  - "Planned full project using structured roadmaps, phases, and architectural diagrams."
+  - "Created the site’s visual identity, narrative structure, IA, and editorial layout."
+  - "Designed and implemented the design system (tokens, components, grid, spacing)."
+  - "Engineered a deterministic generative UI renderer from YAML → JSON → components."
+  - "Implemented a two-agent system (Copywriter + Orchestrator)."
+  - "Implemented RAG pipeline: chunking, embeddings, retrieval, and context shaping."
+  - "Implemented conversational AI modal and intent-driven content retrieval."
+  - "Built Cmd+K command palette with AI-driven navigation."
+  - "Developed page templates, case study layouts, image systems, and analytics."
+  - "Set up LangSmith instrumentation and evals workflow."
+  - "Set up Supabase storage, vector DB, actions, and API routes."
+  - "Handled deployment, environment management, performance, and hosting concerns."
+
+what_charles_did_not_do:
+  - "Did not use external templates or UI kits—every component was built custom."
+  - "Did not outsource any engineering, design, or content work."
+  - "Did not use off-the-shelf AI assistants; all agents were bespoke and rigorously orchestrated."
+
+tools_used:
+  - "Next.js"
+  - "React"
+  - "TypeScript"
+  - "Tailwind CSS"
+  - "Supabase (Postgres + Storage + pgvector)"
+  - "LangChain"
+  - "LangGraph"
+  - "LangSmith (evals, tracing)"
+  - "Anthropic / OpenAI APIs"
+  - "Figma for system design + layout"
+  - "Cursor for accelerated coding + refactoring"
+  - "Jest and Storybook for testing and documentation"
+
+impact:
+  - "Created a portfolio that actively demonstrates the skill it advertises: intelligent system design."
+  - "Shows recruiters and hiring managers the architecture behind the work instead of just describing it."
+  - "Established a scalable foundation for future AI features (intent modeling, adaptive layouts, user profiling)."
+  - "Dramatically improved clarity in how Charles communicates technical and design reasoning."
+  - "Built a professional-grade RAG pipeline that rivals early-stage product-quality systems."
+
+contextual_constraints:
+  - "Strict cost ceiling for hosting + model usage."
+  - "Must load fast and remain stable even with AI-driven features."
+  - "Must speak clearly to recruiters while retaining creative identity."
+  - "AI must never hallucinate roles or misrepresent professional experience."
+  - "Component registry must stay deterministic to avoid visual drift."
+
+notable_strengths_demonstrated:
+  - "System architecture and pipeline design (RAG + agents + deterministic UI)."
+  - "Narrative thinking combined with engineering clarity."
+  - "Ability to build a complex, polished system alone and under time pressure."
+  - "Design–engineering hybrid strength: layout craft + code rigor."
+  - "Strong debugging, refactoring, and testing discipline."
+  - "Clear articulation of goals → constraints → decisions → outcomes."
+
+learnings:
+  - "Learned how to design and implement a complete RAG pipeline from scratch."
+  - "Learned how to convert narrative intent into structured design and component systems."
+  - "Learned deeper LangGraph patterns (state management, reducers, routing)."
+  - "Learned how to balance simplicity with expressive generative UI behavior."
+  - "Learned how to manage a full product lifecycle: planning → execution → launch → analytics."
+  - "Learned how to make architectural trade-offs that keep the system maintainable."
+
+# Internal Docs (referenced, not embedded)
+local_doc_refs:
+  - id: "pfaff_design_roadmap_v1"
+    label: "Pfaff.design V1 Roadmap"
+    type: "project_doc"
+  - id: "pfaff_design_architecture_diagram"
+    label: "Pfaff.design architecture & orchestration"
+    type: "project_doc"
+  - id: "pfaff_design_chunking_strategy"
+    label: "Chunking & retrieval model"
+    type: "project_doc"
+  - id: "pfaff_design_rag_pipeline_notes"
+    label: "RAG pipeline specifications & iterations"
+    type: "project_doc"
+  - id: "pfaff_design_phase_notes"
+    label: "Phase summaries (1–14)"
+    type: "project_doc"
+
+retrieval_tags:
+  - "pfaff-design"
+  - "intelligent systems"
+  - "rag pipeline"
+  - "generative ui"
+  - "portfolio"
+  - "architecture"
+  - "full-stack"
+  - "solo project"

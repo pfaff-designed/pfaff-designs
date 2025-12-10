@@ -1,0 +1,97 @@
+doc_type: work_style
+version: 1
+updated: "2025-12-08"
+
+# ==========================================
+# 5.1 How Charles Works
+# ==========================================
+working_style:
+  autonomy:
+    - "Thrives in small, autonomous teams with clear goals."
+    - "Comfortable owning end-to-end workstreams with high-level guidance."
+    - "Self-scopes tasks and follows through reliably."
+
+  structure_and_process:
+    - "Begins projects by identifying the north star, constraints, and user intent."
+    - "Writes extensively during early phases to clarify ideas and reduce ambiguity."
+    - "Organizes work into structured documents, lists, and conceptual frameworks."
+    - "Builds simple, scalable foundations before adding complexity."
+
+  execution:
+    - "Iterates through small prototypes and proofs of concept before scaling."
+    - "Prioritizes clarity, maintainability, and consistent patterns in implementation."
+    - "De-risks projects by breaking them into solvable components."
+
+# ==========================================
+# 5.2 How Charles Learns
+# ==========================================
+learning_style:
+  motivation:
+    - "Learns fastest when stakes are real and tied to a deadline."
+    - "Self-teaches new languages, tools, or frameworks as needed by the project."
+
+  methods:
+    - "Uses experimentation and small prototypes to understand new concepts."
+    - "Reduces complex technologies to their core patterns before applying them."
+
+  philosophy:
+    - "Views learning as a combination of mechanical skill-building and applied practice."
+    - "Seeks enough understanding to execute reliably, not just theoretical knowledge."
+
+# ==========================================
+# 5.3 How Charles Communicates
+# ==========================================
+communication_style:
+  principles:
+    - "Over-communicates by default to eliminate ambiguity."
+    - "Frames decisions in terms of constraints, tradeoffs, and user intent."
+    - "Translates technical concepts clearly for non-technical teammates."
+
+  collaboration:
+    - "Collaborates well with designers, PMs, and clients."
+    - "Gives early and frequent feedback to prevent misalignment."
+    - "Focuses on enabling teams’ ideas—not showcasing technology for its own sake."
+
+  client_interaction:
+    - "Comfortable presenting work to stakeholders."
+    - "Supports PMs by grounding conversations in feasibility and user needs."
+
+# ==========================================
+# 5.4 How Charles Solves Problems
+# ==========================================
+problem_solving:
+  approach:
+    - "Breaks down large problems into small, testable components."
+    - "Uses root-cause analysis and logging to isolate issues."
+    - "Seeks the simplest system that accomplishes the goal."
+
+  mindset:
+    - "Prefers clarity over cleverness."
+    - "Grounds designs and architectures in real-world constraints."
+    - "Optimizes for maintainability and long-term scalability."
+
+# ==========================================
+# 5.5 Team Preferences
+# ==========================================
+team_preferences:
+  ideal_environment:
+    - "Small, supportive, communicative teams."
+    - "Clear goals, frequent check-ins, and collaborative iteration."
+    - "Culture of constructive feedback and shared ownership."
+
+  feedback_preferences:
+    - "Prefers direct, clear feedback early in the process."
+    - "Values structure and actionable suggestions over vague critique."
+
+# ==========================================
+# 5.6 Leadership & Influence
+# ==========================================
+leadership:
+  influence:
+    - "Capable of influencing direction through structure, clarity, and domain expertise."
+    - "Often serves as the connective tissue between disciplines."
+    - "Provides stability through organized thinking and a calm, optimistic demeanor."
+
+  management:
+    - "Has not formally managed direct reports."
+    - "Comfortable coordinating with cross-disciplinary partners and guiding technical decisions."

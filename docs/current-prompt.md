@@ -1,160 +1,202 @@
-You are working in the `pfaff-designs` repo on the Command Palette UI.
+# Task: Switch modalGraph to use a full ChatPromptTemplate for `generate_answer` (Option 1)
+
+You are working in the **pfaff-designs** repo.
 
 ## Goal
 
-Fix a mobile overflow bug in the Command Palette so that:
+Update the **AI modal graph** so that the `generate_answer` node uses a full `ChatPromptTemplate` loaded from LangSmith (slug: `pfaff-modal-graph-generate-answer`), instead of a raw system string.
 
-- On small screens (mobile), the palette **never expands beyond the viewport width**.
-- There is **no horizontal scrolling** when the palette is open.
-- The palette remains **centered** horizontally, with a comfortable margin from the viewport edges.
-- Existing **desktop behavior and animations** must stay intact.
-- Existing **height clamping** (`max-height: calc(100vh - 96px)`) must remain in place.
+We want **Option 1**:
 
-Right now, on mobile:
+- **One unified system message** that contains all rules for the modal.
+- **One human message template** that receives variables like `mode`, `question`, `context_blob`, `pagePath`, `projectSlug`, and `retrieved_chunks`.
+- No examples for now; just a clean, two-message chat prompt.
 
-- When the Command Palette opens, the UI is centered correctly.
-- But the **palette content (input + quick actions) can be wider than the viewport**, causing horizontal overflow.
-- This is especially noticeable when the quick action buttons wrap in odd ways.
-- This behavior does **not** occur on desktop.
+This should **not** change the external API contract of `/api/ai/modal` — only how the LLM prompt is built.
 
-## Relevant components
+---
 
-Start by inspecting these files:
+## 1. Prompt loader changes
 
-- `src/components/organisms/CommandPalette/CommandPaletteContent.tsx`
-- `src/components/organisms/CommandPalette/CommandPaletteHost.tsx` (or similar host/portal file that mounts the palette overlay)
-- Any shared layout wrapper used specifically for the Command Palette (e.g. a container inside the host).
+**File:** `src/lib/ai/promptLoader.ts`
 
-Current `CommandPaletteContent` root element looks like this (for reference):
+1. Locate how prompts are currently loaded from LangSmith (for example, anything like `getCopywriterPromptTemplate`, `getPromptTemplate`, or other helpers that load a `ChatPromptTemplate`).
 
-```tsx
-return (
-  <div
-    ref={ref}
-    onKeyDown={onKeyDown}
-    className="flex flex-col w-full max-w-[40rem] sm:max-w-none"
-    style={{
-      maxHeight: "calc(100vh - 96px)",
-      overflowY: "auto",
-    }}
-  >
-    {/* ... */}
-  </div>
-);
+2. Add a new exported helper:
+
+```ts
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+// … keep existing imports
+
+export async function getModalGraphPromptTemplate(): Promise<ChatPromptTemplate> {
+  // Reuse the same LangSmith loading pattern used for other prompts,
+  // but with slug "pfaff-modal-graph-generate-answer".
+
+  // Pseudocode shape (adapt to existing utilities):
+  //
+  // try {
+  //   const prompt = await loadPromptFromLangSmith("pfaff-modal-graph-generate-answer");
+  //   // Ensure it's a ChatPromptTemplate
+  //   return prompt as ChatPromptTemplate;
+  // } catch (err) {
+  //   console.warn("[PromptLoader] Failed to load modal graph prompt from LangSmith, using fallback", err);
+  //   return ChatPromptTemplate.fromMessages([
+  //     [
+  //       "system",
+  //       "You are the AI assistant for Charles Pfaff’s portfolio site. Use ONLY the provided context to answer questions about Charles, his work, skills, and projects. If the context is insufficient, say so briefly and suggest what the user can ask instead. Answer in a concise, recruiter-friendly tone.",
+  //     ],
+  //     [
+  //       "human",
+  //       "Mode: {mode}\nPage path: {pagePath}\nProject slug: {projectSlug}\n\nContext:\n{context_blob}\n\nQuestion:\n{question}",
+  //     ],
+  //   ]);
+  // }
+}
 ```
 
-The animated input container currently has:
+3. Reuse any existing **logging style** from the file (e.g., `[PromptLoader] ...`) so logs are consistent. It’s fine to keep a `console.warn` with the `[PromptLoader]` prefix.
 
-```tsx
-<motion.div
-  key="palette-input"
-  className={cn(
-    "rounded-full border border-[color:var(--accent-primary)]",
-    "bg-[color:var(--bg-default)] shadow-sm",
-    "overflow-hidden",
-    "px-4 py-2 flex items-center justify-center gap-2 h-[2.5rem]",
-    "w-full",
-  )}
-  initial={{
-    width: "100%",
-    scale: 0.8,
-    opacity: 0,
-  }}
-  animate={{ width: "100%", scale: 1, opacity: 1 }}
-  exit={{ width: "100%", scale: 0.8, opacity: 0 }}
-  transition={{
-    type: "spring",
-    stiffness: 260,
-    damping: 24,
-  }}
-  style={{
-    originX: 0.5,
-    flexShrink: 0,
-    maxWidth: "400px",
-  }}
-  onAnimationComplete={handleAnimationComplete}
->
-  {/* input + submit button */}
-</motion.div>
+4. If there is an older helper like `getModalGraphSystemPrompt`, **remove it** once all references are updated (see next section).
+
+---
+
+## 2. modalGraph `generate_answer` node changes
+
+**File:** `src/lib/ai/modalGraph.ts`
+
+### 2.1. Update imports
+
+- Import `getModalGraphPromptTemplate` from `promptLoader`:
+
+```ts
+import { getModalGraphPromptTemplate } from "./promptLoader"; // adjust relative path as needed
 ```
 
-## Requirements
+- Remove any imports of `getModalGraphSystemPrompt` or old modal system-prompt helpers.
 
-### 1. Mobile width clamping
+### 2.2. Replace system-string prompt usage
 
-On mobile/small screens:
+Find the **`generate_answer` node/function** in the modal graph — the part that currently:
 
-- The **entire palette container** (including quick actions grid) must be constrained to the viewport width **minus a small horizontal margin**.
-- Use a **responsive max width** that:
-  - Clamps to `100vw - 2rem` (or similar) on mobile.
-  - Preserves the existing 40rem-ish max width for larger screens.
+- Resolves a **system prompt string** (via `getModalGraphSystemPrompt` or similar).
+- Builds an array of messages manually, something like:
 
-Concretely, update the root wrapper and/or host so that on small screens:
+```ts
+const systemPrompt = await getModalGraphSystemPrompt();
+const messages = [
+  { role: "system", content: systemPrompt },
+  { role: "user", content: /* question + context blob */ },
+];
+const answer = await llm.invoke(messages, config);
+```
 
-- It uses something like:
+Replace that logic so it:
 
-  - `w-full`
-  - `max-w-[min(100vw-2rem,40rem)]` (or equivalent Tailwind utility)
-  - `mx-auto`
-  - `px-4` on mobile, no extra padding on larger screens.
+1. Loads a `ChatPromptTemplate`:
 
-- The goal is: **no horizontal scroll**, palette remains centered, and it feels like a “pill” floating comfortably inside the viewport.
+```ts
+const promptTemplate = await getModalGraphPromptTemplate();
+```
 
-Do **not** re-introduce the bug where the palette jumps sideways or “snaps” to the left when opening.
+2. Renders it into messages using the **existing modal graph state**. At minimum, pass:
 
-### 2. Quick actions + grid behavior
+- `mode`
+- `question`
+- `context_blob`
+- `pagePath`
+- `projectSlug`
+- `retrieved_chunks` or a serialized version such as `retrieval_debug_notes` if that already exists
 
-The quick actions section currently uses a `grid grid-cols-3 gap-3 w-full` layout.
+For example:
 
-You should:
+```ts
+const { mode, question, context_blob, pagePath, projectSlug, retrieved_chunks } = state;
 
-- Keep the overall layout and behavior (3 columns, wrapping, show-more/collapse row, etc.).
-- Ensure that **grid children never force the container to be wider than the clamped width**.
-- If needed, allow labels to wrap or shrink slightly on very small screens, instead of stretching the container.
+const messages = await promptTemplate.formatMessages({
+  mode,
+  question,
+  context_blob,
+  pagePath,
+  projectSlug,
+  retrieved_chunks,
+});
+```
 
-It is acceptable to:
+3. Pass those `messages` to the LLM in the same way the old array was used:
 
-- Add mobile-specific constraints to button text (`text-xs` on very small screens, for example).
-- Allow multi-line labels when necessary instead of forcing `whitespace-nowrap` everywhere.
-- Add `overflow-x-hidden` to the palette container as a last-resort guardrail, but the primary fix should be **correct width constraints**, not just hiding overflow.
+```ts
+const llmResponse = await llm.invoke(messages, {
+  // keep existing config/metadata (e.g. runName, tags, etc.)
+});
+```
 
-### 3. Preserve existing behavior
+4. Keep the **rest of the node behavior identical**:
 
-Do **not**:
+- How we parse/normalize the final answer text.
+- How we attach `citations`, `used_chunks`, `mode`, etc. to the returned state.
+- How errors are caught and surfaced.
 
-- Change routing or keyboard shortcuts.
-- Change the open/close logic for the Command Palette.
-- Change the height clamping behavior (`max-height: calc(100vh - 96px)`).
-- Break any desktop layouts.
+### 2.3. Variable coverage
 
-Do:
+Make sure that **everything** the old system prompt used (e.g., `context_blob`, `pagePath`, `projectSlug`, debug notes about retrieval) remains available to the template.
 
-- Keep the animation feel (spring, scale, fade) the same.
-- Keep the pill-like shape and visual styling.
-- Keep the current order of special commands (show more / collapse) and regular commands.
+If:
 
-### 4. Implementation steps
+- There is a field like `state.retrieval_debug_notes`,
+- Or a field representing which page/project we’re on,
 
-1. Inspect the Command Palette host to see how it is positioned (likely fixed/absolute in the viewport).
-2. Introduce a **responsive width clamp** at the **highest appropriate container** for the palette (likely inside the host, wrapping `CommandPaletteContent`).
-3. Adjust `CommandPaletteContent`’s root div so it:
-   - Uses `w-full` consistently.
-   - Uses a **responsive max width** that clamps on mobile (see above).
-   - Applies horizontal padding on mobile (`px-4`) to keep the pill from touching the edges.
-4. If necessary, tweak the quick actions grid/button text styles so they do not create overflow on very narrow viewports.
-5. Verify:
-   - Mobile: iPhone-ish viewport in devtools with the palette open, no horizontal scroll, no width overflow, still centered.
-   - Desktop: behavior unchanged, still looks and feels like before, no regressions to centering or animation.
+then include it in the `formatMessages` call and in the fallback prompt template if needed. It’s fine to add extra variables, even if the LangSmith template doesn’t use all of them yet, as long as they’re serializable.
 
-### 5. Testing
+---
 
-- Use the browser devtools responsive mode to test multiple viewport widths (e.g., 320px, 375px, 414px).
-- Confirm:
-  - No horizontal scrollbar appears when the palette is open.
-  - The palette width is visually clamped with some breathing room from the edges.
-  - Quick actions grid wraps gracefully and doesn’t push the layout wider.
+## 3. Cleanup
 
-When you’re done:
+1. Remove any unused constants or helper functions that were only needed for the old system-string setup (e.g., `MODAL_GRAPH_SYSTEM_PROMPT_TEXT`, `getModalGraphSystemPrompt`).
 
-- Summarize the exact changes you made (files + className/style updates).
-- Call out any tradeoffs you had to make specifically for very small viewports.
+2. Ensure there are **no remaining references** to the old helper in the repo:
+
+```bash
+pnpm test modalGraph.wiring
+# or
+pnpm test -- modalGraph
+```
+
+(or whatever the existing test command is for modalGraph wiring).
+
+3. Confirm that `/api/ai/modal` still:
+
+- Accepts the same payload.
+- Returns the same JSON shape.
+- Logs no new errors related to prompt loading (unless LangSmith is actually unreachable, in which case we should see the fallback log and still get a valid answer).
+
+---
+
+## 4. Quick manual sanity check
+
+After changes:
+
+1. Run the dev server:
+
+```bash
+pnpm dev
+```
+
+2. From the home page, open the AI modal and try questions like:
+
+- “What does Charles do?”
+- “Tell me about his experience at AKQA.”
+- “How should I use this assistant?”
+
+3. Verify:
+
+- The answers are grounded in the KB.
+- The tone is concise and recruiter-friendly.
+- No `[PromptLoader]` errors appear unless LangSmith is down, in which case the fallback template still works.
+
+---
+
+If anything is ambiguous, prefer to:
+
+- **Reuse existing helper patterns** in `promptLoader.ts`.
+- Keep changes localized to **`promptLoader.ts` and the `generate_answer` node** in `modalGraph.ts`.
+- Avoid introducing new dependencies beyond what’s already used for prompt templates.

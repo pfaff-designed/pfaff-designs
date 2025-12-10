@@ -1,0 +1,162 @@
+# knowledge-base/master-profile.yaml
+
+doc_type: master_profile
+version: 1
+updated: "2025-12-08"
+
+identity:
+  primary_label: "Applied AI engineer & design-minded technologist"
+  short_title_options:
+    - "Applied AI Engineer"
+    - "Design-Engineer"
+    - "Intelligent Systems Designer"
+  one_liner: "Charles designs intelligent systems—AI-powered, context-aware interfaces that turn user intent into working products."
+  location: "Richmond, VA, USA"
+  work_preferences:
+    remote: true
+    hybrid: true
+    relocation_for_right_role: true
+
+career_timeline:
+  - phase_id: phase_1_early_career
+    years: "2016–2019"
+    label: "Scrappy marketing, music, and first digital products"
+    roles:
+      - "Marketing manager at a local coffee roaster"
+      - "Marketing and web generalist at a real estate company"
+      - "Independent musician and DIY promoter"
+    activities:
+      - "Managed social media, packaging, and vendor coordination for a coffee roaster."
+      - "Owned marketing websites and basic automation funnels for a real estate company."
+      - "Handled end-to-end promotion, merch, and branding for bands and small music events."
+      - "Acted as informal product owner for a small custom tab-tracking app built for the coffee shop."
+    skills_gained:
+      - "Resourceful problem solving under constraints."
+      - "Basic digital product thinking (feature scoping, communicating between builder and stakeholder)."
+      - "Hands-on branding and scrappy visual design."
+    strengths_demonstrated:
+      - "Saying yes to unfamiliar work and figuring it out."
+      - "Translating technical work into language non-technical stakeholders understand."
+      - "Creating engagement and interest with very limited resources."
+
+  - phase_id: phase_2_grad_and_vr
+    years: "2020–2022"
+    label: "Experience design and immersive prototypes"
+    roles:
+      - "Graduate student in Experience Design at VCU Brandcenter"
+      - "VR prototype creator"
+    activities:
+      - "Studied experience design, usability, and emerging technologies (AI, AR, VR)."
+      - "Self-taught Unity and C# to build an interactive VR film experience."
+      - "Co-created a branching immersive film that let users navigate through people’s dreams in VR."
+    skills_gained:
+      - "Experience design and interaction thinking."
+      - "Hands-on prototyping in new mediums (VR)."
+      - "Scoping and delivering ambitious projects with real stakes."
+    strengths_demonstrated:
+      - "Learning hard skills quickly when a project depends on it."
+      - "Combining narrative, design, and technology into a single experience."
+      - "Pushing beyond tutorial-level tutorials into shipped, working prototypes."
+
+  - phase_id: phase_3_fe_engineering
+    years: "2022–2024"
+    label: "Front-end engineering and component systems at AKQA"
+    roles:
+      - "Associate Technologist at AKQA"
+    activities:
+      - "Built production front-end features for large clients (e.g., Capital One, PMI, Tanger)."
+      - "Translated complex, high-fidelity designs into responsive React/TypeScript components."
+      - "Worked within and contributed to component libraries and design systems."
+    skills_gained:
+      - "Front-end engineering with React, TypeScript, and modern tooling."
+      - "Systematic component architecture and template thinking."
+      - "Balancing design fidelity with performance and implementation constraints."
+    strengths_demonstrated:
+      - "Owning front-end deliverables on small teams with high-level guidance."
+      - "Reasoning about how local implementation decisions affect larger systems."
+      - "Maintaining reliability and quality on production systems."
+
+  - phase_id: phase_4_applied_ai
+    years: "2024–2025"
+    label: "Applied AI and intelligent systems"
+    roles:
+      - "Technologist at AKQA (applied AI-focused work)."
+      - "Independent applied AI engineer and portfolio creator."
+    activities:
+      - "Designed and implemented RAG pipelines and generative UI flows for pfaff.design."
+      - "Prototyped AI agents and workflows for client innovation projects (e.g., Coca-Cola)."
+      - "Planned and executed pfaff.design as a full-stack intelligent system: architecture, narrative, design, and implementation."
+    skills_gained:
+      - "Applied AI system design (RAG, agent workflows, generative UI)."
+      - "End-to-end project ownership (planning, architecture, execution, launch)."
+      - "Connecting design intent to AI-powered system behaviors."
+    strengths_demonstrated:
+      - "Turning abstract ideas about AI and interaction into working systems."
+      - "Designing simple foundations that scale (components, pipelines, analytics)."
+      - "Using roadmaps and structure to de-risk ambitious projects."
+
+education:
+  - institution: "Virginia Commonwealth University (VCU)"
+    program: "B.S. in Marketing"
+    years: "2014–2017"
+    focus:
+      - "Marketing fundamentals."
+      - "Branding and communication."
+  - institution: "VCU Brandcenter (VCU School of Business)"
+    program: "MBA in Experience Design"
+    years: "2020–2022"
+    focus:
+      - "Experience design and UX."
+      - "Emerging technologies (AI, AR, VR)."
+      - "Creative problem solving for brands and products."
+
+roles_and_titles:
+  - organization: "AKQA"
+    titles:
+      - title: "Associate Technologist"
+        years: "2022–2025"
+      - title: "Technologist"
+        years: "2025"
+    clarification:
+      - "“Technologist” at AKQA covered front-end engineering, prototyping, and applied AI work."
+      - "Charles was frequently staffed in roles with senior-level responsibility but did not hold a formal senior title."
+  - organization: "Local coffee roaster"
+    titles:
+      - title: "Marketing Manager"
+        years: "approx. 2016–2017"
+  - organization: "Real estate company"
+    titles:
+      - title: "Marketing / Web Generalist"
+        years: "approx. 2017–2019"
+
+collaboration_style:
+  communication:
+    - "Over-communicates by default to reduce ambiguity."
+    - "Comfortable translating technical concepts for non-technical stakeholders."
+    - "Focuses on enabling ideas while keeping teams grounded in technical reality."
+  working_with_others:
+    - "Works well with designers, PMs, and clients in cross-disciplinary teams."
+    - "Prefers small, autonomous teams with clear goals and frequent check-ins."
+  independence:
+    - "Comfortable owning front-end or system-level work with high-level guidance."
+    - "Can scope his own tasks and drive them to completion."
+
+core_strengths:
+  - id: "systems_thinking"
+    label: "Systems thinking"
+    description: "Naturally reasons about how individual decisions affect the larger system—components, pages, and AI flows."
+  - id: "turning_intent_into_systems"
+    label: "Turning intent into working systems"
+    description: "Takes a fuzzy goal or narrative and shapes it into concrete architectures, components, and flows."
+  - id: "learning_under_real_stakes"
+    label: "Learning fast when stakes are real"
+    description: "Learns new technologies fastest when attached to real, non-optional projects and deadlines."
+  - id: "translation_between_disciplines"
+    label: "Translating between disciplines"
+    description: "Bridges design, engineering, and business language so teams stay aligned on goals and tradeoffs."
+  - id: "simple_scalable_foundations"
+    label: "Building simple foundations that can scale"
+    description: "Prefers simple, well-structured architectures and component systems that can grow without becoming chaotic."
+  - id: "design_and_engineering_blend"
+    label: "Blending design sensibility with technical rigor"
+    description: "Brings an eye for layout, hierarchy, and narrative while still caring deeply about code quality and reliability."

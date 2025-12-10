@@ -1,0 +1,137 @@
+doc_type: skills
+version: 1
+updated: "2025-12-08"
+
+# ==========================================
+# 2.1 Engineering Skills
+# ==========================================
+engineering_skills:
+  frontend_stack:
+    - "React"
+    - "Next.js"
+    - "TypeScript"
+    - "JavaScript"
+    - "Tailwind CSS"
+    - "Radix UI"
+    - "Shadcn components"
+
+  component_architecture:
+    - "Designing reusable components and UI primitives"
+    - "Template composition for complex page layouts"
+    - "Building scalable component systems with consistent patterns"
+    - "Accessibility-focused UI development"
+
+  engineering_process:
+    - "Writing maintainable, well-structured code"
+    - "Debugging through isolation, console logging, and root-cause analysis"
+    - "Using Storybook for component development and visual QA"
+    - "Using Jest for unit testing"
+
+  performance_and_reliability:
+    - "Ensuring responsive behavior across breakpoints"
+    - "Working with API-driven data and asynchronous UI flows"
+    - "Identifying system bottlenecks and simplifying architectures"
+
+# ==========================================
+# 2.2 AI & RAG Engineering Skills
+# ==========================================
+ai_rag_skills:
+  rag_fundamentals:
+    - "Understanding retrieval-augmented generation (RAG) patterns"
+    - "Working with vector databases (Supabase pgvector)"
+    - "Designing chunking strategies with metadata"
+    - "Building structured knowledge bases for retrieval"
+
+  intelligent_system_design:
+    - "Mapping user intent to system behaviors"
+    - "Constructing generative UI pipelines"
+    - "Creating deterministic component registries"
+    - "Designing context-aware interaction models"
+
+  pipelines_and_agents:
+    - "Designing RAG pipelines with retrieval → context building → synthesis"
+    - "Building multi-agent orchestration flows (copywriter agent, orchestrator agent)"
+    - "Instrumenting pipelines with LangSmith tracing and evaluations"
+
+  prompt_and_context_management:
+    - "Structuring prompts for stability, grounding, and tone consistency"
+    - "Using strict 'use only the provided context' rules"
+    - "Designing fallback behaviors to prevent hallucination"
+
+# ==========================================
+# 2.3 Design & UX Skills
+# ==========================================
+design_ux_skills:
+  design_foundations:
+    - "Information architecture and hierarchy"
+    - "Interaction design with clear user flows"
+    - "Swiss-influenced editorial layout and grid structure"
+    - "Inclusive, intuitive, user-centered design"
+
+  tools:
+    - "Figma"
+    - "Framer"
+    - "Photoshop (proficient)"
+    - "Illustrator (working familiarity)"
+
+  design_process:
+    - "Using writing as a sketching and conceptualization tool"
+    - "Pattern recognition and applying existing design conventions"
+    - "Iterating through prototypes and usability feedback"
+
+# ==========================================
+# 2.4 Product & Strategy Skills
+# ==========================================
+product_and_strategy_skills:
+  problem_framing:
+    - "Identifying user intent and desired outcomes"
+    - "Translating goals into actionable system behaviors"
+    - "North-star and constraint-setting for projects"
+
+  solution_design:
+    - "Scoping features and defining success criteria"
+    - "Choosing tools and approaches aligned with constraints"
+    - "Connecting brand, narrative, and interface decisions"
+
+  end_to_end_execution:
+    - "Creating project roadmaps"
+    - "Self-scoping and delivery across design + engineering"
+    - "Balancing ambition with timeline and budget constraints"
+
+# ==========================================
+# 2.5 Communication & Collaboration Skills
+# ==========================================
+communication_and_collaboration:
+  cross_discipline:
+    - "Explaining technical concepts clearly to non-technical teammates"
+    - "Collaborating effectively with designers, PMs, and stakeholders"
+    - "Aligning design intent with engineering feasibility"
+
+  communication_style:
+    - "Over-communicates to reduce ambiguity"
+    - "Grounds decisions in constraints, tradeoffs, and intent"
+    - "Provides early, frequent feedback"
+
+  client_interaction:
+    - "Participating in stakeholder presentations"
+    - "Framing decisions in terms of user value and system clarity"
+    - "Supporting PMs with scoped, realistic estimates"
+
+# ==========================================
+# 2.6 Meta Skills
+# ==========================================
+meta_skills:
+  learning:
+    - "Learns fastest when working on real projects with real stakes"
+    - "Self-teaches new technologies to meet project requirements"
+    - "Builds small prototypes to validate ideas"
+
+  working_style:
+    - "Structured, systematic approach to design and engineering"
+    - "Simplifies complex problems into small, solvable components"
+    - "Thrives in small, autonomous teams"
+
+  mindset:
+    - "Curious, detail-oriented, and grounded in practical execution"
+    - "Comfortable with ambiguity when designing new systems"
+    - "Seeks clarity, structure, and harmony in final work"
