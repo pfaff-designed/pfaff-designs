@@ -1,0 +1,83 @@
+# knowledge-base/projects/project-tanger.yaml
+
+doc_type: project
+project_slug: "tanger"
+project_label: "Tanger Corporate Website"
+version: 1
+updated: "2025-12-08"
+
+visibility: hidden   # Internal case study; not publicly viewable
+project_url: null
+
+timeline:
+  start: "2023-03"
+  end: "2024-01"
+
+role:
+  title: "Associate Technologist (Front-end engineering)"
+  description: "Front-end engineer responsible for building core UI components, page templates, and responsive layouts for Tanger’s corporate website."
+
+team_structure:
+  - "AKQA team including designers, PMs, and senior technologists."
+  - "Charles contributed as a front-end engineer within a small, focused implementation pod."
+
+project_goal:
+  - "Build a modern, responsive corporate website for Tanger with reusable components and scalable content templates."
+  - "Translate detailed design files into production-ready React components with pixel fidelity and accessibility standards."
+  - "Establish foundational sections and patterns for future content expansion."
+
+responsibilities:
+  - "Implemented front-end components in React + TypeScript."
+  - "Translated complex page templates into responsive, maintainable layouts."
+  - "Ensured accessibility, responsive behavior, and consistent styling across pages."
+  - "Collaborated closely with designers to implement exact visual and interaction specifications."
+  - "Maintained component library consistency and contributed to design–engineering alignment."
+
+what_charles_did_not_do:
+  - "Did not lead strategy, IA, or high-level UX."
+  - "Did not design the brand or visual identity."
+  - "Did not build backend, CMS, or API systems."
+  - "Did not own analytics, hosting, or deployment pipelines."
+  - "Did not manage the team or direct project scope."
+
+tools_used:
+  - "React"
+  - "Next.js"
+  - "TypeScript"
+  - "Tailwind CSS"
+  - "Figma"
+  - "Storybook"
+  - "Lighthouse (accessibility checks)"
+
+impact:
+  - "Delivered production-ready front-end components used throughout Tanger’s corporate site."
+  - "Improved responsiveness and component consistency across multiple page types."
+  - "Helped ensure design fidelity and accessibility compliance during implementation."
+  - "Strengthened overall maintainability of the front-end system through reusable component patterns."
+
+contextual_constraints:
+  - "Enterprise project with formal QA, strict fidelity requirements, and multiple stakeholders."
+  - "Large volume of content templates requiring alignment to a unified design system."
+  - "High emphasis on responsive behavior for both marketing and investor-relations content."
+
+notable_strengths_demonstrated:
+  - "High attention to detail when translating designs to front-end implementation."
+  - "Ability to work within an evolving component system and maintain consistency."
+  - "Clear communication with design and PM teams to resolve ambiguity."
+  - "Balancing speed, quality, and long-term maintainability."
+
+learnings:
+  - "Deepened expertise in responsive system design across large corporate websites."
+  - "Learned to better identify and reuse existing component patterns, avoiding unnecessary reinvention."
+  - "Improved cross-functional collaboration, especially around design fidelity and template complexity."
+  - "Gained experience working at enterprise scale with higher stakes for accessibility and quality."
+
+retrieval_tags:
+  - "tanger"
+  - "corporate website"
+  - "front-end engineering"
+  - "react"
+  - "typescript"
+  - "enterprise web"
+  - "component systems"
+  - "akqa"

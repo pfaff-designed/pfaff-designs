@@ -1,6 +1,6 @@
 #!/bin/bash
 # Test conversation policy modes
-# Usage: ./scripts/test-conversation-policy.sh
+# Usage: ./scripts/tests/test-conversation-policy.sh
 
 BASE_URL="http://localhost:3000/api/dev/modal-graph"
 

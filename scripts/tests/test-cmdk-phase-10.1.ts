@@ -14,7 +14,7 @@ import {
   commandRegistry,
   filterCommands,
   createCommandContext,
-} from "../src/lib/cmdk";
+} from "../../src/lib/cmdk";
 
 console.log("🧪 Testing Phase 10.1 - Command Model, Registry & Context\n");
 

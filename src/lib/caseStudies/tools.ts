@@ -1,43 +1,45 @@
+import { loadProjectById } from "@/lib/kb/loader";
+
 /**
  * Utility to get tools from KB facts for case studies
- * Maps case study slugs to KB project facts paths
+ * Maps case study slugs to KB project IDs and loads YAML via the KB loader.
  */
 
-// Mapping from case study slug to KB project ID
-const SLUG_TO_KB_PROJECT: Record<string, string> = {
+const SLUG_TO_PROJECT_ID: Record<string, string> = {
   "capital-one-travel": "capital-one",
+  "coca-cola-creative-technology": "coca-cola",
+  "pfaff-designs": "pfaff-design",
   "pmi": "pmi",
-  "coca-cola-creative-technology": "coke",
-  "pfaff-designs": "pfaff-designs",
+  "tanger": "tanger",
+  "mcwhinney": "mcwhinney",
+  "real-estate": "mcwhinney",
 };
 
-// Import KB facts JSON files
-import capitalOneFacts from "../../../knowledge-base/projects/capital-one/capital-one-short-form.json";
-import pmiFacts from "../../../knowledge-base/projects/pmi/pmi-shortform.json";
-import cokeFacts from "../../../knowledge-base/projects/coke/coke-facts.json";
-import pfaffDesignsFacts from "../../../knowledge-base/projects/pfaff-designs/pfaff-designs.json";
-
-const KB_FACTS: Record<string, any> = {
-  "capital-one": capitalOneFacts,
-  "pmi": pmiFacts,
-  "coke": cokeFacts,
-  "pfaff-designs": pfaffDesignsFacts,
-};
+function extractTools(project: any): string[] {
+  return (
+    project?.tools_used ??
+    project?.skills_used ??
+    project?.tools ??
+    project?.skillsUsed ??
+    project?.skills ??
+    project?.tools_and_tech?.frontend ??
+    []
+  );
+}
 
 /**
  * Get tools array for a case study by slug
  */
-export function getToolsForCaseStudy(slug: string): string[] {
-  const kbProjectId = SLUG_TO_KB_PROJECT[slug];
-  if (!kbProjectId) {
-    return [];
-  }
+export async function getToolsForCaseStudy(slug: string): Promise<string[]> {
+  const projectId = SLUG_TO_PROJECT_ID[slug];
+  if (!projectId) return [];
 
-  const facts = KB_FACTS[kbProjectId];
-  if (!facts || !Array.isArray(facts.skillsUsed)) {
-    return [];
-  }
+  const project = await loadProjectById(projectId);
+  if (!project) return [];
 
-  return facts.skillsUsed;
+  const tools = extractTools(project);
+  if (!Array.isArray(tools)) return [];
+
+  return tools.map((t) => String(t));
 }
 

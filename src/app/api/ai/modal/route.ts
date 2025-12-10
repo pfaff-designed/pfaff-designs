@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { buildRunMetadata, modalGraphApp, type ModalGraphState } from "@/lib/ai/modalGraph";
 import { getCaseStudyBySlug } from "@/lib/caseStudies/data";
 import type { AiModalAction } from "@/components/organisms/ai-modal/AiActionsRow";
 import type { CaseStudyPage } from "@/lib/caseStudies/types";
 import { detectProjectMentions, getProjectRoute, getProjectLabelFromSlug } from "@/lib/navigation/project-mapping";
 import { detectNavigationIntent } from "@/lib/navigation/navigation-intent";
+import { rateLimit } from "@/lib/rate-limit";
 
 // ============================================================
 // TYPES
@@ -45,6 +47,25 @@ export interface ModalResponseBody {
     label: string;
   };
 }
+
+const ModalRequestSchema = z.object({
+  question: z.string().min(1).max(2000),
+  topicLabel: z.string().optional(),
+  topicId: z.string().optional(),
+  source: z.enum(["hover-pill", "keyboard", "button"]).optional(),
+  pagePath: z.string().optional(),
+  projectSlug: z.string().optional(),
+  sectionHeadline: z.string().optional(),
+  sectionText: z.string().optional(),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "ai"]),
+        text: z.string(),
+      })
+    )
+    .optional(),
+});
 
 // ============================================================
 // HELPERS
@@ -382,16 +403,38 @@ function generateModalActions(params: {
  */
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as ModalRequestBody;
-    const { question, topicLabel, topicId, source, pagePath, history } = body;
+    // Rate limit (simple in-memory)
+    const rateLimitWindowMs = Number(process.env.AI_MODAL_WINDOW_MS ?? 5 * 60 * 1000);
+    const rateLimitMax = Number(process.env.AI_MODAL_MAX_REQUESTS ?? 20);
+    const ipHeader = req.headers.get("x-forwarded-for") ?? "";
+    const ip = ipHeader.split(",")[0].trim() || (req as any).ip || "unknown";
+    const rateResult = rateLimit({
+      key: `ai-modal-${ip}`,
+      windowMs: rateLimitWindowMs,
+      max: rateLimitMax,
+    });
 
-    // Validate required field
-    if (!question || typeof question !== "string" || question.trim().length === 0) {
+    if (!rateResult.allowed) {
       return NextResponse.json(
-        { error: "Missing or invalid question" },
+        { error: "Too many requests to the AI assistant. Please wait a bit and try again." },
+        { status: 429 }
+      );
+    }
+
+    const raw = await req.json();
+    const parsed = ModalRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid request payload",
+          details: parsed.error.flatten(),
+        },
         { status: 400 }
       );
     }
+
+    const body = parsed.data as ModalRequestBody;
+    const { question, topicLabel, topicId, source, pagePath, history } = body;
 
     // Check for navigation intent first
     const navigationIntent = detectNavigationIntent(question);

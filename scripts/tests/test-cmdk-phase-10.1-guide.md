@@ -5,7 +5,7 @@
 Run the test script:
 
 ```bash
-npx tsx scripts/test-cmdk-phase-10.1.ts
+npx tsx scripts/tests/test-cmdk-phase-10.1.ts
 ```
 
 This will verify:
@@ -213,7 +213,7 @@ npx tsc --noEmit --project tsconfig.json
 Then run the test script:
 
 ```bash
-npx tsx scripts/test-cmdk-phase-10.1.ts
+npx tsx scripts/tests/test-cmdk-phase-10.1.ts
 ```
 
 If both pass, Phase 10.1 is complete! ✅

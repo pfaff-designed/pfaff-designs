@@ -169,7 +169,7 @@ export const commandRegistry: Command[] = [
     description: "Download Charles Pfaff's resume",
     keywords: ["resume", "cv", "pdf", "download", "charles", "pfaff"],
     run: (ctx) => {
-      ctx.download("https://ijwldoqqihdtwegdjjwf.supabase.co/storage/v1/object/sign/Resume/Resume.pages?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9kNmUwN2M2ZS0zYTdlLTQxNzItYjRhOC02Y2FkM2I0ZTA3NmYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJSZXN1bWUvUmVzdW1lLnBhZ2VzIiwiaWF0IjoxNzY0NDY2ODE1LCJleHAiOjE3OTYwMDI4MTV9.VtraXDZwuJfoMUXrAiyJTf78STHs-P-f4f06PMhoCMg");
+      ctx.download("https://ijwldoqqihdtwegdjjwf.supabase.co/storage/v1/object/sign/Resume/Resume.pdf?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9kNmUwN2M2ZS0zYTdlLTQxNzItYjRhOC02Y2FkM2I0ZTA3NmYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJSZXN1bWUvUmVzdW1lLnBkZiIsImlhdCI6MTc2NTIzMTg5NSwiZXhwIjoxNzk2NzY3ODk1fQ.pYCvab6lsXXcti63esOqcQBGG-IYx6m_TG8e09ofLOk");
     },
   },
 

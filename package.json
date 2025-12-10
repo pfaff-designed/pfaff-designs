@@ -15,7 +15,8 @@
     "sync:projects": "tsx scripts/sync-projects-from-kb.ts",
     "sync-and-embed": "npm run sync:projects && npm run embed:kb",
     "eval": "tsx scripts/run-evaluation.ts",
-    "eval:push-datasets": "tsx scripts/ls-push.ts"
+    "eval:push-datasets": "tsx scripts/ls-push.ts",
+    "audit-lines-of-code": "bash scripts/audit-lines-of-code.sh"
   },
   "repository": {
     "type": "git",

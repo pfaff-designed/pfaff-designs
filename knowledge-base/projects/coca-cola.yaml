@@ -1,0 +1,85 @@
+# knowledge-base/projects/project-coca-cola.yaml
+
+doc_type: project
+project_slug: "coca-cola"
+project_label: "Coca-Cola Applied AI Prototype"
+version: 1
+updated: "2025-12-08"
+
+visibility: visible
+project_url: null  # internal innovation work, no public URL
+
+timeline:
+  start: "2024"
+  end: "2024"
+  duration_notes:
+    - "Short-cycle innovation sprint"
+    - "Prototype-focused project, not a production build"
+
+role:
+  title: "Technologist"
+  focus: "Applied AI prototyping, agent workflow design, technical feasibility exploration"
+
+team_structure:
+  - "Staffed alongside a Director of Technology, PM, art directors, and designers"
+  - "Charles handled AI workflow design, prototyping, and feasibility validation"
+  - "Designers owned branding, interface concepts, and user-facing visuals"
+
+project_goal:
+  - "Demonstrate feasibility for an AI-powered hydration-recommendation vending machine concept for athletes"
+  - "Explore how Coke Freestyle-style machines could personalize outputs using user data + conversational AI"
+  - "Produce a clear future-state concept the client could evaluate strategically"
+
+responsibilities:
+  - "Designed an AI agent with explicit goals, instructions, constraints, and process logic"
+  - "Created the prompt architecture, system persona, guardrails, and operational flow"
+  - "Prototyped how the agent would gather user hydration inputs and translate them into beverage recommendations"
+  - "Produced documentation outlining architecture, user journey, recommended hardware, and operational system"
+  - "Conducted feasibility research and experimentation around AI reliability and workflow matching real-world constraints"
+  - "Worked with designers to ensure AI behaviors aligned with envisioned user experience"
+
+what_charles_did_not_do:
+  - "Did not design the UI, visual branding, or industrial design"
+  - "Did not create ML models or train custom datasets"
+  - "Did not build production hardware integrations"
+  - "Did not lead the project (worked as an IC within a cross-functional team)"
+  - "Did not own final client communication (provided technical support to leads)"
+
+tools_used:
+  - "GPT-based prototyping"
+  - "System prompt + agent workflow design"
+  - "Documentation + architectural mapping tools"
+
+impact:
+  - "Demonstrated a feasible AI-driven interaction model for a next-generation vending experience"
+  - "Expanded the creative team's understanding of how AI can shape physical-digital products"
+  - "Provided a detailed process + architecture that clarified what would be required to operationalize the concept"
+  - "Enabled the client to evaluate future-state personalization strategies grounded in technical reality"
+
+contextual_constraints:
+  - "Fast-turn prototype sprint"
+  - "Concept had to simulate real-world inputs without hardware access"
+  - "AI behavior needed to be predictable, structured, and repeatable despite novelty of the use case"
+  - "Outputs had to align with brand voice and athlete-focused positioning"
+
+notable_strengths_demonstrated:
+  - "Ability to design AI agent workflows that mimic real-world processes"
+  - "Translating ambiguous innovation goals into concrete technical systems"
+  - "Creating structure—persona, goals, constraints—that produced stable, repeatable AI behaviors"
+  - "Bridging between designers' creative vision and technical feasibility"
+  - "Clear documentation for non-technical audiences"
+
+learnings:
+  - "Deepened understanding of AI agent design, particularly persona shaping and output consistency"
+  - "Learned how to prototype structured real-world workflows with conversational AI"
+  - "Developed techniques for aligning speculative creative work with realistic technical constraints"
+  - "Strengthened ability to experiment quickly in ambiguous innovation environments"
+
+retrieval_tags:
+  - "coke"
+  - "coca-cola"
+  - "ai prototyping"
+  - "innovation"
+  - "agent design"
+  - "hydration prototype"
+  - "future-state concepts"

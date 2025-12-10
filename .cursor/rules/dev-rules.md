@@ -53,6 +53,11 @@ Cursor must:
 	•	Respect existing layout, card, and typography systems.
 	•	Follow established Responsiveness and A11y patterns.
 	•	Use path aliases (@/components/..., @/lib/...).
+	•	Files should follow these STRICT rules:
+		• Ideal Target (Most Files): 50–150 lines
+		• Acceptable for More Complex Files: 150–250 lines
+		• Large but Sometimes Unavoidable: 250–400 lines
+		• Anti-Pattern Threshold: 400+ lines
 
 Cursor must NOT:
 	•	Introduce new components that duplicate existing ones.

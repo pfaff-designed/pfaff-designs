@@ -1,0 +1,135 @@
+# knowledge-base/projects/capital-one-travel.yaml
+
+doc_type: project_profile
+version: 1
+updated: "2025-12-08"
+
+slug: "capital-one-travel"
+visibility: "visible"
+
+project_name: "Capital One Travel"
+client_name: "Capital One"
+project_type: "Product website & lounge experience"
+industry: "Financial services"
+
+engagement:
+  employer: "AKQA"
+  relationship: "Agency staff augmentation for Capital One"
+  summary: "Front-end engineering for Capital One Travel marketing and airport lounge experiences."
+
+timeline:
+  phases:
+    - id: "c1_core_travel"
+      label: "Core Capital One Travel experience"
+      start: "2022-06"
+      end: "2023-03"
+      confidence: "approximate"
+      note: "Initial work on Capital One Travel site and core marketing/experience pages."
+    - id: "c1_lounges_components"
+      label: "Airport lounge components and templates"
+      start: "2024-07"
+      end: "2024-12"
+      confidence: "approximate"
+      note: "Focused on modular lounge components and section-level layout work."
+    - id: "c1_lounges_pages"
+      label: "Scalable lounge pages"
+      start: "2025-01"
+      end: "2025-12"
+      confidence: "approximate"
+      note: "Primary front-end contributor on scalable lounge page templates."
+
+role:
+  title: "Associate Technologist"
+  level: "mid"
+  focus: "Front-end engineering"
+  responsibilities_summary: "Built modular, scalable front-end components and page templates for Capital One Travel and airport lounge experiences."
+
+team_structure:
+  summary: "Small cross-functional team with designers, PMs, and a senior technologist/tech lead."
+  details:
+    - "Charles owned front-end implementation for specific pages and sections with high-level guidance from a senior technologist."
+    - "Worked closely with design to interpret complex, high-fidelity layouts into production-ready components."
+    - "Collaborated with backend/API teams to integrate data-driven components."
+
+responsibilities:
+  primary:
+    - "Implemented responsive React/TypeScript components for Capital One Travel pages."
+    - "Worked heavily on section-level and page-construction components rather than atomic design tokens alone."
+    - "Built and refined complex templates such as the homepage, tips & planning pages, and airport lounge pages."
+    - "Implemented and refined the header navigation and its interaction patterns."
+    - "Ensured components behaved correctly with tab logic and keyboard navigation."
+    - "Integrated front-end components with existing APIs and data sources."
+  secondary:
+    - "Participated in scoping and estimating front-end work for sprints."
+    - "Used Lighthouse and browser dev tools to spot accessibility and performance issues."
+    - "Provided feedback on design feasibility and implementation details."
+
+what_charles_did_not_do:
+  - "Did not own overall product strategy for Capital One Travel."
+  - "Did not define the core UX or visual design system for Capital One Travel."
+  - "Did not own back-end or API implementation."
+  - "Did not act as project manager or people manager."
+  - "Did not design the brand identity for Capital One."
+
+tools_and_tech:
+  frontend:
+    - "React"
+    - "TypeScript"
+    - "Next.js"
+    - "CSS-in-JS / modern CSS approaches"
+    - "Animations and interaction patterns implemented in React"
+  collaboration_and_process:
+    - "Jira (for sprint/task tracking)"
+    - "Figma (for design handoff and specs)"
+    - "Browser dev tools and Lighthouse (for accessibility/performance checks)"
+
+impact:
+  summary: "Helped make Capital One Travel’s front-end more modular, scalable, and maintainable—especially for complex marketing and lounge experiences."
+  details:
+    - "Contributed to a component architecture that reduced overhead for creating new pages and sections."
+    - "Implemented reusable section templates that made it easier to launch new airport lounge pages."
+    - "Improved consistency across travel and lounge experiences by reusing shared patterns."
+    - "Delivered a sprint of work estimated at ~2 weeks in ~2 days, freeing capacity for additional improvements."
+
+constraints_and_context:
+  - "Worked within a large enterprise design system and brand guidelines."
+  - "High-fidelity designs with complex layout and interaction requirements."
+  - "Strong dependency on existing APIs and data for travel and lounge content."
+  - "Need to balance pixel-level design fidelity with performance and implementation constraints."
+  - "Enterprise-level expectations for accessibility and reliability."
+
+strengths_demonstrated:
+  - "Systems thinking about how individual components roll up into templates and the broader experience."
+  - "Ability to take very detailed, complex designs and translate them into robust, responsive implementations."
+  - "Reliability under time pressure (e.g., completing a multi-week sprint’s work in a few days)."
+  - "Strong collaboration with designers and PMs to keep implementation aligned with intent."
+  - "Respecting and extending existing design and component patterns instead of inventing unnecessary new ones."
+
+learnings_and_takeaways:
+  - "Learned how to work deeply inside an existing enterprise design and component system."
+  - "Strengthened skills in building scalable, section-level components that can support many pages."
+  - "Reinforced the importance of aligning with existing patterns for maintainability and team velocity."
+  - "Gained experience shipping production work for a high-visibility financial services brand."
+
+links:
+  public_site:
+    label: "Capital One Travel (public site)"
+    url: null # Intentionally left null; can be populated later if a stable URL is chosen.
+
+tags:
+  client:
+    - "capital_one"
+  project_kind:
+    - "case_study"
+    - "marketing_site"
+    - "experience_site"
+  focus:
+    - "frontend_engineering"
+    - "component_systems"
+    - "enterprise_design_system"
+  tech:
+    - "react"
+    - "typescript"
+    - "next_js"
+  industry:
+    - "financial_services"

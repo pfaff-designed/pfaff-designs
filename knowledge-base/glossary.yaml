@@ -1,0 +1,182 @@
+# knowledge-base/glossary.yaml
+
+doc_type: glossary
+version: 1
+updated: "2025-12-08"
+
+terms:
+
+  - term: "Intelligent system"
+    canonical: "context-aware, AI-assisted interface"
+    definition: >
+      A digital system that interprets user intent, uses contextual information, and responds adaptively. 
+      Intelligent systems combine retrieval, generation, and deterministic UI behavior to help users achieve goals with less friction.
+    synonyms:
+      - "intelligent interface"
+      - "adaptive system"
+      - "context-aware interface"
+
+  - term: "Intelligent system design"
+    canonical: "designing AI-powered, context-aware experiences"
+    definition: >
+      A design-engineering practice that connects user intent, system constraints, and AI capabilities into a coherent blueprint.
+      It emphasizes structure, predictability, grounding, and usability rather than novelty-for-novelty's sake.
+    synonyms:
+      - "AI experience design"
+      - "AI interaction design"
+
+  - term: "RAG"
+    canonical: "retrieval augmented generation"
+    definition: >
+      A system pattern where user queries retrieve relevant knowledge from a database, which is then used to ground a language model’s output.
+      Ensures answers stay factual, context-aware, and controllable.
+    synonyms:
+      - "retrieval-augmented pipeline"
+      - "retrieval + generation"
+
+  - term: "RAG pipeline"
+    canonical: "retrieval augmented generation pipeline"
+    definition: >
+      The full system that handles chunking, embeddings, retrieval, reranking, grounding, prompt construction, and final generation.
+      Includes monitoring, evaluation, guardrails, and deterministic UI mapping.
+    synonyms:
+      - "RAG system"
+      - "AI retrieval pipeline"
+
+  - term: "Chunking"
+    canonical: "semantic text segmentation"
+    definition: >
+      The process of splitting documents into meaningful pieces for embedding and retrieval.
+      Good chunking improves context quality and reduces hallucination.
+    synonyms:
+      - "document segmentation"
+      - "text splitting"
+
+  - term: "Metadata filtering"
+    canonical: "retrieval filtering by metadata"
+    definition: >
+      Using metadata like project IDs, section types, timestamps, or tags to limit search results during retrieval.
+      Reduces irrelevant context and boosts retrieval accuracy.
+    synonyms:
+      - "metadata constraints"
+      - "context filters"
+
+  - term: "Hybrid retrieval"
+    canonical: "lexical + semantic retrieval"
+    definition: >
+      A retrieval approach that combines keyword search with embedding similarity to improve relevance, especially for short or precise queries.
+    synonyms:
+      - "hybrid search"
+      - "semantic + keyword retrieval"
+
+  - term: "Generative UI"
+    canonical: "AI-driven UI layout selection"
+    definition: >
+      A system where structured outputs from an AI agent map to deterministic UI components. 
+      The UI is not “generated” in HTML, but assembled from a whitelisted component library.
+    synonyms:
+      - "AI-driven UI"
+      - "schema-based UI generation"
+
+  - term: "Deterministic components"
+    canonical: "whitelisted UI components with controlled inputs"
+    definition: >
+      Rigid, predictable UI components that accept structured data. 
+      Used to prevent hallucinated markup and ensure visual consistency.
+    synonyms:
+      - "component registry"
+      - "structured components"
+
+  - term: "Component registry"
+    canonical: "approved set of UI components"
+    definition: >
+      A curated list of components that the AI is allowed to use when producing UI output.
+      Ensures outputs are stable, safe, and visually consistent.
+    synonyms:
+      - "component whitelist"
+
+  - term: "System prompt"
+    canonical: "global behavioral instruction"
+    definition: >
+      A persistent instruction that defines how the AI should behave: tone, constraints, grounding rules, disclaimers, and priorities.
+    synonyms:
+      - "model instruction"
+      - "base prompt"
+
+  - term: "Context blob"
+    canonical: "assembled AI context"
+    definition: >
+      The structured set of retrieved facts, metadata, and page context provided to the model before answering a question.
+    synonyms:
+      - "prompt context"
+      - "knowledge context"
+
+  - term: "Grounding"
+    canonical: "ensuring model answers follow provided evidence"
+    definition: >
+      A technique that restricts AI output to the provided context, avoiding hallucinations and ensuring factual accuracy.
+    synonyms:
+      - "evidence-based answering"
+      - "context grounding"
+
+  - term: "Low-context fallback"
+    canonical: "safe response when insufficient context"
+    definition: >
+      A predictable, helpful template used when the model does not have enough information to answer accurately.
+    synonyms:
+      - "fallback mode"
+      - "insufficient context response"
+
+  - term: "Mode routing"
+    canonical: "deterministic decision for how the AI should answer"
+    definition: >
+      The decision layer that determines whether the AI should answer directly, ask clarifying questions, or use a fallback.
+    synonyms:
+      - "response mode selection"
+
+  - term: "Applied AI engineer"
+    canonical: "engineer who builds practical AI-powered systems"
+    definition: >
+      A hybrid role that blends engineering, interaction design, and AI system design to turn abstract capabilities into working products.
+    synonyms:
+      - "design-engineer"
+      - "intelligent systems designer"
+
+  - term: "Design-engineer"
+    canonical: "designer + engineer hybrid"
+    definition: >
+      Someone who approaches engineering with a design mindset, focusing on structure, usability, and intent.
+    synonyms:
+      - "technical designer"
+      - "design technologist"
+
+  - term: "North star"
+    canonical: "guiding intent for a project"
+    definition: >
+      A single, clarifying principle that defines what the system is trying to accomplish and how success should be judged.
+    synonyms:
+      - "project intention"
+      - "guiding principle"
+
+  - term: "Swiss editorial design"
+    canonical: "grid-first, hierarchy-driven design style"
+    definition: >
+      A design philosophy focused on clarity, spacing, hierarchy, and structure—foundational to Charles’s visual approach.
+    synonyms:
+      - "Swiss grid"
+      - "editorial grid systems"
+
+  - term: "Pond metaphor"
+    canonical: "ecosystem-based metaphor for portfolio navigation"
+    definition: >
+      A metaphor that frames Charles’s portfolio as an ecosystem: each project is a node in a structured environment, and the AI helps users explore that system.
+    synonyms:
+      - "portfolio ecosystem metaphor"
+
+  - term: "Intent → System pipeline"
+    canonical: "Charles’s approach to turning ideas into architecture"
+    definition: >
+      A process that begins with intent and constraints, then translates them into flows, components, systems, and eventually working software.
+    synonyms:
+      - "intent translation"
+      - "design-to-system pipeline"

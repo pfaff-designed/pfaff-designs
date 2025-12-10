@@ -557,98 +557,8 @@ Remember:
  * 
  * Falls back to hardcoded prompt if LangSmith is unavailable
  */
-export async function getModalGraphSystemPrompt(): Promise<string> {
-  // Check if LangSmith is configured
-  if (!langsmithClient || !process.env.LANGSMITH_API_KEY) {
-    console.warn("[PromptLoader] LangSmith not configured, using fallback modal graph prompt");
-    return getFallbackModalGraphSystemPrompt();
-  }
-
-  try {
-    console.log(`[PromptLoader] Attempting to load modal graph prompt: ${MODAL_GRAPH_PROMPT_NAME}`);
-    
-    // Use pullPromptCommit (TypeScript SDK equivalent of Python's pull_prompt)
-    const promptCommit = await langsmithClient.pullPromptCommit(MODAL_GRAPH_PROMPT_NAME, {
-      includeModel: false,
-    });
-    
-    // The prompt data is in the manifest
-    const manifest = promptCommit?.manifest;
-    const promptData = manifest || promptCommit;
-
-    if (!promptData) {
-      console.warn(`[PromptLoader] No prompt data returned for ${MODAL_GRAPH_PROMPT_NAME}, using fallback`);
-      return getFallbackModalGraphSystemPrompt();
-    }
-
-    // Try to extract system message from prompt template
-    let messages: any[] | undefined;
-    
-    // Format 1: LangChain serialized format
-    if (promptData.lc === 1 && 
-        promptData.type === "constructor" && 
-        Array.isArray(promptData.id) &&
-        promptData.id[0] === "langchain" &&
-        promptData.id[1] === "prompts" &&
-        promptData.id[2] === "chat" &&
-        promptData.id[3] === "ChatPromptTemplate" &&
-        promptData.kwargs?.messages &&
-        Array.isArray(promptData.kwargs.messages)) {
-      messages = promptData.kwargs.messages;
-    }
-    // Format 2: Direct messages array
-    else if (Array.isArray(promptData.messages)) {
-      messages = promptData.messages;
-    }
-    // Format 3: Nested in manifest
-    else if (promptData.manifest?.messages && Array.isArray(promptData.manifest.messages)) {
-      messages = promptData.manifest.messages;
-    }
-    
-    if (messages && messages.length > 0) {
-      // Find the system message
-      for (const msg of messages) {
-        // Check if it's a SystemMessage
-        if (msg.id && Array.isArray(msg.id) && msg.id[msg.id.length - 1] === "SystemMessage") {
-          const content = msg.kwargs?.content || "";
-          if (content) {
-            console.log(`[PromptLoader] ✅ Successfully loaded modal graph prompt from LangSmith: ${MODAL_GRAPH_PROMPT_NAME}`);
-            return content;
-          }
-        }
-        // Check if it's already a SystemMessage object
-        else if (msg instanceof SystemMessage || (msg._getType && msg._getType() === "system")) {
-          const content = msg.content || "";
-          if (content) {
-            console.log(`[PromptLoader] ✅ Successfully loaded modal graph prompt from LangSmith: ${MODAL_GRAPH_PROMPT_NAME}`);
-            return typeof content === "string" ? content : String(content);
-          }
-        }
-        // Check if it's a simple system message format
-        else if (msg.role === "system" || msg.type === "system") {
-          const content = msg.content || "";
-          if (content) {
-            console.log(`[PromptLoader] ✅ Successfully loaded modal graph prompt from LangSmith: ${MODAL_GRAPH_PROMPT_NAME}`);
-            return typeof content === "string" ? content : String(content);
-          }
-        }
-      }
-    }
-
-    console.warn(`[PromptLoader] Could not extract system message from prompt ${MODAL_GRAPH_PROMPT_NAME}, using fallback`);
-    return getFallbackModalGraphSystemPrompt();
-  } catch (error) {
-    const originalError = error instanceof Error ? error.message : String(error);
-    console.warn(`[PromptLoader] Failed to load modal graph prompt from LangSmith, using fallback: ${originalError}`);
-    return getFallbackModalGraphSystemPrompt();
-  }
-}
-
-/**
- * Fallback modal graph system prompt (used when LangSmith prompt is unavailable)
- */
-export function getFallbackModalGraphSystemPrompt(): string {
-  return `You are Charles's portfolio guide. You answer questions about his work as an applied AI engineer and front‑end technologist.
+// Hoisted modal graph system prompt as a top-level constant
+export const DEFAULT_MODAL_SYSTEM_PROMPT = `You are Charles's portfolio guide. You answer questions about his work as an applied AI engineer and front‑end technologist.
 
 Your task is to generate warm, clear, grounded responses based on:
 - the user's QUESTION
@@ -723,4 +633,152 @@ Tools & Technologies:
 - If tools are missing, stay high-level about process and outcomes rather than guessing.
 
 Your output should ONLY be the final answer text. No metadata, no reasoning traces.`;
+
+function getFallbackModalGraphPromptTemplate(): ChatPromptTemplate {
+  const human = `QUESTION:
+{question}
+
+MODE: {mode}
+PAGE PATH: {pagePath}
+PROJECT SLUG: {projectSlug}
+
+CONTEXT:
+{context}
+
+HISTORY:
+{history}
+`;
+
+  return ChatPromptTemplate.fromMessages([
+    ["system", DEFAULT_MODAL_SYSTEM_PROMPT],
+    ["human", human],
+  ]);
+}
+
+// New helper to pull modal graph system prompt from LangSmith, with fallback
+export async function getModalGraphSystemMessage(): Promise<SystemMessage> {
+  // If LangSmith isn't configured, fall back to the default system prompt.
+  if (!langsmithClient || !process.env.LANGSMITH_API_KEY) {
+    console.warn("[PromptLoader] LangSmith not configured, using fallback modal graph system prompt");
+    return new SystemMessage(DEFAULT_MODAL_SYSTEM_PROMPT);
+  }
+
+  try {
+    console.log(`[PromptLoader] Attempting to load modal graph system message: ${MODAL_GRAPH_PROMPT_NAME}`);
+    const promptCommit = await langsmithClient.pullPromptCommit(MODAL_GRAPH_PROMPT_NAME, { includeModel: false });
+    const promptData = promptCommit?.manifest || promptCommit;
+
+    // Case 1: Serialized SystemMessagePromptTemplate
+    if (
+      promptData?.lc === 1 &&
+      promptData?.type === "constructor" &&
+      Array.isArray(promptData?.id) &&
+      promptData.id[0] === "langchain" &&
+      promptData.id[1] === "prompts" &&
+      promptData.id[2] === "chat" &&
+      promptData.id[3] === "SystemMessagePromptTemplate" &&
+      promptData.kwargs?.prompt?.kwargs?.template
+    ) {
+      const tpl = promptData.kwargs.prompt.kwargs.template as string;
+      return new SystemMessage(tpl);
+    }
+
+    // Case 2: ChatPromptTemplate with messages array
+    let messages: any[] | undefined;
+    if (
+      promptData?.lc === 1 &&
+      promptData?.type === "constructor" &&
+      Array.isArray(promptData?.id) &&
+      promptData.id[0] === "langchain" &&
+      promptData.id[1] === "prompts" &&
+      promptData.id[2] === "chat" &&
+      promptData.id[3] === "ChatPromptTemplate" &&
+      promptData.kwargs?.messages &&
+      Array.isArray(promptData.kwargs.messages)
+    ) {
+      messages = promptData.kwargs.messages;
+    } else if (Array.isArray(promptData?.messages)) {
+      messages = promptData.messages;
+    } else if (Array.isArray(promptData?.manifest?.messages)) {
+      messages = promptData.manifest.messages;
+    }
+
+    if (messages && messages.length > 0) {
+      const first = messages[0];
+      if (first?.role === "system" || first?._type === "system") {
+        const content = first.content ?? first.text ?? "";
+        if (content) {
+          return new SystemMessage(content);
+        }
+      }
+      // Serialized SystemMessagePromptTemplate inside messages
+      if (first?.lc === 1 && Array.isArray(first.id)) {
+        const messageType = first.id[first.id.length - 1];
+        if (messageType === "SystemMessagePromptTemplate") {
+          const template =
+            first.kwargs?.prompt?.kwargs?.template ??
+            first.kwargs?.content ??
+            "";
+          if (template) {
+            return new SystemMessage(template);
+          }
+        }
+      }
+    }
+
+    throw new Error("Could not extract a system message from modal graph prompt");
+  } catch (error) {
+    const originalError = error instanceof Error ? error.message : String(error);
+    console.warn(
+      `[PromptLoader] Failed to load modal graph system message from LangSmith, using fallback: ${originalError}`
+    );
+    return new SystemMessage(DEFAULT_MODAL_SYSTEM_PROMPT);
+  }
+}
+
+
+export async function getModalGraphPromptTemplate(): Promise<ChatPromptTemplate> {
+  if (!langsmithClient || !process.env.LANGSMITH_API_KEY) {
+    console.warn("[PromptLoader] LangSmith not configured, using fallback modal graph prompt");
+    return getFallbackModalGraphPromptTemplate();
+  }
+
+  try {
+    console.log(`[PromptLoader] Attempting to load modal graph prompt: ${MODAL_GRAPH_PROMPT_NAME}`);
+    const promptCommit = await langsmithClient.pullPromptCommit(MODAL_GRAPH_PROMPT_NAME, {
+      includeModel: false,
+    });
+    const promptData = promptCommit?.manifest || promptCommit;
+
+    let messages: any[] | undefined;
+    if (
+      promptData?.lc === 1 &&
+      promptData?.type === "constructor" &&
+      Array.isArray(promptData?.id) &&
+      promptData.id[0] === "langchain" &&
+      promptData.id[1] === "prompts" &&
+      promptData.id[2] === "chat" &&
+      promptData.id[3] === "ChatPromptTemplate" &&
+      promptData.kwargs?.messages &&
+      Array.isArray(promptData.kwargs.messages)
+    ) {
+      messages = promptData.kwargs.messages;
+    } else if (Array.isArray(promptData?.messages)) {
+      messages = promptData.messages;
+    } else if (Array.isArray(promptData?.manifest?.messages)) {
+      messages = promptData.manifest.messages;
+    }
+
+    if (messages && messages.length > 0) {
+      console.log(`[PromptLoader] ✅ Successfully loaded modal graph prompt from LangSmith: ${MODAL_GRAPH_PROMPT_NAME}`);
+      return ChatPromptTemplate.fromMessages(messages);
+    }
+
+    console.warn(`[PromptLoader] Could not extract modal graph messages for ${MODAL_GRAPH_PROMPT_NAME}, using fallback`);
+    return getFallbackModalGraphPromptTemplate();
+  } catch (error) {
+    const originalError = error instanceof Error ? error.message : String(error);
+    console.warn(`[PromptLoader] Failed to load modal graph prompt from LangSmith, using fallback: ${originalError}`);
+    return getFallbackModalGraphPromptTemplate();
+  }
 }

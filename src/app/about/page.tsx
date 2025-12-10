@@ -2,8 +2,6 @@
 
 import * as React from "react";
 import { ContentSection } from "@/components/page-components/ContentSection";
-import { Section } from "@/components/layout/Section";
-import { Container } from "@/components/layout/Container";
 import { aboutPageData } from "@/lib/pages/about/data";
 import { Renderer } from "@/components/utility/Renderer";
 import { TypingIndicator } from "@/components/ui/TypingIndicator";

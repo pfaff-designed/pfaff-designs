@@ -1,0 +1,90 @@
+# knowledge-base/projects/project-pmi.yaml
+
+doc_type: project
+project_slug: "pmi"
+project_label: "PMI.org Redesign"
+version: 1
+updated: "2025-12-08"
+
+visibility: visible
+project_url: null   # Project not publicly linkable
+
+timeline:
+  start: "2024-04"
+  end: "2024-12"
+
+role:
+  title: "Associate Technologist (Front-end focus)"
+  description: "Front-end engineer responsible for implementing complex page templates and component system work."
+
+team_structure:
+  - "Staff augmentation model: PMI-hired designer + PMI PM."
+  - "Engineering team: Charles (front-end) + one AKQA developer (back-end)."
+  - "Designer created design system; Charles implemented it."
+
+project_goal:
+  - "Redesign PMI.org with a scalable, accessible, modular component framework."
+  - "Translate highly detailed design system into production-ready React components."
+  - "Improve complexity-heavy templates (resource pages, learning flows, etc.) while ensuring consistency."
+
+responsibilities:
+  - "Implemented front-end architecture using React + TypeScript + Tailwind."
+  - "Built reusable atoms/molecules and assembled page-level sections."
+  - "Styled Radix UI components to match PMI’s design system specifications."
+  - "Translated complex responsive templates into production-ready layouts."
+  - "Collaborated closely with a technical designer to implement pixel-perfect, annotated components."
+  - "Wrote Jest tests for components and contributed to Storybook documentation."
+  - "Handled accessibility, interaction details, edge-case logic, and QA across multiple templates."
+
+what_charles_did_not_do:
+  - "Did not design the visual system or component library (designer-owned)."
+  - "Did not lead backend, analytics, authentication, or CMS work."
+  - "Did not serve as PM, tech lead, or strategist."
+  - "Did not create the original IA or high-level product direction."
+
+tools_used:
+  - "React"
+  - "Next.js"
+  - "TypeScript"
+  - "Radix UI"
+  - "Tailwind CSS"
+  - "Storybook"
+  - "Jest"
+  - "Figma"
+
+impact:
+  - "Delivered a robust, modular front-end system capable of supporting dozens of content-heavy page types."
+  - "Improved consistency across templates through component-driven architecture."
+  - "Increased accessibility compliance by adhering to Radix primitives and semantic structure."
+  - "Enabled PMI design team to ship complex layouts faithfully due to aligned design–engineering workflow."
+
+contextual_constraints:
+  - "Large, enterprise-scale site with many content patterns requiring consistency."
+  - "High design fidelity expectations—component annotations were extremely detailed."
+  - "Complex responsive requirements that varied significantly across templates."
+  - "Limited backend changes; front-end work had to integrate with existing PMI infrastructure."
+
+notable_strengths_demonstrated:
+  - "Ability to interpret and implement highly technical designer annotations."
+  - "Strong component systems thinking; balancing reuse vs template uniqueness."
+  - "Collaborating effectively in a hybrid team environment."
+  - "Engineering for accessibility, clarity, and long-term maintainability."
+  - "Systematic problem solving and translating complex layouts into flexible components."
+
+learnings:
+  - "Developed deeper fluency in building component systems from designer-authored specs."
+  - "Learned how design and engineering intersect when a designer is technically strong."
+  - "Learned to identify and extend existing patterns rather than invent new ones unnecessarily."
+  - "Strengthened Jest testing practices and Storybook-driven development."
+  - "Improved ability to scope front-end work independently in a staff-augmentation model."
+
+retrieval_tags:
+  - "pmi"
+  - "pmi.org"
+  - "redesign"
+  - "front-end engineering"
+  - "component systems"
+  - "enterprise web"
+  - "radix"
+  - "react"
+  - "typescript"

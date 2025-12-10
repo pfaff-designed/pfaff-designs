@@ -66,5 +66,5 @@ echo ""
 echo "Next steps:"
 echo "1. Start dev server: npm run dev"
 echo "2. Press Cmd+K (or Ctrl+K) to test the palette"
-echo "3. See scripts/test-phase-10.2.md for full testing guide"
+echo "3. See scripts/tests/test-phase-10.2.md for full testing guide"
 

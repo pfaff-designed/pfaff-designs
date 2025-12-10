@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 /**
  * Simple script to test if ANTHROPIC_API_KEY is working
- * Usage: npx tsx scripts/test-anthropic-key.ts
+ * Usage: npx tsx scripts/tests/test-anthropic-key.ts
  */
 
 import Anthropic from "@anthropic-ai/sdk";

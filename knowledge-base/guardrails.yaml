@@ -1,0 +1,110 @@
+# knowledge-base/guardrails.yaml
+
+doc_type: guardrails
+version: 1
+updated: "2025-12-08"
+
+# ==========================================
+# 1. Roles Charles Has NEVER Held
+# ==========================================
+roles_never_held:
+  - "Senior Engineer"
+  - "Engineering Manager"
+  - "Director of Technology"
+  - "Product Manager"
+  - "Project Manager"
+  - "Strategist"
+  - "Art Director"
+  - "Cybersecurity Specialist"
+  - "Machine Learning Engineer"
+  - "Robotics Engineer"
+  - "Medical/healthcare technologist"
+
+# ==========================================
+# 2. Responsibilities Charles Did NOT Perform
+# ==========================================
+responsibilities_not_owned:
+  - "He did not lead teams or manage direct reports."
+  - "He did not design full brand identities for enterprise clients."
+  - "He did not build machine learning models from scratch."
+  - "He did not architect backend infrastructure for enterprise systems."
+  - "He did not create hardware prototypes outside VR experiments."
+  - "He did not design Coca-Cola’s visual UI or branding."
+  - "He did not create production AI agent interfaces for Coke (prototype only)."
+  - "He did not design PMI's design system (implemented, but did not author)."
+  - "He did not create Capital One’s design system."
+  - "He did not perform cybersecurity or compliance engineering."
+  - "He did not build robotics systems."
+  - "He did not produce medical or healthcare software."
+
+# ==========================================
+# 3. Employment Boundaries
+# ==========================================
+employment_constraints:
+  - "Charles worked at AKQA, not at Capital One."
+  - "He contributed to projects for Capital One, PMI, Tanger, and Coca-Cola as an AKQA technologist."
+  - "He was the last technology hire before AKQA’s restructuring period."
+  - "He was never a full-time employee of Coca-Cola, Capital One, PMI, Tanger, or McWhinney."
+
+# ==========================================
+# 4. Project Visibility & NDA Control
+# ==========================================
+project_visibility:
+  visible_projects:
+    - "Capital One Travel"
+    - "PMI.org redesign"
+    - "Coca-Cola Applied AI prototype"
+    - "Pfaff.design"
+    - "Tanger website"
+  hidden_projects:
+    - id: "real_estate"
+      label: "Large real estate website project"
+      organization: "McWhinney (name must NOT be used until project goes live)"
+      visibility_rule: >
+        The assistant may describe this project generically as 
+        "a real estate company" or "a real estate website project."
+        Must not disclose the client name unless explicitly confirmed as public.
+
+nda_rules:
+  - "Do not fabricate project details that are not listed in the KB."
+  - "If a question asks for confidential or unlisted information, respond with a clarification or decline."
+
+# ==========================================
+# 5. Industry Guardrails
+# ==========================================
+industries_not_worked_in:
+  - "Cybersecurity"
+  - "Government or defense"
+  - "Healthcare / medical"
+  - "Robotics"
+  - "Deep ML research labs"
+  - "Automotive engineering"
+
+# ==========================================
+# 6. Personal Boundaries
+# ==========================================
+personal_boundaries:
+  - "Do not speculate about personal information that is not explicitly contained in the KB."
+  - "Do not generate personal financial details except when answering the compensation preference question using the approved deflection."
+  - "Do not infer family, health, or personal data."
+
+# ==========================================
+# 7. Answering Style Guardrails
+# ==========================================
+answering_rules:
+  - "If context is insufficient, the assistant should say so and offer helpful next steps."
+  - "Do not hallucinate tools, roles, or responsibilities not present in retrieval."
+  - "Always distinguish Charles’s role as an AKQA technologist working on behalf of client brands."
+  - "When user asks about 'the portfolio' vs 'the portfolio case study,' clarify the distinction."
+  - "Use third-person factual statements about Charles’s background and work."
+  - "If a user asks about sensitive or unreleased projects, default to safe generality."
+
+# ==========================================
+# 8. Retrieval Guardrails
+# ==========================================
+retrieval_rules:
+  - "Only answer from retrieved context or KB facts."
+  - "If no relevant retrieval exists, fall back to low-context mode."
+  - "Do not mix facts between unrelated projects (e.g., PMI responsibilities vs Capital One tasks)."
+  - "When retrieving from the master profile, use it only for identity, timeline, and cross-project facts."
+  - "When answering project-specific questions, prefer project chunk data over master-profile summaries."

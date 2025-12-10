@@ -1,0 +1,87 @@
+# knowledge-base/projects/project-real-estate-hidden.yaml
+
+doc_type: project
+project_slug: "real-estate-hidden"
+project_label: "Real Estate Website (Hidden Client)"
+version: 1
+updated: "2025-12-08"
+
+visibility: hidden
+project_url: null  # Site not yet live, client name withheld until release
+
+timeline:
+  start: "2025 spring"
+  end: "2025 fall"
+  duration_notes:
+    - "Full website redesign and rebuild"
+    - "Large-scale content + layout system"
+
+role:
+  title: "Technologist"
+  focus: "Front-end engineering, systems architecture, and site-level component patterns"
+
+team_structure:
+  - "Worked with a lead designer, PM, and other AKQA technologists"
+  - "Charles focused primarily on front-end architecture and page section construction"
+  - "Collaborated with design to translate complex templates into scalable components"
+
+project_goal:
+  - "Redesign and rebuild a large, content-rich real estate website"
+  - "Create flexible page templates capable of supporting many property types and marketing needs"
+  - "Modernize the experience while improving maintainability for internal teams"
+
+responsibilities:
+  - "Engineered responsive React/TypeScript components and layout systems"
+  - "Implemented section-level and template-level logic for highly structured pages"
+  - "Collaborated with design on interaction patterns, responsive breakpoints, and component fidelity"
+  - "Ensured accessibility, performance, and semantic correctness across new templates"
+  - "Worked with back-end developers to integrate API-driven content"
+  - "Used Storybook to develop and validate components in isolation"
+  - "Translated complex, high-fidelity designs into production-ready implementations"
+
+what_charles_did_not_do:
+  - "Did not define the visual design system (owned by design team)"
+  - "Did not lead engineering (worked as a contributing engineer on a multi-person team)"
+  - "Did not own back-end architecture, CMS decisions, or content modeling"
+  - "Did not handle analytics, SEO strategy, or client presentations"
+
+tools_used:
+  - "React"
+  - "TypeScript"
+  - "Tailwind CSS"
+  - "Storybook"
+  - "Figma for close design collaboration"
+  - "Jest for component testing"
+
+impact:
+  - "Upgraded the site to a robust, modern component foundation"
+  - "Improved consistency across property pages and marketing sections"
+  - "Enabled easier content updates through predictable templates"
+  - "Enhanced accessibility and responsive behavior site-wide"
+  - "Strengthened technical collaboration across design and engineering"
+
+contextual_constraints:
+  - "Complex content structure requiring reusable but flexible components"
+  - "Design fidelity needed to remain exact across many page types"
+  - "API-driven content demands careful fallback + loading logic"
+  - "Scale required clean architecture to avoid duplication and bloat"
+
+notable_strengths_demonstrated:
+  - "Component systems thinking and translation of design into scalable architecture"
+  - "Independent ownership of large front-end deliverables"
+  - "Strong communication with design to resolve ambiguities and edge cases"
+  - "Attention to accessibility and long-term maintainability"
+
+learnings:
+  - "Deepened understanding of large-site template design and cross-page pattern reuse"
+  - "Refined approach to balancing design fidelity with implementation constraints"
+  - "Improved at systems-level thinking for highly structured websites"
+  - "Further developed skill in explaining technical tradeoffs to design partners"
+
+retrieval_tags:
+  - "real-estate"
+  - "hidden"
+  - "website redesign"
+  - "front-end engineering"
+  - "component systems"
+  - "template architecture"
